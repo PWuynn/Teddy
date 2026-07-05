@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.name }} | TEDDY{% endblock %}
+
+{% block content %}
+<div class="course-detail-page py-5">
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="course-detail-hero">
+            <div class="hero-copy">
+                <span class="course-kicker">Course Overview</span>
+                <h1>{{ course.name }}</h1>
+                <p>{{ course.description|default:"Khóa học chưa có mô tả chi tiết." }}</p>
+            </div>
+
+            <div class="course-code-card">
+                <span>Mã khóa học</span>
+                <strong>{{ course.course_code }}</strong>
+                {% if course.join_permission == 'approval' %}
+                    <small>Khóa học yêu cầu người tạo duyệt trước khi tham gia.</small>
+                {% else %}
+                    <small>Khóa học công khai, học viên được tham gia ngay.</small>
+                {% endif %}
+            </div>
+        </section>
+
+        <div class="row g-4 mt-1">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-person-workspace"></i>
+                    <span>Người tạo</span>
+                    <strong>{{ course.creator.username }}</strong>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    <span>Số lớp</span>
+                    <strong>{{ classrooms.count }}</strong>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-people"></i>
+                    <span>Thành viên duyệt</span>
+                    <strong>{{ approved_count }}</strong>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Quyền tham gia</span>
+                    <strong>{% if course.join_permission == 'approval' %}Kiểm duyệt{% else %}Công khai{% endif %}</strong>
+                </div>
+            </div>
+        </div>
+
+        {% if request.user != course.creator %}
+            <section class="membership-panel mt-4">
+                <div>
+                    <strong>Trạng thái tham gia</strong>
+                    {% if membership.status == 'approved' %}
+                        <span class="text-success">Bạn đã được tham gia khóa học này.</span>
+                    {% elif membership.status == 'pending' %}
+                        <span class="text-warning">Yêu cầu của bạn đang chờ người tạo duyệt.</span>
+                    {% elif membership.status == 'rejected' %}
+                        <span class="text-danger">Yêu cầu trước đó đã bị từ chối. Bạn có thể gửi lại yêu cầu.</span>
+                    {% else %}
+                        <span class="text-muted">Bạn chưa tham gia khóa học này.</span>
+                    {% endif %}
+                </div>
+                <form method="post" action="{% url 'courses:join_course' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="course_code" value="{{ course.course_code }}">
+                    <button class="btn btn-primary" {% if membership.status == 'approved' or membership.status == 'pending' %}disabled{% endif %}>
+                        {% if course.join_permission == 'approval' %}Gửi yêu cầu tham gia{% else %}Tham gia khóa học{% endif %}
+                    </button>
+                </form>
+            </section>
+        {% endif %}
+
+        {% if request.user == course.creator and pending_memberships %}
+            <section class="review-panel mt-4">
+                <div class="panel-top">
+                    <div>
+                        <h2>Yêu cầu tham gia chờ duyệt</h2>
+                        <p>Chấp nhận hoặc từ chối học viên muốn tham gia khóa học.</p>
+                    </div>
+                </div>
+
+                <div class="review-list">
+                    {% for item in pending_memberships %}
+                        <div class="review-row">
+                            <div class="review-avatar">{{ item.user.username|first|upper }}</div>
+                            <div>
+                                <strong>{{ item.user.username }}</strong>
+                                <span>Gửi yêu cầu lúc {{ item.requested_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div class="review-actions">
+                                <form method="post" action="{% url 'courses:review_course_member' course.id item.id 'approve' %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-success btn-sm">Chấp nhận</button>
+                                </form>
+                                <form method="post" action="{% url 'courses:review_course_member' course.id item.id 'reject' %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-outline-danger btn-sm">Từ chối</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        <section class="classroom-panel mt-4">
+            <div class="panel-top">
+                <div>
+                    <h2>Danh sách lớp học</h2>
+                    <p>Tìm và vào lớp để xem thành viên, tài liệu, bài giao và quiz.</p>
+                </div>
+
+                {% if request.user == course.creator %}
+                    <a href="{% url 'courses:edit_course' course.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil-square"></i> Chỉnh sửa khóa học
+                    </a>
+                {% endif %}
+            </div>
+
+            <form method="get" class="course-search">
+                <i class="bi bi-search"></i>
+                <input name="q" value="{{ keyword }}" placeholder="Tìm lớp theo tên, mã lớp hoặc giáo viên...">
+                <button class="btn btn-primary">Tìm lớp</button>
+                {% if keyword %}
+                    <a class="btn btn-outline-secondary" href="{% url 'courses:course_detail' course.id %}">Xóa lọc</a>
+                {% endif %}
+            </form>
+
+            <div class="classroom-list">
+                {% for classroom in classrooms %}
+                    <article class="classroom-row">
+                        <div class="classroom-avatar">{{ classroom.name|first|upper }}</div>
+                        <div class="classroom-main">
+                            <h3>{{ classroom.name }}</h3>
+                            <div class="classroom-meta">
+                                <span><i class="bi bi-key"></i> {{ classroom.class_code }}</span>
+                                <span><i class="bi bi-people"></i> {{ classroom.members.count }}/{{ classroom.max_members }} thành viên</span>
+                                <span><i class="bi bi-person-badge"></i> {{ classroom.teacher.username }}</span>
+                            </div>
+                        </div>
+                        <div class="classroom-actions">
+                            {% if can_interact %}
+                                <a href="{% url 'classroom:class_detail' classroom.id %}" class="btn btn-primary">Vào lớp</a>
+                            {% elif membership.status == 'pending' %}
+                                <span class="btn btn-secondary disabled">Chờ duyệt</span>
+                            {% else %}
+                                <form method="post" action="{% url 'courses:join_course' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="course_code" value="{{ course.course_code }}">
+                                    <button class="btn btn-outline-primary">Tham gia</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% empty %}
+                    <div class="empty-state-soft">
+                        <i class="bi bi-inboxes"></i>
+                        <h3>Chưa có lớp phù hợp</h3>
+                        <p>Thử đổi từ khóa tìm kiếm hoặc chỉnh sửa khóa học để thêm lớp mới.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if request.user == course.creator %}
+            <div class="danger-zone mt-4">
+                <div>
+                    <strong>Vùng quản trị</strong>
+                    <span>Xóa khóa học sẽ xóa các lớp và dữ liệu liên quan.</span>
+                </div>
+                <a href="{% url 'courses:delete_course' course.id %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash3"></i> Xóa khóa học
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.course-detail-page{background:#f3f8f6}
+.course-detail-hero{align-items:stretch;background:#0f766e;border-radius:8px;color:white;display:grid;gap:24px;grid-template-columns:minmax(0,1fr) 300px;padding:30px}
+.course-kicker{color:#ccfbf1;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.hero-copy h1{font-size:38px;font-weight:850;letter-spacing:0;margin:8px 0}
+.hero-copy p{color:rgba(255,255,255,.78);font-size:16px;margin:0;max-width:780px}
+.course-code-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.24);border-radius:8px;display:grid;gap:6px;padding:20px}
+.course-code-card span,.course-code-card small{color:rgba(255,255,255,.76)}
+.course-code-card strong{font-size:30px;letter-spacing:.08em}
+.metric-card,.classroom-panel,.review-panel,.membership-panel,.danger-zone{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 12px 28px rgba(15,118,110,.07)}
+.metric-card{display:grid;gap:6px;min-height:132px;padding:20px}
+.metric-card i{color:#0f766e;font-size:26px}
+.metric-card span{color:#64748b}
+.metric-card strong{font-size:20px}
+.classroom-panel,.review-panel{padding:24px}
+.membership-panel,.danger-zone{align-items:center;display:flex;justify-content:space-between;gap:18px;padding:18px}
+.membership-panel span,.danger-zone span{display:block}
+.panel-top{align-items:center;display:flex;justify-content:space-between;gap:18px}
+.panel-top h2{font-size:24px;font-weight:820;margin:0}
+.panel-top p{color:#64748b;margin:4px 0 0}
+.review-list{display:grid;gap:12px;margin-top:18px}
+.review-row{align-items:center;border:1px solid #e2e8f0;border-radius:8px;display:grid;gap:14px;grid-template-columns:44px minmax(0,1fr) auto;padding:14px}
+.review-avatar{align-items:center;background:#ecfdf5;border-radius:8px;color:#0f766e;display:flex;font-weight:850;height:44px;justify-content:center;width:44px}
+.review-row span{color:#64748b;display:block}
+.review-actions{display:flex;gap:8px}
+.review-actions form{margin:0}
+.course-search{align-items:center;background:#f8fafc;border:1px solid #dbe8e3;border-radius:8px;display:flex;gap:10px;margin:22px 0;padding:10px}
+.course-search i{color:#0f766e;font-size:18px;padding-left:8px}
+.course-search input{background:transparent;border:0;flex:1;min-height:42px;outline:0}
+.classroom-list{display:grid;gap:12px}
+.classroom-row{align-items:center;border:1px solid #e2e8f0;border-radius:8px;display:grid;gap:16px;grid-template-columns:52px minmax(0,1fr) auto;padding:16px}
+.classroom-avatar{align-items:center;background:#ecfdf5;border-radius:8px;color:#0f766e;display:flex;font-size:22px;font-weight:850;height:52px;justify-content:center;width:52px}
+.classroom-main h3{font-size:18px;font-weight:800;margin-bottom:7px}
+.classroom-meta{color:#64748b;display:flex;flex-wrap:wrap;gap:12px}
+.empty-state-soft{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;padding:42px;text-align:center}
+.empty-state-soft i{color:#0f766e;font-size:40px}
+.empty-state-soft h3{color:#0f172a;font-size:20px;margin-top:12px}
+@media(max-width:768px){.course-detail-hero,.classroom-row,.review-row{grid-template-columns:1fr}.panel-top,.danger-zone,.membership-panel,.course-search{align-items:stretch;flex-direction:column}.review-actions{flex-direction:column}}
+</style>
+{% endblock %}

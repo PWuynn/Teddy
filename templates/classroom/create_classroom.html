@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Tạo lớp học | TEDDY{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm" style="border-radius: 8px;">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="mb-4">
+                        <h1 class="h3 fw-bold mb-1">Tạo lớp học</h1>
+                        <p class="text-muted mb-0">Thiết lập lớp để quản lý thành viên, tài liệu, bài giao và quiz.</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Tên lớp</label>
+                            <input class="form-control" name="name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" name="description" rows="4" required></textarea>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Số thành viên tối đa</label>
+                                <input class="form-control" type="number" name="max_members" min="1" value="50" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Quyền tham gia</label>
+                                <select class="form-select" name="join_permission">
+                                    <option value="free">Tự do</option>
+                                    <option value="invite">Cần mã mời</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'classroom:classroom_list' %}" class="btn btn-outline-secondary">
+                                Hủy
+                            </a>
+                            <button class="btn btn-primary">
+                                <i class="bi bi-check2"></i> Tạo lớp
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

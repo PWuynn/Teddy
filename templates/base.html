@@ -1,0 +1,288 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        TEDDY
+        {% endblock %}
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          href="{% static 'css/base.css' %}">
+
+    {% block extra_css %}
+    {% endblock %}
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg sticky-top">
+
+    <div class="container">
+
+        <a class="navbar-brand"
+           href="{% if user.is_authenticated and user.role == 'teacher' %}{% url 'accounts:tea_dashboard' %}{% else %}{% url 'accounts:stu_dashboard' %}{% endif %}">
+
+            <i class="bi bi-mortarboard-fill"></i>
+            TEDDY
+
+        </a>
+
+        <button class="navbar-toggler"
+                data-bs-toggle="collapse"
+                data-bs-target="#menu">
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+        <div class="collapse navbar-collapse"
+             id="menu">
+
+            <ul class="navbar-nav mx-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       href="{% if user.is_authenticated and user.role == 'teacher' %}{% url 'accounts:tea_dashboard' %}{% else %}{% url 'accounts:stu_dashboard' %}{% endif %}">
+                        Trang chủ
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       href="{% if user.is_authenticated and user.role == 'teacher' %}{% url 'courses:course_list' %}{% else %}{% url 'courses:course_list' %}{% endif %}">
+                        Khóa học
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       href="{% url 'quiz_ai:quiz_list' %}">
+                        Đề thi
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       href="{% url 'todo:todo_list' %}">
+                        TodoList
+                    </a>
+                </li>
+
+<li class="nav-item">
+                    <a class="nav-link"
+                       href="{% url 'materials:document_list' %}">
+                        Tài liệu
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       href="{% url 'quiz_ai:quiz_history' %}">
+                        Lịch sử làm bài
+                    </a>
+                </li>
+
+            </ul>
+
+            {% if user.is_authenticated %}
+
+            <div class="dropdown">
+
+                <button class="btn btn-light dropdown-toggle"
+                        data-bs-toggle="dropdown">
+
+                    <i class="bi bi-person-circle me-2"></i>
+
+                    {{ user.username }}
+
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end">
+
+                    <li>
+
+                        <a class="dropdown-item"
+                           href="{% url 'accounts:profile' %}">
+
+                            Hồ sơ
+
+                        </a>
+
+                    </li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <li>
+
+                        <a class="dropdown-item text-danger"
+                           href="{% url 'accounts:logout' %}">
+
+                            Đăng xuất
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</nav>
+{% if messages %}
+<div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dong"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% block content %}
+
+{% endblock %}
+
+{% if user.is_authenticated %}
+<div class="study-assistant" id="studyAssistant">
+    <button class="assistant-toggle" type="button" aria-label="Mở chatbot học tập">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+
+    <div class="assistant-window" hidden>
+        <div class="assistant-head">
+            <div>
+                <strong>TEDDY Chatbot</strong>
+                <span>Hỏi nhanh về khóa học, lớp học, tài liệu, quiz</span>
+            </div>
+            <button class="assistant-close" type="button" aria-label="Đóng chatbot">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="assistant-messages" aria-live="polite">
+            <div class="assistant-msg bot">
+                Chào bạn, mình có thể tìm khóa học, classroom, tài liệu, bài kiểm tra hoặc todo. Nhập tên, mã lớp, mã khóa hoặc từ khóa cần tìm nhé.
+            </div>
+        </div>
+
+        <form class="assistant-form" method="post" data-url="{% url 'assistant_chat' %}">
+            {% csrf_token %}
+            <input name="message" class="form-control" placeholder="Ví dụ: lớp Python, mã ABC123, tài liệu toán..." autocomplete="off">
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% if user.is_authenticated %}
+<script>
+(function () {
+    const assistant = document.getElementById('studyAssistant');
+    if (!assistant) return;
+
+    const toggle = assistant.querySelector('.assistant-toggle');
+    const panel = assistant.querySelector('.assistant-window');
+    const close = assistant.querySelector('.assistant-close');
+    const form = assistant.querySelector('.assistant-form');
+    const input = form.querySelector('input[name="message"]');
+    const messages = assistant.querySelector('.assistant-messages');
+    const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+    function appendMessage(text, role) {
+        const node = document.createElement('div');
+        node.className = 'assistant-msg ' + role;
+        node.textContent = text;
+        messages.appendChild(node);
+        messages.scrollTop = messages.scrollHeight;
+        return node;
+    }
+
+    function appendResults(items) {
+        if (!items || !items.length) return;
+
+        const list = document.createElement('div');
+        list.className = 'assistant-results';
+
+        items.forEach(function (item) {
+            const link = document.createElement('a');
+            link.href = item.url;
+            link.className = 'assistant-result';
+            link.innerHTML = '<span>' + item.type + '</span><strong></strong><small></small>';
+            link.querySelector('strong').textContent = item.title;
+            link.querySelector('small').textContent = item.description || '';
+            list.appendChild(link);
+        });
+
+        messages.appendChild(list);
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    toggle.addEventListener('click', function () {
+        panel.hidden = !panel.hidden;
+        if (!panel.hidden) input.focus();
+    });
+
+    close.addEventListener('click', function () {
+        panel.hidden = true;
+    });
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage(text, 'user');
+        input.value = '';
+
+        const waiting = appendMessage('Đang tìm trong TEDDY...', 'bot');
+        const body = new URLSearchParams();
+        body.set('message', text);
+
+        fetch(form.dataset.url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrf,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: body.toString()
+        })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                waiting.textContent = data.answer || 'Mình chưa có câu trả lời phù hợp.';
+                appendResults(data.items || []);
+            })
+            .catch(function () {
+                waiting.textContent = 'Chatbot chưa phản hồi được. Bạn thử lại sau một chút nhé.';
+            });
+    });
+})();
+</script>
+{% endif %}
+
+</body>
+</html>
+

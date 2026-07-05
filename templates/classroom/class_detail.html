@@ -1,0 +1,1242 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ classroom.name }} | TEDDY{% endblock %}
+
+{% block content %}
+<div class="classroom-page">
+    <div class="container py-4 py-lg-5">
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} mb-2">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if pending_membership %}
+            <div class="alert alert-warning mb-4">
+                Yêu cầu tham gia lớp của bạn đang chờ người tạo duyệt. Bạn chỉ có thể xem nội dung, chưa thể upload tài liệu, nộp bài hoặc làm bài kiểm tra.
+            </div>
+        {% endif %}
+
+        <section class="class-hero mb-4">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="hero-icon">
+                            <i class="bi bi-easel2-fill"></i>
+                        </span>
+                        <div>
+                            <h1 class="mb-1">{{ classroom.name }}</h1>
+                            <p class="mb-0">{{ classroom.description }}</p>
+                        </div>
+                    </div>
+
+                    <div class="class-meta">
+                        <span><i class="bi bi-person-badge"></i> Người tạo: {{ classroom.teacher.username }}</span>
+                        <span><i class="bi bi-key"></i> Mã lớp: {{ classroom.class_code }}</span>
+                        <span><i class="bi bi-people"></i> {{ members|length }}/{{ classroom.max_members }} thành viên</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="quick-panel">
+                        <div class="small text-muted mb-1">Khóa học</div>
+                        {% if classroom.course %}
+                            <a href="{% url 'courses:course_detail' classroom.course.id %}" class="fw-semibold">
+                                {{ classroom.course.name }}
+                            </a>
+                        {% else %}
+                            <span class="fw-semibold">Chưa gắn khóa học</span>
+                        {% endif %}
+                        <div class="progress mt-3" role="progressbar">
+                            <div class="progress-bar" style="width: {{ members|length }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="row g-4">
+            <div class="col-xl-4">
+                <section class="panel h-100">
+                    <div class="panel-header">
+                        <h2><i class="bi bi-people-fill"></i> Thành viên</h2>
+                    </div>
+
+                    <div class="member-row creator">
+                        <div class="avatar">{{ classroom.teacher.username|first|upper }}</div>
+                        <div>
+                            <div class="fw-semibold">{{ classroom.teacher.username }}</div>
+                            <div class="small text-muted">Người tạo lớp</div>
+                        </div>
+                    </div>
+
+                    {% for member in members %}
+                        <div class="member-row member-row-manage">
+                            <div class="member-info">
+                                <div class="avatar">{{ member.student.username|first|upper }}</div>
+                                <div>
+                                    <div class="fw-semibold">{{ member.student.username }}</div>
+                                    <div class="small text-muted">Tham gia {{ member.joined_at|date:"d/m/Y" }}</div>
+                                </div>
+                            </div>
+                            {% if classroom.teacher == request.user %}
+                                <form method="post" action="{% url 'classroom:remove_classroom_member' classroom.id member.id %}" onsubmit="return confirm('X?a th?nh vi?n n?y kh?i l?p?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-person-x"></i> Xóa
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <div class="empty-line">Chưa có học sinh/sinh viên tham gia lớp.</div>
+                    {% endfor %}
+                </section>
+            </div>
+
+            <div class="col-xl-8">
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2><i class="bi bi-folder2-open"></i> Tài liệu lớp học</h2>
+                        {% if can_interact %}
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#uploadDocument">
+                                <i class="bi bi-upload"></i> Tải lên
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    {% if can_interact %}
+                        <div id="uploadDocument" class="collapse mb-4">
+                            <form method="post" enctype="multipart/form-data" action="{% url 'classroom:upload_class_document' classroom.id %}" class="action-form">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tên tài liệu</label>
+                                        <input class="form-control" name="title" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Môn học</label>
+                                        <input class="form-control" name="subject" value="{{ classroom.name }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Cấp học</label>
+                                        <select class="form-select" name="level">
+                                            <option value="THPT">THPT</option>
+                                            <option value="THCS">THCS</option>
+                                            <option value="Đại học">Đại học</option>
+                                            <option value="Tiểu học">Tiểu học</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Quyền tải</label>
+                                        <select class="form-select" name="permission">
+                                            <option value="download">Xem và tải</option>
+                                            <option value="view">Chỉ xem</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tệp</label>
+                                        <input class="form-control" type="file" name="file" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Mô tả</label>
+                                        <textarea class="form-control" name="description" rows="2"></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button class="btn btn-success">
+                                            <i class="bi bi-check2"></i> Lưu tài liệu
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tài liệu</th>
+                                    <th>Người tải</th>
+                                    <th>Ngày tải</th>
+                                    <th class="text-end">Tải xuống</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in documents %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">{{ document.title }}</div>
+                                            <div class="small text-muted">{{ document.description|default:"Không có mô tả" }}</div>
+                                        </td>
+                                        <td>{{ document.owner.username }}</td>
+                                        <td>{{ document.created_at|date:"d/m/Y H:i" }}</td>
+                                        <td class="text-end">
+                                            {% if can_interact %}
+                                                <a class="btn btn-outline-primary btn-sm" href="{{ document.file.url }}" download>
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark">Chỉ xem</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">Chưa có tài liệu nào.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-xl-6">
+                <section class="panel h-100">
+                    <div class="panel-header">
+                        <h2><i class="bi bi-list-check"></i> Bài được giao</h2>
+                        {% if is_teacher %}
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#assignTodo">
+                                <i class="bi bi-send"></i> Giao bài
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    {% if is_teacher %}
+                        <div id="assignTodo" class="collapse mb-4">
+                            <form method="post" action="{% url 'classroom:assign_class_todo' classroom.id %}" class="action-form">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label">Tiêu đề</label>
+                                        <input class="form-control" name="title" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Ưu tiên</label>
+                                        <select class="form-select" name="priority">
+                                            <option value="medium">Trung bình</option>
+                                            <option value="high">Cao</option>
+                                            <option value="low">Thấp</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Hạn hoàn thành</label>
+                                        <input class="form-control" type="datetime-local" name="deadline" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Yêu cầu</label>
+                                        <textarea class="form-control" name="description" rows="3"></textarea>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Giao cho</label>
+                                        <div class="assign-scope">
+                                            <label class="scope-option">
+                                                <input class="form-check-input" type="radio" name="assign_scope" value="all" id="assignScopeAll" checked>
+                                                <span>
+                                                    <strong>Tất cả thành viên</strong>
+                                                    <small>Mọi học sinh trong lớp sẽ nhận bài này.</small>
+                                                </span>
+                                            </label>
+                                            <label class="scope-option">
+                                                <input class="form-check-input" type="radio" name="assign_scope" value="selected" id="assignScopeSelected">
+                                                <span>
+                                                    <strong>Thành viên cụ thể</strong>
+                                                    <small>Chỉ giao cho những thành viên được chọn bên dưới.</small>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12" id="studentList" style="display:none;">
+                                        <div class="student-picker">
+                                            <div class="student-picker-head">
+                                                <span>Danh sách thành viên</span>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-success" id="selectAllStudents">Chọn tất cả</button>
+                                                    <button type="button" class="btn btn-outline-secondary" id="unselectAllStudents">Bỏ chọn</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="student-checkboxes">
+                                                {% for member in members %}
+                                                    <label class="student-choice" for="student{{ member.student.id }}">
+                                                        <input class="form-check-input student-checkbox" type="checkbox" name="student_ids" value="{{ member.student.id }}" id="student{{ member.student.id }}">
+                                                        <span class="avatar small-avatar">{{ member.student.username|first|upper }}</span>
+                                                        <span>{{ member.student.get_full_name|default:member.student.username }}</span>
+                                                    </label>
+                                                {% empty %}
+                                                    <div class="empty-line mb-0">Chưa có học sinh nào trong lớp.</div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-check2-circle"></i>
+                                            Giao bài
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+                    <div class="task-list assignment-accordion">
+                        {% for group in assignment_groups %}
+                            <article class="assignment-card priority-{{ group.priority }}">
+                                <button class="assignment-summary" type="button" data-bs-toggle="collapse" data-bs-target="#assignmentGroup{{ forloop.counter }}" aria-expanded="false" aria-controls="assignmentGroup{{ forloop.counter }}">
+                                    <span class="assignment-icon"><i class="bi bi-chevron-down"></i></span>
+                                    <span class="assignment-title-block">
+                                        <strong>{{ group.title }}</strong>
+                                        <small>
+                                            Hạn nộp {{ group.deadline|date:"d/m/Y H:i" }}
+                                            {% if group.assigned_by %} - giao bởi {{ group.assigned_by.username }}{% endif %}
+                                        </small>
+                                    </span>
+                                    <span class="assignment-progress">
+                                        {% if group.is_late %}
+                                            <span class="badge bg-danger">Đã quá hạn</span>
+                                        {% endif %}
+                                        <span class="badge bg-success">{{ group.submitted|length }} đã nộp</span>
+                                        <span class="badge bg-warning text-dark">{{ group.pending|length }} chưa nộp</span>
+                                    </span>
+                                </button>
+
+                                <div class="collapse" id="assignmentGroup{{ forloop.counter }}">
+                                    <div class="assignment-detail">
+                                        <div class="assignment-description">
+                                            <div class="small text-muted mb-1">Chi tiết bài được giao</div>
+                                            <p>{{ group.description|default:"Không có mô tả." }}</p>
+                                            {% if is_teacher and group.is_late and group.assigned_by == request.user %}
+                                                <form method="post" action="{% url 'classroom:delete_class_todo_group' group.representative_id %}" class="mt-3" onsubmit="return confirm('Xóa bài giao quá hạn này cho tất cả thành viên?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                        <i class="bi bi-trash3"></i> Xóa bài đã quá hạn
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if is_teacher %}
+                                            <div class="row g-3">
+                                                <div class="col-lg-6">
+                                                    <div class="submission-box submitted">
+                                                        <h3><i class="bi bi-check2-circle"></i> Đã nộp</h3>
+                                                        {% for assignment in group.submitted %}
+                                                            <div class="submission-entry">
+                                                                <div class="submission-row">
+                                                                    <span>{{ assignment.user.get_full_name|default:assignment.user.username }}</span>
+                                                                    {% if assignment.submission_file %}
+                                                                        <div class="submission-actions">
+                                                                            <button type="button" class="btn btn-sm btn-outline-success download-submission-btn" data-submission-id="{{ assignment.id }}">
+                                                                                <i class="bi bi-download"></i> Tải file
+                                                                            </a>
+                                                                        </div>
+                                                                    {% else %}
+                                                                        <span class="badge bg-success">Hoàn thành</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        {% empty %}
+                                                            <div class="empty-line mb-0">Chưa có thành viên nộp bài.</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <div class="submission-box pending">
+                                                        <h3><i class="bi bi-hourglass-split"></i> Chưa nộp</h3>
+                                                        {% for assignment in group.pending %}
+                                                            <div class="submission-row">
+                                                                <span>{{ assignment.user.get_full_name|default:assignment.user.username }}</span>
+                                                                <span class="badge bg-warning text-dark">Đang làm</span>
+                                                            </div>
+                                                        {% empty %}
+                                                            <div class="empty-line mb-0">Tất cả thành viên đã nộp bai.</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            {% for assignment in group.items %}
+                                                <div class="student-assignment-actions">
+                                                    {% if assignment.completed %}
+                                                        <span class="badge bg-success">Đã nộp bai</span>
+                                                        {% if assignment.submission_file %}
+                                                            <button type="button" class="btn btn-sm btn-outline-success download-submission-btn" data-submission-id="{{ assignment.id }}">
+                                                                <i class="bi bi-download"></i> Tải file đã nộp
+                                                            </a>
+                                                        {% endif %}
+                                                    {% elif not can_interact %}
+                                                        <span class="badge bg-secondary">Dang cho duyet, chua the nop bai</span>
+                                                    {% elif group.is_late %}
+                                                        <span class="badge bg-danger">Đã quá hạn, không thể nộp bài</span>
+                                                    {% else %}
+                                                        <form method="post" enctype="multipart/form-data" action="{% url 'classroom:submit_todo_file' assignment.id %}" class="submit-inline-form">
+                                                            {% csrf_token %}
+                                                            <input type="file" name="submission_file" class="form-control form-control-sm" required>
+                                                            <button type="submit" class="btn btn-success btn-sm">
+                                                                <i class="bi bi-upload"></i>
+                                                                Nộp bài
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </article>
+                        {% empty %}
+                            <div class="empty-line">Chưa có bài được giao trong lớp.</div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-xl-6">
+                <section class="panel h-100">
+                    <div class="panel-header">
+                        <h2><i class="bi bi-ui-checks-grid"></i> Bài kiểm tra</h2>
+                        {% if is_teacher %}
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#createQuiz">
+                                <i class="bi bi-plus-lg"></i> Tạo quiz
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    {% if is_teacher %}
+                        <div id="createQuiz" class="collapse mb-4">
+                            <form method="post" action="{% url 'classroom:create_class_quiz' classroom.id %}" class="action-form smart-quiz-form">
+                                {% csrf_token %}
+                                <div class="form-section-title">
+                                    <span><i class="bi bi-stars"></i> Tạo bài kiểm tra</span>
+                                    <small>Chọn tạo thủ công hoặc tự sinh câu hỏi bằng AI nội bộ.</small>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-7">
+                                        <label class="form-label">Tên bài kiểm tra</label>
+                                        <input class="form-control" name="title" placeholder="Ví dụ: Kiểm tra chương 2" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Thời gian (phút)</label>
+                                        <input class="form-control" type="number" name="time_limit" min="1" value="30" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Số lượt tối đa</label>
+                                        <input class="form-control" type="number" name="max_attempts" min="1" placeholder="Không giới hạn">
+                                    </div>
+                                    <div class="col-md-7">
+                                        <label class="form-label">Mô tả</label>
+                                        <input class="form-control" name="description" placeholder="Hướng dẫn ngắn cho học sinh">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Cách tạo đề</label>
+                                        <div class="quiz-mode-grid">
+                                            <label class="quiz-mode-option">
+                                                <input class="form-check-input quiz-mode-radio" type="radio" name="mode" value="manual" checked>
+                                                <span><strong>Thủ công</strong><small>Tạo đề trước, thêm câu hỏi sau.</small></span>
+                                            </label>
+                                            <label class="quiz-mode-option">
+                                                <input class="form-check-input quiz-mode-radio" type="radio" name="mode" value="ai">
+                                                <span><strong>Tự động bằng AI</strong><small>Sinh sẵn câu hỏi và đáp án đúng.</small></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 ai-classroom-fields" style="display:none;">
+                                        <div class="ai-config-box">
+                                            <div class="row g-3">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Chủ đề AI</label>
+                                                    <input class="form-control" name="ai_topic" placeholder="Ví dụ: Hàm số bậc hai, thì hiện tại hoàn thành...">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Số câu</label>
+                                                    <input class="form-control" type="number" name="question_count" min="1" max="30" value="5">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button class="btn btn-success">
+                                            <i class="bi bi-magic"></i> Tạo bài kiểm tra
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <div class="quiz-list">
+                        {% for quiz in quizzes %}
+                            <div class="quiz-item">
+                                <div>
+                                    <div class="fw-semibold">{{ quiz.title }}</div>
+                                    <div class="small text-muted">
+                                        {{ quiz.questions.count }} câu hỏi · {{ quiz.time_limit }} phút · tạo bởi {{ quiz.created_by.username }}
+                                    </div>
+                                </div>
+                                <div class="btn-group">
+                                    {% if can_interact %}
+                                    <a class="btn btn-outline-primary btn-sm" href="{% url 'quiz_ai:quiz_detail' quiz.id %}">
+                                        Xem
+                                    </a>
+                                    {% if can_interact %}
+                                    <a class="btn btn-success btn-sm" href="{% url 'quiz_ai:take_quiz' quiz.id %}">
+                                        Làm
+                                    </a>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="btn btn-secondary btn-sm disabled">Cho duyet</span>
+                                    {% endif %}
+                                    {% if request.user == quiz.created_by %}
+                                        <a class="btn btn-warning btn-sm" href="{% url 'quiz_ai:add_question' quiz.id %}">
+                                            Sửa
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="empty-line">Chưa có bài kiểm tra trong lớp.</div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        {% if is_teacher %}
+            <section class="panel mt-4">
+                <div class="panel-header">
+                    <h2><i class="bi bi-clock-history"></i> Lịch sử làm bài</h2>
+                    <span class="badge bg-light text-dark">React tự cập nhật</span>
+                </div>
+                <div id="class-history-root" data-url="{% url 'classroom:class_quiz_history_json' classroom.id %}"></div>
+            </section>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.classroom-page {
+    background: #f4f7fb;
+    min-height: calc(100vh - 76px);
+}
+
+.class-hero,
+.panel {
+    background: #fff;
+    border: 1px solid #e6ebf2;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+    padding: 24px;
+}
+
+.class-hero h1 {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.hero-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f766e;
+    color: #fff;
+    font-size: 28px;
+}
+
+.class-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.class-meta span {
+    background: #eef6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    color: #1f3a5f;
+    padding: 8px 10px;
+}
+
+.quick-panel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 18px;
+}
+
+.panel-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.panel-header h2 {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 750;
+    margin: 0;
+}
+
+.member-row,
+.task-item,
+.quiz-item {
+    align-items: center;
+    border: 1px solid #edf1f7;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 12px;
+}
+
+.member-row {
+    justify-content: flex-start;
+}
+.member-row-manage {
+    justify-content: space-between;
+}
+
+.member-info {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+
+.member-row.creator {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.avatar {
+    align-items: center;
+    background: #334155;
+    border-radius: 8px;
+    color: white;
+    display: inline-flex;
+    font-weight: 700;
+    height: 40px;
+    justify-content: center;
+    width: 40px;
+}
+
+.action-form {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+
+.assign-scope {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scope-option,
+.student-choice {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+}
+
+.scope-option strong,
+.scope-option small {
+    display: block;
+}
+
+.scope-option small {
+    color: #64748b;
+}
+
+.student-picker {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.student-picker-head {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.student-checkboxes {
+    display: grid;
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.small-avatar {
+    flex: 0 0 30px;
+    height: 30px;
+    width: 30px;
+}
+
+.assignment-accordion {
+    display: grid;
+    gap: 12px;
+}
+
+.assignment-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-left: 5px solid #f59e0b;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.assignment-card.priority-high {
+    border-left-color: #ef4444;
+}
+
+.assignment-card.priority-low {
+    border-left-color: #10b981;
+}
+
+.assignment-summary {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    padding: 14px;
+    text-align: left;
+    width: 100%;
+}
+
+.assignment-icon {
+    align-items: center;
+    background: #eef6ff;
+    border-radius: 8px;
+    color: #2563eb;
+    display: inline-flex;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.assignment-title-block strong,
+.assignment-title-block small {
+    display: block;
+}
+
+.assignment-title-block strong {
+    font-weight: 750;
+}
+
+.assignment-title-block small {
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.assignment-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.assignment-detail {
+    border-top: 1px solid #edf1f7;
+    padding: 14px;
+}
+
+.assignment-description {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    padding: 12px;
+}
+
+.assignment-description p {
+    margin: 0;
+}
+
+.submission-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.submission-box h3 {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 750;
+    margin: 0 0 10px;
+}
+
+.submission-box.submitted {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.submission-box.pending {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.submission-row,
+.student-assignment-actions,
+.submit-inline-form {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.submission-row {
+    background: rgba(255,255,255,.75);
+    border-radius: 8px;
+    margin-top: 8px;
+    padding: 9px 10px;
+}
+
+.submit-inline-form {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+}
+.task-item.done {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.quiz-item .btn-group {
+    flex-shrink: 0;
+}
+
+.empty-line {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    color: #64748b;
+    padding: 18px;
+    text-align: center;
+}
+
+.history-table {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+
+
+.classroom-page {
+    background: linear-gradient(180deg, #eef4fb 0%, #f7fafc 38%, #f4f7fb 100%);
+}
+
+.class-hero {
+    background: linear-gradient(135deg, #12343b, #1f5f5b);
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+}
+
+.class-hero::after {
+    background: rgba(255, 255, 255, .08);
+    border-radius: 999px;
+    content: "";
+    height: 180px;
+    position: absolute;
+    right: -56px;
+    top: -72px;
+    width: 180px;
+}
+
+.class-hero p,
+.class-hero .small,
+.class-hero .class-meta span {
+    color: rgba(255, 255, 255, .82);
+}
+
+.class-hero .class-meta span {
+    background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .18);
+}
+
+.class-hero .quick-panel {
+    background: rgba(255, 255, 255, .13);
+    border-color: rgba(255, 255, 255, .2);
+    color: #fff;
+}
+
+.class-hero .quick-panel a,
+.class-hero .quick-panel span {
+    color: #fff;
+}
+
+.panel {
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.panel:hover {
+    box-shadow: 0 18px 38px rgba(15, 23, 42, .09);
+}
+
+.panel-header h2 i {
+    color: #0f766e;
+}
+
+.action-form {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .65);
+}
+
+.form-section-title {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.form-section-title span {
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.form-section-title small {
+    color: #64748b;
+}
+
+.quiz-mode-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quiz-mode-option {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dbe4ef;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+}
+
+.quiz-mode-option strong,
+.quiz-mode-option small {
+    display: block;
+}
+
+.quiz-mode-option small {
+    color: #64748b;
+}
+
+.ai-config-box {
+    background: #eef6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.submission-entry {
+    background: rgba(255, 255, 255, .72);
+    border: 1px solid rgba(187, 247, 208, .9);
+    border-radius: 8px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.submission-entry .submission-row {
+    background: transparent;
+    margin: 0;
+}
+
+.submission-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+
+
+
+.quiz-item,
+.task-item,
+.member-row {
+    background: #fff;
+}
+
+@media (max-width: 768px) {
+    .class-hero h1 {
+        font-size: 26px;
+    }
+
+    .panel,
+    .class-hero {
+        padding: 18px;
+    }
+
+    .panel-header,
+    .task-item,
+    .quiz-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .assign-scope,
+    .assignment-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .student-picker-head,
+    .submission-row,
+    .student-assignment-actions,
+    .submit-inline-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .assignment-progress {
+        justify-content: flex-start;
+    }
+
+    .quiz-mode-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .submission-actions,
+
+}
+.submission-preview-modal .modal-body{background:#f8fafc;padding:10px}.submission-preview-modal iframe{background:#fff;border:0;border-radius:6px;height:72vh;width:100%}
+</style>
+
+{% if is_teacher %}
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script>
+(function () {
+    const rootElement = document.getElementById('class-history-root');
+    if (!rootElement || !window.React || !window.ReactDOM) return;
+
+    const endpoint = rootElement.dataset.url;
+    const h = React.createElement;
+
+    function HistoryTable() {
+        const state = React.useState([]);
+        const results = state[0];
+        const setResults = state[1];
+        const loadingState = React.useState(true);
+        const loading = loadingState[0];
+        const setLoading = loadingState[1];
+
+        React.useEffect(function () {
+            let active = true;
+
+            function loadResults() {
+                fetch(endpoint, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        if (active) {
+                            setResults(data.results || []);
+                            setLoading(false);
+                        }
+                    });
+            }
+
+            loadResults();
+            const timer = setInterval(loadResults, 5000);
+
+            return function () {
+                active = false;
+                clearInterval(timer);
+            };
+        }, []);
+
+        if (loading) {
+            return h('div', { className: 'empty-line' }, 'Đang tải lịch sử làm bài...');
+        }
+
+        if (!results.length) {
+            return h('div', { className: 'empty-line' }, 'Chưa có học sinh/sinh viên làm bài kiểm tra của lớp.');
+        }
+
+        return h('div', { className: 'table-responsive history-table' },
+            h('table', { className: 'table table-hover align-middle mb-0' }, [
+                h('thead', { key: 'head', className: 'table-light' },
+                    h('tr', null, [
+                        h('th', { key: 'student' }, 'Người làm'),
+                        h('th', { key: 'quiz' }, 'Bài kiểm tra'),
+                        h('th', { key: 'score' }, 'Điểm'),
+                        h('th', { key: 'created' }, 'Thời gian')
+                    ])
+                ),
+                h('tbody', { key: 'body' },
+                    results.map(function (item, index) {
+                        return h('tr', { key: index }, [
+                            h('td', { key: 'student' }, item.student),
+                            h('td', { key: 'quiz' }, item.quiz),
+                            h('td', { key: 'score' }, h('span', { className: 'badge bg-primary' }, item.score + '/10')),
+                            h('td', { key: 'created' }, item.created_at)
+                        ]);
+                    })
+                )
+            ])
+        );
+    }
+
+    ReactDOM.createRoot(rootElement).render(h(HistoryTable));
+})();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const assignAll = document.getElementById('assignScopeAll');
+    const assignSelected = document.getElementById('assignScopeSelected');
+    const studentList = document.getElementById('studentList');
+    const checkboxes = Array.from(document.querySelectorAll('.student-checkbox'));
+    const selectAll = document.getElementById('selectAllStudents');
+    const unselectAll = document.getElementById('unselectAllStudents');
+
+    if (!assignAll || !assignSelected || !studentList) return;
+
+    function updateStudentList() {
+        studentList.style.display = assignSelected.checked ? 'block' : 'none';
+
+        if (assignAll.checked) {
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = false;
+            });
+        }
+    }
+
+    assignAll.addEventListener('change', updateStudentList);
+    assignSelected.addEventListener('change', updateStudentList);
+
+    if (selectAll) {
+        selectAll.addEventListener('click', function () {
+            assignSelected.checked = true;
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = true;
+            });
+            updateStudentList();
+        });
+    }
+
+    if (unselectAll) {
+        unselectAll.addEventListener('click', function () {
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = false;
+            });
+        });
+    }
+
+    checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            if (checkbox.checked) {
+                assignSelected.checked = true;
+                updateStudentList();
+            }
+        });
+    });
+
+    updateStudentList();
+});
+</script>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const radios = Array.from(document.querySelectorAll('.quiz-mode-radio'));
+    const aiFields = document.querySelector('.ai-classroom-fields');
+
+    if (!radios.length || !aiFields) return;
+
+    function syncQuizMode() {
+        const selected = radios.find(function (radio) { return radio.checked; });
+        aiFields.style.display = selected && selected.value === 'ai' ? 'block' : 'none';
+    }
+
+    radios.forEach(function (radio) {
+        radio.addEventListener('change', syncQuizMode);
+    });
+
+    syncQuizMode();
+});
+</script>
+
+
+<div class="modal fade" id="submissionPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content submission-preview-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submissionPreviewTitle">Xem b?i n?p</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="??ng"></button>
+            </div>
+            <div class="modal-body">
+                <iframe id="submissionPreviewFrame" title="Xem tr??c b?i n?p PDF"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('click', function (event) {
+    const previewButton = event.target.closest('.preview-submission-btn');
+    if (previewButton) {
+        const id = previewButton.dataset.submissionId;
+        if (!id) return;
+        const frame = document.getElementById('submissionPreviewFrame');
+        const title = document.getElementById('submissionPreviewTitle');
+        if (title) title.textContent = previewButton.dataset.submissionTitle || 'Xem b?i n?p';
+        if (frame) frame.src = '/todo/submission/' + id + '/file/';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('submissionPreviewModal')).show();
+        return;
+    }
+
+    const button = event.target.closest('.download-submission-btn');
+    if (!button) return;
+    const id = button.dataset.submissionId;
+    if (!id) return;
+    window.location.href = '/todo/submission/' + id + '/file/?download=1';
+});
+
+const submissionPreviewModal = document.getElementById('submissionPreviewModal');
+if (submissionPreviewModal) {
+    submissionPreviewModal.addEventListener('hidden.bs.modal', function () {
+        const frame = document.getElementById('submissionPreviewFrame');
+        if (frame) frame.removeAttribute('src');
+    });
+}
+</script>
+
+{% endblock %}
+

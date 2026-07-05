@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Tham gia khóa học | TEDDY{% endblock %}
+
+{% block content %}
+<div class="join-course-page py-5">
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="join-card">
+            <div class="join-visual">
+                <span>Course Access</span>
+                <h1>Tham gia khóa học</h1>
+                <p>Nhập mã khóa học. Nếu khóa học yêu cầu kiểm duyệt, yêu cầu của bạn sẽ được gửi tới người tạo.</p>
+            </div>
+
+            <form method="post" class="join-form">
+                {% csrf_token %}
+                <label class="form-label">Mã khóa học</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white"><i class="bi bi-key"></i></span>
+                    <input type="text" name="course_code" class="form-control" placeholder="Ví dụ: ABC123" required>
+                    <button class="btn btn-primary">Gửi yêu cầu</button>
+                </div>
+                <div class="join-note">
+                    <i class="bi bi-info-circle"></i>
+                    Công khai: tham gia ngay. Kiểm duyệt: chờ người tạo chấp nhận.
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.join-course-page{background:#f3f8f6;min-height:calc(100vh - 76px)}
+.join-card{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 18px 42px rgba(15,118,110,.1);display:grid;grid-template-columns:360px minmax(0,1fr);overflow:hidden}
+.join-visual{background:#0f766e;color:white;padding:34px}
+.join-visual span{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.join-visual h1{font-size:34px;font-weight:850;letter-spacing:0;margin:10px 0}
+.join-visual p{color:rgba(255,255,255,.78);margin:0}
+.join-form{align-self:center;padding:34px}
+.join-note{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#64748b;margin-top:16px;padding:12px}
+@media(max-width:768px){.join-card{grid-template-columns:1fr}}
+</style>
+{% endblock %}

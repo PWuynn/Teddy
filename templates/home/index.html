@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEDDY Learning</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icon -->
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Font tiếng Việt đẹp -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        body {
+            background: #f6f8fc;
+            overflow-x: hidden;
+            color: #1e293b;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            padding: 18px 0;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .navbar-brand {
+            font-size: 30px;
+            font-weight: 800;
+            color: #2563eb !important;
+        }
+
+        .nav-link {
+            color: #334155 !important;
+            font-weight: 500;
+            margin: 0 8px;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            width: 0%;
+            height: 3px;
+            background: #2563eb;
+            left: 0;
+            bottom: -6px;
+            border-radius: 20px;
+            transition: .3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .btn-login {
+            border: 2px solid #2563eb;
+            color: #2563eb;
+            border-radius: 14px;
+            padding: 10px 22px;
+            font-weight: 600;
+            transition: .3s;
+        }
+
+        .btn-login:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: white;
+            border-radius: 14px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: .3s;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: #93c5fd;
+            filter: blur(120px);
+            opacity: 0.4;
+            top: -100px;
+            right: -100px;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            padding: 10px 18px;
+background: #dbeafe;
+            color: #2563eb;
+            border-radius: 999px;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 {
+            font-size: 68px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 span {
+            color: #2563eb;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #64748b;
+            line-height: 1.8;
+            margin-bottom: 35px;
+        }
+
+        .hero-btn {
+            padding: 15px 32px;
+            border-radius: 16px;
+            font-weight: 600;
+            transition: .3s;
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        /* ===== HERO CARD ===== */
+        .hero-card {
+            background: white;
+            border-radius: 35px;
+            padding: 35px;
+            box-shadow: 0 15px 45px rgba(37, 99, 235, 0.08);
+            position: relative;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .dashboard-box {
+            background: #f8fafc;
+            border-radius: 22px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .dashboard-box h6 {
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            height: 10px;
+            border-radius: 30px;
+        }
+
+        /* ===== FEATURE ===== */
+        .section-title {
+            text-align: center;
+            margin-bottom: 70px;
+        }
+
+        .section-title h2 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .section-title p {
+            color: #64748b;
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 30px;
+            padding: 35px 30px;
+            height: 100%;
+            transition: .35s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(37, 99, 235, 0.08);
+        }
+
+        .feature-icon {
+            width: 75px;
+            height: 75px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: white;
+        }
+
+        .feature-card h4 {
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        /* ===== STATS ===== */
+        .stats {
+            padding: 100px 0;
+        }
+
+        .stat-box {
+background: white;
+            padding: 40px 25px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-box h2 {
+            font-size: 52px;
+            font-weight: 800;
+            color: #2563eb;
+        }
+
+        .stat-box p {
+            color: #64748b;
+            margin-top: 10px;
+        }
+
+        /* ===== CTA ===== */
+        .cta-section {
+            padding-bottom: 100px;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, #2563eb, #4338ca);
+            border-radius: 40px;
+            padding: 80px 40px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            top: -100px;
+            right: -50px;
+        }
+
+        .cta-box h2 {
+            font-size: 52px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .cta-box p {
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 35px;
+            position: relative;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #0f172a;
+            color: white;
+            padding: 70px 0 40px;
+        }
+
+        .footer-logo {
+            font-size: 34px;
+            font-weight: 800;
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 15px;
+        }
+
+        .social-icons a {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            margin: 0 5px;
+            transition: .3s;
+        }
+
+        .social-icons a:hover {
+            background: #2563eb;
+            transform: translateY(-4px);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media(max-width:992px) {
+
+            .hero {
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: 48px;
+            }
+
+            .hero-card {
+                margin-top: 50px;
+            }
+        }
+
+        @media(max-width:768px) {
+
+            .hero h1 {
+                font-size: 38px;
+            }
+
+            .section-title h2 {
+                font-size: 34px;
+            }
+
+            .cta-box h2 {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+
+        <div class="container">
+<a class="navbar-brand" href="#">
+                <i class="bi bi-mortarboard-fill"></i> TEDDY
+            </a>
+
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menu">
+
+                <ul class="navbar-nav mx-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Trang chủ</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'courses:course_list' %}">Khóa học</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'quiz_ai:quiz_list' %}">Đề thi</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'todo:todo_list' %}">TodoList</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'materials:document_list' %}">Tài liệu</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'quiz_ai:quiz_history' %}">Lịch sử làm bài</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex gap-2">
+                    {% if user.is_authenticated %}
+
+    <div class="dropdown">
+
+        <button class="btn btn-light dropdown-toggle"
+                data-bs-toggle="dropdown">
+
+            <i class="bi bi-person-circle me-2"></i>
+
+            {{ user.username }}
+
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+
+            <li>
+                <a class="dropdown-item text-danger"
+                   href="{% url 'accounts:logout' %}">
+
+                    Đăng xuất
+
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+
+{% else %}
+
+    <a href="{% url 'accounts:login' %}"
+       class="btn btn-light me-2">
+
+        Đăng nhập
+
+    </a>
+
+    <a href="{% url 'accounts:register' %}"
+       class="btn btn-warning">
+
+        Đăng ký
+
+    </a>
+
+{% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <div class="container">
+
+            <div class="row align-items-center">
+
+                <div class="col-lg-6">
+
+                    <div class="hero-tag">
+                        <i class="bi bi-stars"></i>
+                        Hệ thống học tập thông minh
+                    </div>
+
+                    <h1>
+                        Học tập hiệu quả cùng
+                        <span>TEDDY EDU</span>
+                    </h1>
+
+                    <p>
+                        Nền tảng hỗ trợ học tập dành cho sinh viên hiện đại.
+                        Quản lý tài liệu, bài kiểm tra, tiến độ học tập
+                        và công việc hằng ngày trên cùng một hệ thống.
+                    </p>
+
+                </div>
+                <div class="col-lg-6">
+
+                    <div class="hero-card">
+
+                        <div class="dashboard-header">
+
+                            <div>
+                                <h4 class="fw-bold">
+Dashboard học tập
+                                </h4>
+
+                                <small class="text-muted">
+                                    Theo dõi tiến độ học tập
+                                </small>
+                            </div>
+
+                            <span class="badge bg-success h-100">
+                                Online
+                            </span>
+
+                        </div>
+
+                        <div class="dashboard-box">
+
+                            <h6>Tiến độ môn học</h6>
+
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" style="width:85%"></div>
+                            </div>
+
+                        </div>
+
+                        <div class="dashboard-box">
+
+                            <div class="d-flex justify-content-between">
+                                <span>Đề kiểm tra</span>
+                                <strong>125+</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="dashboard-box">
+
+                            <div class="d-flex justify-content-between">
+                                <span>Tài liệu học tập</span>
+                                <strong>1TB+</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="dashboard-box">
+
+                            <div class="d-flex justify-content-between">
+                                <span>Công việc hôm nay</span>
+                                <strong>12 Tasks</strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FEATURES -->
+    <section class="pb-5">
+
+        <div class="container">
+
+            <div class="section-title">
+
+                <h2>Tính năng nổi bật</h2>
+
+                <p>
+                    TEDDY hỗ trợ đầy đủ các công cụ dành cho sinh viên,
+                    giảng viên và quản trị hệ thống.
+                </p>
+
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-lg-4 col-md-6">
+
+                    <div class="feature-card">
+
+                        <div class="feature-icon">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+
+                        <a href = "{% url 'create_quiz' %}">Tạo đề kiểm tra</a>
+
+                        <p>
+                            Tạo bài kiểm tra trực tuyến nhanh chóng,
+                            hỗ trợ quản lý ngân hàng câu hỏi thông minh.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+
+                    <div class="feature-card">
+
+                        <div class="feature-icon">
+<i class="bi bi-cloud-arrow-up"></i>
+                        </div>
+
+                        <h4>Quản lý tài liệu</h4>
+
+                        <p>
+                            Upload và chia sẻ tài liệu học tập dễ dàng,
+                            an toàn và nhanh chóng.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+
+                    <div class="feature-card">
+
+                        <div class="feature-icon">
+                            <i class="bi bi-check2-square"></i>
+                        </div>
+
+                        <h4>TodoList học tập</h4>
+                        <a href="{% url 'todo:todo_list' %}" class="btn btn-dark"> Mở Todo </a>
+                        <p>
+                            Theo dõi lịch học và công việc hằng ngày
+                            giúp tăng hiệu suất học tập.
+                        </p>
+
+                    </div>
+
+                </div>
+                
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- STATS -->
+    <section class="stats">
+
+        <div class="container">
+
+            <div class="row g-4">
+
+                <div class="col-md-3">
+
+                    <div class="stat-box">
+
+                        <h2>10K+</h2>
+
+                        <p>Sinh viên sử dụng</p>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="stat-box">
+
+                        <h2>500+</h2>
+
+                        <p>Đề kiểm tra</p>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="stat-box">
+
+                        <h2>1TB+</h2>
+
+                        <p>Tài liệu học tập</p>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="stat-box">
+
+                        <h2>24/7</h2>
+
+                        <p>Hỗ trợ trực tuyến</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+
+        <div class="container">
+
+            <div class="cta-box">
+
+                <h2>
+                    Sẵn sàng bắt đầu cùng TEDDY?
+                </h2>
+
+                <p>
+                    Trải nghiệm nền tảng học tập hiện đại dành cho sinh viên.
+                </p>
+
+                <a href="#" class="btn btn-light btn-lg px-5 py-3 rounded-4">
+                    Đăng ký ngay
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+
+        <div class="container text-center">
+
+            <div class="footer-logo">
+                <i class="bi bi-mortarboard-fill"></i> TEDDY
+            </div>
+
+            <p class="footer-text">
+                Hệ thống hỗ trợ học tập dành cho sinh viên và giảng viên.
+            </p>
+
+            <div class="social-icons my-4">
+<a href="#">
+                    <i class="bi bi-facebook"></i>
+                </a>
+
+                <a href="#">
+                    <i class="bi bi-github"></i>
+                </a>
+
+                <a href="#">
+                    <i class="bi bi-instagram"></i>
+                </a>
+
+                <a href="#">
+                    <i class="bi bi-youtube"></i>
+                </a>
+
+            </div>
+
+            <small class="text-white-50">
+                © 2026 TEDDY EDU PLATFORM
+            </small>
+
+        </div>
+
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

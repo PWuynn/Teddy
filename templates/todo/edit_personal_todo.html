@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-pencil-square"></i>
+                        Chỉnh sửa công việc
+                    </h3>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Tiêu đề
+                            </label>
+                            <input
+                                type="text"
+                                name="title"
+                                class="form-control"
+                                value="{{ todo.title }}"
+                                required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Mô tả
+                            </label>
+                            <textarea
+                                name="description"
+                                rows="4"
+                                class="form-control">{{ todo.description }}</textarea>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    Độ ưu tiên
+                                </label>
+
+                                <select name="priority" class="form-select">
+
+                                    <option value="low"
+                                        {% if todo.priority == 'low' %}selected{% endif %}>
+                                        🟢 Thấp
+                                    </option>
+
+                                    <option value="medium"
+                                        {% if todo.priority == 'medium' %}selected{% endif %}>
+                                        🟡 Trung bình
+                                    </option>
+
+                                    <option value="high"
+                                        {% if todo.priority == 'high' %}selected{% endif %}>
+                                        🔴 Cao
+                                    </option>
+
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    Hạn chót
+                                </label>
+
+                                <input
+                                    type="datetime-local"
+                                    name="deadline"
+                                    class="form-control"
+                                    value="{{ todo.deadline|date:'Y-m-d\\TH:i' }}">
+                            </div>
+
+                        </div>
+
+                        <div class="form-check form-switch mb-4">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="is_public"
+                                id="isPublic"
+                                {% if todo.is_public %}checked{% endif %}>
+
+                            <label class="form-check-label" for="isPublic">
+                                Công khai công việc
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+
+                            <a href="{% url 'todo:todo_list' %}"
+                               class="btn btn-outline-secondary">
+                                ← Quay lại
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                💾 Lưu thay đổi
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

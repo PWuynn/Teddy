@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Tham gia lớp học
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-7">
+
+            <div class="card border-0 shadow-lg rounded-4">
+
+                <div class="card-header bg-primary text-white py-4">
+
+                    <h3 class="mb-0">
+                        <i class="bi bi-door-open-fill me-2"></i>
+                        Tham gia lớp học
+                    </h3>
+
+                </div>
+
+                <div class="card-body p-5">
+
+                    <div class="text-center mb-4">
+
+                        <div class="display-1 text-primary">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="row mb-3">
+
+                        <div class="col-md-4 fw-bold">
+                            Tên lớp:
+                        </div>
+
+                        <div class="col-md-8">
+                            {{ classroom.name }}
+                        </div>
+
+                    </div>
+
+                    <div class="row mb-3">
+
+                        <div class="col-md-4 fw-bold">
+                            Giáo viên:
+                        </div>
+
+                        <div class="col-md-8">
+                            {{ classroom.teacher.username }}
+                        </div>
+
+                    </div>
+
+                    <div class="row mb-3">
+
+                        <div class="col-md-4 fw-bold">
+                            Mã lớp:
+                        </div>
+
+                        <div class="col-md-8">
+                            <span class="badge bg-dark">
+                                {{ classroom.class_code }}
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="row mb-4">
+
+                        <div class="col-md-4 fw-bold">
+                            Thành viên:
+                        </div>
+
+                        <div class="col-md-8">
+
+                            <span class="badge bg-success">
+                                {{ classroom.members.count }}
+                                /
+                                {{ classroom.max_members }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <div class="d-flex justify-content-center gap-3">
+
+                            <a href="{% url 'courses:course_detail' classroom.course.id %}"
+                               class="btn btn-outline-secondary px-4">
+
+                                Quay lại
+
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-primary px-5">
+
+                                <i class="bi bi-check-circle-fill me-2"></i>
+
+                                Tham gia lớp
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

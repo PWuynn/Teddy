@@ -1,0 +1,79 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Lịch sử làm bài | TEDDY{% endblock %}
+
+{% block content %}
+<div class="history-page">
+    <div class="container py-4 py-lg-5">
+        <header class="history-hero">
+            <div>
+                <span class="history-kicker">Assessment History</span>
+                <h1>Lịch sử làm bài</h1>
+                <p>Theo dõi kết quả làm bài của bạn và các đề do bạn tạo trong một bảng gọn, dễ quét.</p>
+            </div>
+            <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-light"><i class="bi bi-ui-checks"></i> Kho đề thi</a>
+        </header>
+
+        <section class="history-panel">
+            <div class="history-head">
+                <div>
+                    <span class="history-kicker dark">Records</span>
+                    <h2>{{ results|length }} lượt làm bài</h2>
+                </div>
+            </div>
+
+            {% if results %}
+            <div class="history-table">
+                <div class="history-row table-head">
+                    <span>Người làm</span>
+                    <span>Đề kiểm tra</span>
+                    <span>Tác giả</span>
+                    <span>Điểm</span>
+                    <span>Ngày làm</span>
+                    <span></span>
+                </div>
+
+                {% for result in results %}
+                <div class="history-row">
+                    <div class="user-cell"><i class="bi bi-person-circle"></i><strong>{{ result.user.username }}</strong></div>
+                    <div class="quiz-cell"><strong>{{ result.quiz.title }}</strong><small>ID #{{ result.quiz.id }}</small></div>
+                    <div><span class="author-pill">{{ result.quiz.created_by.username }}</span></div>
+                    <div>
+                        {% if result.score >= 8 %}
+                        <span class="score-pill high">{{ result.score }}/10</span>
+                        {% elif result.score >= 5 %}
+                        <span class="score-pill mid">{{ result.score }}/10</span>
+                        {% else %}
+                        <span class="score-pill low">{{ result.score }}/10</span>
+                        {% endif %}
+                    </div>
+                    <div class="date-cell">{{ result.created_at|date:"d/m/Y H:i" }}</div>
+                    <div class="action-cell">
+                        {% if request.user == result.quiz.created_by %}
+                        <form method="POST" action="{% url 'quiz_ai:delete_result' result.id %}">
+                            {% csrf_token %}
+                            <button class="icon-btn delete" type="submit" title="Xóa lịch sử" onclick="return confirm('Bạn có chắc muốn xóa lịch sử này?')"><i class="bi bi-trash3"></i></button>
+                        </form>
+                        {% else %}
+                        <span class="muted-mark">—</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-clipboard-data"></i>
+                <h2>Chưa có lịch sử làm bài</h2>
+                <p>Các kết quả làm bài sẽ hiển thị tại đây sau khi học sinh nộp bài.</p>
+                <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-primary">Xem đề thi</a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<style>
+.history-page{background:#f4f7fb;min-height:calc(100vh - 76px)}.history-hero{align-items:flex-start;background:#102a43;border-radius:8px;color:#fff;display:flex;gap:20px;justify-content:space-between;margin-bottom:18px;padding:28px}.history-kicker{color:#99f6e4;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.history-kicker.dark{color:#0f766e}.history-hero h1{font-size:36px;font-weight:850;letter-spacing:0;margin:8px 0}.history-hero p{color:rgba(255,255,255,.78);margin:0;max-width:760px}.history-panel{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 14px 34px rgba(15,23,42,.06);padding:20px}.history-head{align-items:center;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;margin-bottom:14px;padding-bottom:14px}.history-head h2{font-size:22px;font-weight:850;margin:0}.history-table{display:grid;gap:8px}.history-row{align-items:center;border:1px solid #e2e8f0;border-radius:8px;display:grid;gap:12px;grid-template-columns:1.1fr 1.6fr 1fr .8fr 1fr 48px;padding:12px}.history-row:not(.table-head):hover{background:#f8fafc;border-color:#b6c6d8}.table-head{background:#f8fafc;color:#64748b;font-size:12px;font-weight:850;text-transform:uppercase}.user-cell{align-items:center;display:flex;gap:8px}.user-cell i{color:#0f766e;font-size:20px}.quiz-cell strong,.quiz-cell small{display:block}.quiz-cell small,.date-cell{color:#64748b;font-size:13px}.author-pill,.score-pill{border-radius:999px;display:inline-flex;font-size:13px;font-weight:850;padding:7px 10px}.author-pill{background:#f1f5f9;color:#334155}.score-pill.high{background:#dcfce7;color:#166534}.score-pill.mid{background:#fef3c7;color:#92400e}.score-pill.low{background:#fee2e2;color:#991b1b}.action-cell form{margin:0}.icon-btn{align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:8px;display:flex;height:36px;justify-content:center;width:36px}.icon-btn.delete{border-color:#fecaca;color:#dc2626}.icon-btn.delete:hover{background:#fee2e2}.muted-mark{color:#94a3b8}.empty-state{border:1px dashed #cbd5e1;border-radius:8px;padding:54px 24px;text-align:center}.empty-state i{color:#94a3b8;font-size:44px}.empty-state h2{font-size:22px;font-weight:850;margin:10px 0 4px}.empty-state p{color:#64748b;margin:0 0 16px}@media(max-width:992px){.history-hero{flex-direction:column}.history-hero .btn{width:100%}.table-head{display:none}.history-row{align-items:start;grid-template-columns:1fr}.action-cell{justify-self:end}}
+</style>
+{% endblock %}

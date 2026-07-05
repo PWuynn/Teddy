@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Chỉnh sửa khóa học | TEDDY{% endblock %}
+
+{% block content %}
+<div class="course-edit-page py-5">
+    <div class="container">
+        <div class="course-edit-shell">
+            <div class="edit-hero">
+                <div>
+                    <span class="eyebrow">Course Studio</span>
+                    <h1>Chỉnh sửa khóa học</h1>
+                    <p>Cập nhật thông tin khóa học và lớp học mà không làm mất dữ liệu cũ.</p>
+                </div>
+                <a href="{% url 'courses:course_detail' course.pk %}" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+            <form method="post" class="edit-form">
+                {% csrf_token %}
+
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <section class="edit-panel">
+                            <h2>Thông tin khóa học</h2>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tên khóa học</label>
+                                <input type="text" name="name" class="form-control" value="{{ course.name }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả</label>
+                                <textarea name="description" class="form-control" rows="6">{{ course.description }}</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Quyền tham gia</label>
+                                <select name="join_permission" class="form-select">
+                                    <option value="public" {% if course.join_permission == 'public' %}selected{% endif %}>Công khai</option>
+                                    <option value="approval" {% if course.join_permission == 'approval' %}selected{% endif %}>Yêu cầu kiểm duyệt</option>
+                                </select>
+                            </div>
+
+                            <div class="course-code-box">
+                                <span>Mã khóa học</span>
+                                <strong>{{ course.course_code }}</strong>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <section class="edit-panel">
+                            <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                                <div>
+                                    <h2 class="mb-1">Lớp học trong khóa</h2>
+                                    <p class="text-muted mb-0">Sửa tên và sĩ số lớp. Lớp cũ sẽ được giữ nguyên dữ liệu liên quan.</p>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary" id="addClassBtn">
+                                    <i class="bi bi-plus-lg"></i> Thêm lớp
+                                </button>
+                            </div>
+
+                            <div id="classContainer" class="class-edit-list">
+                                {% for classroom in classrooms %}
+                                    <div class="class-edit-item">
+                                        <input type="hidden" name="class_id[]" value="{{ classroom.id }}">
+
+                                        <div class="class-number">
+                                            {{ forloop.counter }}
+                                        </div>
+
+                                        <div class="row g-3 flex-grow-1">
+                                            <div class="col-md-7">
+                                                <label class="form-label">Tên lớp</label>
+                                                <input type="text" name="class_name[]" class="form-control" value="{{ classroom.name }}" required>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label">Thành viên tối đa</label>
+                                                <input type="number" name="max_students[]" class="form-control" min="1" value="{{ classroom.max_members }}" required>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="class-data-note">
+                                                    <i class="bi bi-shield-check"></i>
+                                                    {{ classroom.members.count }} thành viên · mã lớp {{ classroom.class_code }} · dữ liệu lớp được giữ lại
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="empty-line">
+                                        Khóa học chưa có lớp. Bấm "Thêm lớp" để tạo lớp đầu tiên.
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <div class="edit-actions">
+                    <a href="{% url 'courses:course_detail' course.pk %}" class="btn btn-outline-secondary">
+                        Hủy
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<template id="classTemplate">
+    <div class="class-edit-item new-class">
+        <input type="hidden" name="class_id[]" value="">
+
+        <div class="class-number">+</div>
+
+        <div class="row g-3 flex-grow-1">
+            <div class="col-md-7">
+                <label class="form-label">Tên lớp mới</label>
+                <input type="text" name="class_name[]" class="form-control" placeholder="Ví dụ: Lớp Python tối thứ 3" required>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Thành viên tối đa</label>
+                <input type="number" name="max_students[]" class="form-control" min="1" value="50" required>
+            </div>
+            <div class="col-12">
+                <div class="class-data-note">
+                    <i class="bi bi-plus-circle"></i>
+                    Lớp mới sẽ được tạo sau khi lưu.
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+.course-edit-page {
+    background: #f3f8f6;
+}
+
+.course-edit-shell {
+    display: grid;
+    gap: 22px;
+}
+
+.edit-hero {
+    align-items: center;
+    background: #0f766e;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 28px;
+}
+
+.edit-hero h1 {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin: 4px 0;
+}
+
+.edit-hero p {
+    color: rgba(255,255,255,.78);
+    margin: 0;
+}
+
+.eyebrow {
+    color: #ccfbf1;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.edit-panel {
+    background: white;
+    border: 1px solid #dbe8e3;
+    border-radius: 8px;
+    box-shadow: 0 14px 32px rgba(15, 118, 110, .08);
+    height: 100%;
+    padding: 24px;
+}
+
+.edit-panel h2 {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 18px;
+}
+
+.course-code-box {
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    padding: 14px;
+}
+
+.course-code-box span {
+    color: #64748b;
+}
+
+.class-edit-list {
+    display: grid;
+    gap: 14px;
+}
+
+.class-edit-item {
+    align-items: flex-start;
+    background: #fbfefd;
+    border: 1px solid #dbe8e3;
+    border-radius: 8px;
+    display: flex;
+    gap: 14px;
+    padding: 16px;
+}
+
+.class-edit-item.new-class {
+    border-style: dashed;
+}
+
+.class-number {
+    align-items: center;
+    background: #0f766e;
+    border-radius: 8px;
+    color: white;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-weight: 800;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+}
+
+.class-data-note {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.edit-actions {
+    background: white;
+    border: 1px solid #dbe8e3;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 16px;
+}
+
+@media (max-width: 768px) {
+    .edit-hero,
+    .class-edit-item,
+    .edit-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+(function () {
+    const button = document.getElementById('addClassBtn');
+    const container = document.getElementById('classContainer');
+    const template = document.getElementById('classTemplate');
+
+    if (!button || !container || !template) return;
+
+    button.addEventListener('click', function () {
+        const empty = container.querySelector('.empty-line');
+        if (empty) empty.remove();
+
+        const node = template.content.cloneNode(true);
+        container.appendChild(node);
+    });
+})();
+</script>
+{% endblock %}

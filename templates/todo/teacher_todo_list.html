@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+
+{% block title %}Bài đã giao | TEDDY{% endblock %}
+
+{% block content %}
+<div class="teacher-todo-page">
+    <div class="container py-5">
+        <section class="todo-heading">
+            <div>
+                <span class="todo-kicker">Quản lý bài giao</span>
+                <h1>Bài đã giao</h1>
+                <p>Theo dõi từng bài tập, xem thành viên đã nộp hoặc chưa nộp bài.</p>
+            </div>
+            <a class="btn btn-primary" href="{% url 'classroom:classroom_list' %}">
+                <i class="bi bi-easel2"></i> Vào lớp học
+            </a>
+        </section>
+
+        <div class="assignment-stack">
+            {% for group in assignment_groups %}
+                <article class="assignment-card priority-{{ group.priority }}">
+                    <button class="assignment-summary" type="button" data-bs-toggle="collapse" data-bs-target="#teacherAssignment{{ forloop.counter }}" aria-expanded="false" aria-controls="teacherAssignment{{ forloop.counter }}">
+                        <span class="assignment-icon"><i class="bi bi-chevron-down"></i></span>
+                        <span class="assignment-title">
+                            <strong>{{ group.title }}</strong>
+                            <small>
+                                {% if group.classroom %}{{ group.classroom.name }} - {% endif %}
+                                Han nop {{ group.deadline|date:"d/m/Y H:i" }}
+                            </small>
+                        </span>
+                        <span class="assignment-stats">
+                            {% if group.is_late %}
+                                <span class="badge bg-danger">Đã quá hạn</span>
+                            {% endif %}
+                            <span class="badge bg-success">{{ group.submitted|length }} đã nộp</span>
+                            <span class="badge bg-warning text-dark">{{ group.pending|length }} chưa nộp</span>
+                        </span>
+                    </button>
+
+                    <div class="collapse" id="teacherAssignment{{ forloop.counter }}">
+                        <div class="assignment-detail">
+                            <div class="assignment-description">
+                                <div class="small text-muted mb-1">Chi tiết bài được giao</div>
+                                <p>{{ group.description|default:"Không có mô tả." }}</p>
+                                {% if group.is_late %}
+                                    <form method="post" action="{% url 'classroom:delete_class_todo_group' group.representative_id %}" class="mb-2" onsubmit="return confirm('Xóa bài giao quá hạn này cho tất cả thành viên?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash3"></i> Xóa bài đã quá hạn
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                {% if group.classroom %}
+                                    <a class="btn btn-sm btn-outline-primary" href="{% url 'classroom:class_detail' group.classroom.id %}">
+                                        Mở lớp học
+                                    </a>
+                                {% endif %}
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-lg-6">
+                                    <div class="submission-box submitted">
+                                        <h2><i class="bi bi-check2-circle"></i> Đã nộp</h2>
+                                        {% for todo in group.submitted %}
+                                            <div class="submission-row">
+                                                <div>
+                                                    <strong>{{ todo.user.get_full_name|default:todo.user.username }}</strong>
+                                                    {% if todo.submission_file %}
+                                                        <div class="small text-muted">{{ todo.submission_file.name }}</div>
+                                                    {% endif %}
+                                                </div>
+                                                {% if todo.submission_file %}
+                                                    <div class="submission-actions">
+                                                        <button type="button" class="btn btn-sm btn-outline-success download-submission-btn" data-submission-id="{{ todo.id }}">
+                                                            <i class="bi bi-download"></i> Tải file
+                                                        </button>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="badge bg-success">Hoàn thành</span>
+                                                {% endif %}
+                                            </div>
+                                        {% empty %}
+                                            <div class="empty-line">Chưa có thành viên nộp bài.</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="submission-box pending">
+                                        <h2><i class="bi bi-hourglass-split"></i> Chưa nộp</h2>
+                                        {% for todo in group.pending %}
+                                            <div class="submission-row">
+                                                <strong>{{ todo.user.get_full_name|default:todo.user.username }}</strong>
+                                                <span class="badge bg-warning text-dark">Đang làm</span>
+                                            </div>
+                                        {% empty %}
+                                            <div class="empty-line">Tất cả thành viên đã nộp bài.</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h2>Chưa có bài nào được giao</h2>
+                    <p>Hãy vào một lớp học và dùng nút Giao bài để tạo bài cho tất cả hoặc thành viên cụ thể.</p>
+                    <a class="btn btn-primary" href="{% url 'classroom:classroom_list' %}">Chọn lớp học</button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.teacher-todo-page {
+    background: #f4f7fb;
+    min-height: calc(100vh - 76px);
+}
+
+.todo-heading {
+    align-items: center;
+    background: #12343b;
+    border-radius: 8px;
+    color: #fff;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding: 26px;
+}
+
+.todo-heading h1 {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin: 4px 0;
+}
+
+.todo-heading p {
+    color: rgba(255,255,255,.78);
+    margin: 0;
+}
+
+.todo-kicker {
+    color: #99f6e4;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.assignment-stack {
+    display: grid;
+    gap: 12px;
+}
+
+.assignment-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-left: 5px solid #f59e0b;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+    overflow: hidden;
+}
+
+.assignment-card.priority-high {
+    border-left-color: #ef4444;
+}
+
+.assignment-card.priority-low {
+    border-left-color: #10b981;
+}
+
+.assignment-summary {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    padding: 15px;
+    text-align: left;
+    width: 100%;
+}
+
+.assignment-icon {
+    align-items: center;
+    background: #eef6ff;
+    border-radius: 8px;
+    color: #2563eb;
+    display: inline-flex;
+    height: 36px;
+    justify-content: center;
+    width: 36px;
+}
+
+.assignment-title strong,
+.assignment-title small {
+    display: block;
+}
+
+.assignment-title strong {
+    font-weight: 800;
+}
+
+.assignment-title small {
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.assignment-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.assignment-detail {
+    border-top: 1px solid #edf1f7;
+    padding: 16px;
+}
+
+.assignment-description,
+.submission-box,
+.empty-state {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.assignment-description {
+    background: #f8fafc;
+    margin-bottom: 14px;
+}
+
+.assignment-description p {
+    margin-bottom: 10px;
+}
+
+.submission-box h2 {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0 0 10px;
+}
+
+.submission-box.submitted {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.submission-box.pending {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.submission-row {
+    align-items: center;
+    background: rgba(255,255,255,.78);
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 10px;
+}
+
+.submission-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.empty-line {
+    background: rgba(255,255,255,.7);
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    color: #64748b;
+    padding: 14px;
+    text-align: center;
+}
+
+.empty-state {
+    background: #fff;
+    color: #64748b;
+    padding: 42px;
+    text-align: center;
+}
+
+.empty-state i {
+    color: #0f766e;
+    font-size: 42px;
+}
+
+.empty-state h2 {
+    color: #0f172a;
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .todo-heading,
+    .submission-row,
+    .submission-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .assignment-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .assignment-stats {
+        justify-content: flex-start;
+    }
+}
+.submission-preview-modal .modal-body{background:#f8fafc;padding:10px}.submission-preview-modal iframe{background:#fff;border:0;border-radius:6px;height:72vh;width:100%}
+</style>
+
+
+<div class="modal fade" id="submissionPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content submission-preview-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submissionPreviewTitle">Xem b?i n?p</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="??ng"></button>
+            </div>
+            <div class="modal-body">
+                <iframe id="submissionPreviewFrame" title="Xem tr??c b?i n?p PDF"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('click', function (event) {
+    const previewButton = event.target.closest('.preview-submission-btn');
+    if (previewButton) {
+        const id = previewButton.dataset.submissionId;
+        if (!id) return;
+        const frame = document.getElementById('submissionPreviewFrame');
+        const title = document.getElementById('submissionPreviewTitle');
+        if (title) title.textContent = previewButton.dataset.submissionTitle || 'Xem b?i n?p';
+        if (frame) frame.src = '/todo/submission/' + id + '/file/';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('submissionPreviewModal')).show();
+        return;
+    }
+
+    const button = event.target.closest('.download-submission-btn');
+    if (!button) return;
+    const id = button.dataset.submissionId;
+    if (!id) return;
+    window.location.href = '/todo/submission/' + id + '/file/?download=1';
+});
+
+const submissionPreviewModal = document.getElementById('submissionPreviewModal');
+if (submissionPreviewModal) {
+    submissionPreviewModal.addEventListener('hidden.bs.modal', function () {
+        const frame = document.getElementById('submissionPreviewFrame');
+        if (frame) frame.removeAttribute('src');
+    });
+}
+</script>
+
+{% endblock %}
+

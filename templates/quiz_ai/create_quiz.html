@@ -1,0 +1,149 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Tạo đề kiểm tra | TEDDY{% endblock %}
+
+{% block content %}
+<div class="quiz-create-page">
+    <div class="container py-4 py-lg-5">
+        <section class="quiz-builder-shell">
+            <aside class="builder-side">
+                <span class="builder-kicker">Quiz Studio</span>
+                <h1>Tạo đề kiểm tra</h1>
+                <p>Thiết lập đề, chọn cách tạo câu hỏi và xuất bản nhanh cho học sinh. Chế độ AI sẽ tự tạo câu hỏi trắc nghiệm kèm đáp án đúng để bạn chỉnh sửa tiếp.</p>
+                <div class="builder-stats">
+                    <div><strong>AI</strong><span>Tự sinh câu hỏi</span></div>
+                    <div><strong>30</strong><span>Câu tối đa/lần</span></div>
+                    <div><strong>MCQ</strong><span>Trắc nghiệm</span></div>
+                </div>
+            </aside>
+
+            <section class="builder-panel">
+                <form method="post" enctype="multipart/form-data" id="quizCreateForm">
+                    {% csrf_token %}
+
+                    <div class="form-band">
+                        <div class="band-title">
+                            <i class="bi bi-card-checklist"></i>
+                            <div>
+                                <h2>Thông tin đề</h2>
+                                <p>Tên đề, mô tả và giới hạn làm bài.</p>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-lg-8">
+                                <label class="form-label">Tên đề kiểm tra</label>
+                                <input type="text" name="title" class="form-control form-control-lg" placeholder="Ví dụ: Ôn tập chương 3" required>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="form-label">Thời gian (phút)</label>
+                                <input type="number" name="time_limit" class="form-control form-control-lg" value="30" min="1" required>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="form-label">Số lượt tối đa</label>
+                                <input type="number" name="max_attempts" class="form-control" placeholder="Không giới hạn" min="1">
+                            </div>
+                            <div class="col-lg-8">
+                                <label class="form-label">Mô tả / hướng dẫn</label>
+                                <input name="description" class="form-control" placeholder="Ví dụ: Chọn đáp án đúng nhất cho mỗi câu.">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-band">
+                        <div class="band-title">
+                            <i class="bi bi-lightning-charge"></i>
+                            <div>
+                                <h2>Cách tạo câu hỏi</h2>
+                                <p>Chọn tạo thủ công hoặc để AI </p>
+                            </div>
+                        </div>
+
+                        <div class="mode-grid">
+                            <label class="mode-card">
+                                <input type="radio" name="mode" value="manual" checked>
+                                <span class="mode-icon"><i class="bi bi-pencil-square"></i></span>
+                                <span><strong>Thủ công</strong><small>Nhập câu hỏi theo mẫu hoặc thêm từng câu sau.</small></span>
+                            </label>
+                            <label class="mode-card">
+                                <input type="radio" name="mode" value="ai">
+                                <span class="mode-icon"><i class="bi bi-stars"></i></span>
+                                <span><strong>Tự động bằng AI</strong><small>Nhập chủ đề, hệ thống sinh câu hỏi và đáp án.</small></span>
+                            </label>
+                        </div>
+
+                        <div class="mode-section" id="manualSection">
+                            <label class="form-label">Nhập nhanh câu hỏi thủ công</label>
+                            <textarea name="manual_questions" class="form-control" rows="8" placeholder="Mỗi câu cách nhau một dòng trống. Đặt dấu * trước đáp án đúng.\n\nPython là gì?\n*Ngôn ngữ lập trình\nHệ điều hành\nTrình duyệt\n\nHTML dùng để làm gì?\n*Tạo cấu trúc trang web\nLưu trữ database\nNén ảnh"></textarea>
+                            <div class="form-text">Có thể bỏ trống để tạo đề trước rồi thêm câu hỏi sau.</div>
+                        </div>
+
+                        <div class="mode-section ai-section" id="aiSection" style="display:none;">
+                            <label class="form-label">File câu hỏi (không bắt buộc)</label>
+                            <input type="file" name="quiz_file" class="form-control" accept=".txt,.text,.csv">
+                            <div class="ai-note align-items-start">
+                                <i class="bi bi-info-circle mt-1"></i>
+                                <div>
+                                    <div>Có thể bỏ trống file để TEDDY tự tạo 10 câu hỏi mẫu từ tên đề. Nếu tải file, mỗi câu hỏi cách nhau một dòng trống.</div>
+                                    <div>Đáp án đúng có thể đánh dấu bằng <strong>*</strong>, hoặc thêm dòng <strong>Đáp án: A</strong>. Nếu thiếu đánh dấu, hệ thống tạm chọn đáp án đầu tiên.</div>
+                                    <div>Muon xuong dong trong cau hoi hoac dap an, dat <strong>&lt;br /&gt;</strong> tai vi tri can xuong dong.</div>
+                                </div>
+                            </div>
+                            <pre class="file-sample">' Phan 1
+Cau hoi mau la gi?
+*Dap an dung
+Dap an sai 1
+Dap an sai 2</pre>
+                        </div>
+                    </div>
+
+                    <div class="builder-actions">
+                        <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </a>
+                        <button class="btn btn-primary btn-lg">
+                            <i class="bi bi-magic"></i> Tạo đề kiểm tra
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </section>
+    </div>
+</div>
+
+<style>
+.quiz-create-page{background:#f4f7fb;min-height:calc(100vh - 76px)}
+.quiz-builder-shell{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:22px;align-items:start}
+.builder-side{background:#12343b;border-radius:8px;color:#fff;padding:28px;position:sticky;top:96px}
+.builder-kicker{color:#99f6e4;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.builder-side h1{font-size:34px;font-weight:850;letter-spacing:0;margin:10px 0}
+.builder-side p{color:rgba(255,255,255,.78);margin:0}
+.builder-stats{display:grid;gap:10px;margin-top:26px}
+.builder-stats div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:12px}
+.builder-stats strong,.builder-stats span{display:block}.builder-stats span{color:rgba(255,255,255,.72);font-size:13px}
+.builder-panel{background:#fff;border:1px solid #e5eaf0;border-radius:8px;box-shadow:0 18px 42px rgba(15,23,42,.08);padding:24px}
+.form-band{border:1px solid #e5eaf0;border-radius:8px;margin-bottom:16px;padding:18px}
+.band-title{align-items:flex-start;display:flex;gap:12px;margin-bottom:16px}.band-title i{align-items:center;background:#e0f2fe;border-radius:8px;color:#0369a1;display:flex;height:38px;justify-content:center;width:38px}.band-title h2{font-size:19px;font-weight:850;margin:0}.band-title p{color:#64748b;margin:2px 0 0}
+.mode-grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}.mode-card{align-items:center;border:1px solid #dbe4ef;border-radius:8px;cursor:pointer;display:flex;gap:12px;padding:14px}.mode-card strong,.mode-card small{display:block}.mode-card small{color:#64748b}.mode-icon{align-items:center;background:#f0fdfa;border-radius:8px;color:#0f766e;display:flex;height:38px;justify-content:center;width:38px}.mode-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px}.ai-section{background:#eef6ff;border-color:#bfdbfe}.ai-note{align-items:center;color:#1f3a5f;display:flex;gap:8px;margin-top:12px}.file-sample{background:#0f172a;border-radius:8px;color:#e2e8f0;font-size:13px;margin:12px 0 0;overflow:auto;padding:12px;white-space:pre-wrap}.builder-actions{display:flex;gap:12px;justify-content:space-between;margin-top:18px}
+@media(max-width:992px){.quiz-builder-shell{grid-template-columns:1fr}.builder-side{position:static}.mode-grid{grid-template-columns:1fr}}
+@media(max-width:576px){.builder-actions{align-items:stretch;flex-direction:column}.builder-actions .btn{width:100%}}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const radios = Array.from(document.querySelectorAll('input[name="mode"]'));
+    const manual = document.getElementById('manualSection');
+    const ai = document.getElementById('aiSection');
+
+    function syncMode() {
+        const selected = radios.find(function (radio) { return radio.checked; });
+        const isAi = selected && selected.value === 'ai';
+        manual.style.display = isAi ? 'none' : 'block';
+        ai.style.display = isAi ? 'block' : 'none';
+    }
+
+    radios.forEach(function (radio) { radio.addEventListener('change', syncMode); });
+    syncMode();
+});
+</script>
+{% endblock %}
+

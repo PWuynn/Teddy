@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Hồ sơ | TEDDY{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <div class="container py-5">
+        <section class="profile-hero">
+            <div>
+                <span class="profile-kicker">Tài khoản</span>
+                <h1>Hồ sơ cá nhân</h1>
+                <p>Quản lý thông tin, ảnh đại diện và thông tin liên hệ trong hệ thống TEDDY.</p>
+            </div>
+            {% if not editing %}
+                <a class="btn btn-light" href="{% url 'accounts:profile' %}?edit=1"><i class="bi bi-pencil-square"></i> Chỉnh sửa</a>
+            {% endif %}
+        </section>
+
+        {% if needs_required_info %}
+            <div class="alert alert-warning mt-4">Vui lòng bổ sung họ tên và email để hoàn tất hồ sơ.</div>
+        {% endif %}
+
+        <section class="profile-panel mt-4">
+            {% if editing %}
+                <form method="post" enctype="multipart/form-data" class="profile-form">
+                    {% csrf_token %}
+                    <div class="profile-edit-layout">
+                        <div class="avatar-edit-card">
+                            {% if request.user.avatar %}
+                                <img src="{{ request.user.avatar.url }}" alt="?ảnh đại diện của {{ request.user.username }}">
+                            {% else %}
+                                <div class="profile-avatar large">{{ request.user.full_name|default:request.user.username|first|upper }}</div>
+                            {% endif %}
+                            <label class="form-label mt-3" for="{{ form.avatar.id_for_label }}">ảnh đại diện</label>
+                            {{ form.avatar }}
+                            {{ form.avatar.errors }}
+                            <div class="role-pill mt-3"><i class="bi bi-person-badge"></i> {{ request.user.get_role_display }}</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.full_name.id_for_label }}">Họ tên <span>*</span></label>
+                                {{ form.full_name }}
+                                {{ form.full_name.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.email.id_for_label }}">Email <span>*</span></label>
+                                {{ form.email }}
+                                {{ form.email.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Vai trò</label>
+                                <div class="readonly-field">{{ request.user.get_role_display }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.birth_date.id_for_label }}">Ngày sinh</label>
+                                {{ form.birth_date }}
+                                {{ form.birth_date.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.phone.id_for_label }}">Số điện thoại</label>
+                                {{ form.phone }}
+                                {{ form.phone.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.school.id_for_label }}">Trường</label>
+                                {{ form.school }}
+                                {{ form.school.errors }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.bio.id_for_label }}">Mô tả khác</label>
+                                {{ form.bio }}
+                                {{ form.bio.errors }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <a class="btn btn-outline-secondary" href="{% url 'accounts:profile' %}">Hủy</a>
+                        <button class="btn btn-success" type="submit"><i class="bi bi-check2-circle"></i> Lưu hồ sơ</button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="profile-summary">
+                    {% if request.user.avatar %}
+                        <img class="profile-photo" src="{{ request.user.avatar.url }}" alt="Ảnh đại diện của {{ request.user.username }}">
+                    {% else %}
+                        <div class="profile-avatar">{{ request.user.full_name|default:request.user.username|first|upper }}</div>
+                    {% endif %}
+
+                    <div class="profile-info-grid">
+                        <div class="profile-info"><span>Họ tên</span><strong>{{ request.user.full_name|default:"Chưa cập nhật" }}</strong></div>
+                        <div class="profile-info"><span>Email</span><strong>{{ request.user.email|default:"Chưa cập nhật" }}</strong></div>
+                        <div class="profile-info"><span>Vai trò</span><strong>{{ request.user.get_role_display }}</strong></div>
+                        <div class="profile-info"><span>Ngày sinh</span><strong>{{ request.user.birth_date|date:"d/m/Y"|default:"Chưa cập nhật" }}</strong></div>
+                        <div class="profile-info"><span>Số điện thoại</span><strong>{{ request.user.phone|default:"Chưa cập nhật" }}</strong></div>
+                        <div class="profile-info"><span>Trường</span><strong>{{ request.user.school|default:"Chưa cập nhật" }}</strong></div>
+                        <div class="profile-info profile-info-wide"><span>Mô tả khác</span><strong>{{ request.user.bio|default:"Chưa cập nhật" }}</strong></div>
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<style>
+.profile-page{background:#f4f7fb;min-height:calc(100vh - 76px)}.profile-hero{align-items:center;background:#12343b;border-radius:8px;color:#fff;display:flex;gap:18px;justify-content:space-between;padding:28px}.profile-kicker{color:#99f6e4;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.profile-hero h1{font-size:34px;font-weight:800;letter-spacing:0;margin:5px 0}.profile-hero p{color:rgba(255,255,255,.78);margin:0}.profile-panel{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 28px rgba(15,23,42,.06);padding:24px}.profile-form .form-label{color:#334155;font-weight:700}.profile-form .form-label span{color:#dc2626}.profile-form .errorlist{color:#dc2626;margin:6px 0 0;padding-left:18px}.profile-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}.profile-summary{align-items:flex-start;display:grid;gap:22px;grid-template-columns:128px minmax(0,1fr)}.profile-edit-layout{display:grid;gap:24px;grid-template-columns:260px minmax(0,1fr)}.avatar-edit-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px}.avatar-edit-card img,.profile-photo{aspect-ratio:1/1;border-radius:8px;height:auto;object-fit:cover;width:100%}.profile-photo{height:128px;width:128px}.profile-avatar{align-items:center;background:#0f766e;border-radius:8px;color:#fff;display:flex;font-size:44px;font-weight:850;height:128px;justify-content:center;width:128px}.profile-avatar.large{height:228px;width:100%}.role-pill,.readonly-field{align-items:center;background:#e0f2fe;border:1px solid #bae6fd;border-radius:8px;color:#075985;display:flex;font-weight:800;gap:8px;min-height:38px;padding:8px 12px}.readonly-field{background:#f8fafc;border-color:#e2e8f0;color:#334155}.profile-info-grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}.profile-info{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px}.profile-info span{color:#64748b;display:block;font-size:13px;margin-bottom:4px}.profile-info strong{color:#0f172a;display:block;font-size:16px;font-weight:750;overflow-wrap:anywhere;white-space:pre-line}.profile-info-wide{grid-column:1/-1}@media(max-width:768px){.profile-hero,.profile-actions{align-items:stretch;flex-direction:column}.profile-summary,.profile-info-grid,.profile-edit-layout{grid-template-columns:1fr}.profile-photo,.profile-avatar{height:112px;width:112px}.profile-avatar.large{height:180px;width:180px}}
+</style>
+{% endblock %}

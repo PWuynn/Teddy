@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
+
+/* HERO */
+
+.hero{
+    padding:100px 0;
+    position:relative;
+}
+
+.hero::before{
+    content:"";
+    position:absolute;
+    width:500px;
+    height:500px;
+    background:#93c5fd;
+    filter:blur(120px);
+    opacity:.4;
+    top:-100px;
+    right:-100px;
+}
+
+.hero-tag{
+    display:inline-block;
+    padding:10px 20px;
+    border-radius:999px;
+    background:#dbeafe;
+    color:#2563eb;
+    font-weight:600;
+    margin-bottom:25px;
+}
+
+.hero h1{
+    font-size:64px;
+    font-weight:800;
+    line-height:1.15;
+    margin-bottom:25px;
+}
+
+.hero h1 span{
+    color:#2563eb;
+}
+
+.hero p{
+    color:#64748b;
+    font-size:18px;
+    line-height:1.8;
+}
+
+.hero-btn{
+    border-radius:16px;
+    padding:14px 28px;
+    font-weight:600;
+}
+
+/* DASHBOARD MOCKUP */
+
+.hero-card{
+    background:white;
+    border-radius:35px;
+    padding:35px;
+    box-shadow:0 15px 45px rgba(37,99,235,.08);
+}
+
+.dashboard-box{
+    background:#f8fafc;
+    padding:20px;
+    border-radius:20px;
+    margin-bottom:15px;
+}
+
+/* FEATURES */
+
+.section-title{
+    text-align:center;
+    margin-bottom:70px;
+}
+
+.section-title h2{
+    font-size:48px;
+    font-weight:800;
+}
+
+.section-title p{
+    color:#64748b;
+}
+
+.feature-card{
+    background:white;
+    border-radius:30px;
+    padding:35px;
+    height:100%;
+    border:1px solid #e2e8f0;
+    transition:.3s;
+}
+
+.feature-card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 15px 40px rgba(37,99,235,.08);
+}
+
+.feature-icon{
+    width:70px;
+    height:70px;
+    border-radius:20px;
+    background:linear-gradient(135deg,#2563eb,#4f46e5);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
+    margin-bottom:20px;
+}
+
+/* STATS */
+
+.stats{
+    padding:100px 0;
+}
+
+.stat-box{
+    background:white;
+    padding:40px;
+    border-radius:30px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.05);
+}
+
+.stat-box h2{
+    font-size:50px;
+    font-weight:800;
+    color:#2563eb;
+}
+
+/* CTA */
+
+.cta-box{
+    background:linear-gradient(135deg,#2563eb,#4338ca);
+    border-radius:40px;
+    padding:80px 40px;
+    color:white;
+    text-align:center;
+}
+
+.cta-box h2{
+    font-size:48px;
+    font-weight:800;
+}

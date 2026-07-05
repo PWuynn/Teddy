@@ -1,0 +1,49 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Trang chủ giáo viên | TEDDY{% endblock %}
+
+{% block content %}
+<div class="dashboard-page teacher-page">
+    <div class="container py-4 py-lg-5">
+        <section class="dash-hero teacher">
+            <div>
+                <span class="dash-kicker">Trang chủ giáo viên</span>
+                <h1>Chào {{ user.full_name|default:user.username }}</h1>
+                <p>Quản lý khóa học, lớp học, bài tập và tài liệu trong một không gian làm việc gọn gàng.</p>
+            </div>
+            <div class="hero-quick">
+                <a href="{% url 'courses:create_course' %}" class="btn btn-light"><i class="bi bi-plus-lg"></i> Tạo khóa học</a>
+                <a href="{% url 'classroom:create_classroom' %}" class="btn btn-primary"><i class="bi bi-easel2"></i> Tạo lớp</a>
+            </div>
+        </section>
+
+        <section class="teacher-focus-grid">
+            <a href="{% url 'courses:course_list' %}" class="focus-card blue"><span><i class="bi bi-journal-bookmark"></i></span><strong>Khóa học</strong><small>Tạo nội dung và quản lý khóa học.</small></a>
+            <a href="{% url 'classroom:classroom_list' %}" class="focus-card violet"><span><i class="bi bi-people"></i></span><strong>Lớp học</strong><small>Quản lý thành viên, tài liệu và bài giao.</small></a>
+            <a href="{% url 'todo:teacher_todo_list' %}" class="focus-card dark"><span><i class="bi bi-list-check"></i></span><strong>Todo đã giao</strong><small>Theo dõi thành viên đã nộp/chưa nộp.</small></a>
+        </section>
+
+        <section class="dash-layout">
+            <div class="focus-panel">
+                <div class="panel-head"><div><span class="dash-kicker dark">Quản lý lớp</span><h2>Công việc giảng dạy</h2></div></div>
+                <div class="focus-list">
+                    <div><i class="bi bi-1-circle"></i><span>Tạo khóa học hoặc lớp học mới cho nhóm học sinh.</span></div>
+                    <div><i class="bi bi-2-circle"></i><span>Giao bài, upload tài liệu và theo dõi file nộp từ thành viên.</span></div>
+                    <div><i class="bi bi-3-circle"></i><span>Xem lịch sử làm bài của lớp.</span></div>
+                </div>
+            </div>
+            <div class="action-panel teacher-actions">
+                <h2>Lối tắt giáo viên</h2>
+                <a href="{% url 'courses:create_course' %}"><i class="bi bi-plus-circle"></i> Tạo khóa học</a>
+                <a href="{% url 'courses:course_list' %}"><i class="bi bi-arrow-right-circle"></i> Quản lý khóa học</a>
+                <a href="{% url 'classroom:classroom_list' %}"><i class="bi bi-arrow-right-circle"></i> Lớp học của tôi</a>
+                <a href="{% url 'todo:teacher_todo_list' %}"><i class="bi bi-arrow-right-circle"></i> Bài đã giao</a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<style>
+.dashboard-page{background:#f4f7fb;min-height:calc(100vh - 76px)}.dash-hero{align-items:flex-start;border-radius:8px;color:#fff;display:flex;gap:20px;justify-content:space-between;padding:30px}.dash-hero.teacher{background:linear-gradient(135deg,#1f2a44,#334155)}.dash-kicker{color:#bfdbfe;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.dash-kicker.dark{color:#1d4ed8}.dash-hero h1{font-size:36px;font-weight:850;letter-spacing:0;margin:8px 0}.dash-hero p{color:rgba(255,255,255,.82);line-height:1.6;margin:0;max-width:760px}.hero-quick{display:flex;gap:10px;white-space:nowrap}.teacher-focus-grid{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));margin:18px 0}.focus-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.05);color:#0f172a;display:block;padding:20px}.focus-card:hover{border-color:#b6c6d8;color:#0f172a;transform:translateY(-2px)}.focus-card span{align-items:center;border-radius:8px;display:flex;font-size:25px;height:48px;justify-content:center;margin-bottom:14px;width:48px}.focus-card.blue span{background:#e0f2fe;color:#0369a1}.focus-card.violet span{background:#ede9fe;color:#6d28d9}.focus-card.dark span{background:#f1f5f9;color:#0f172a}.focus-card strong,.focus-card small{display:block}.focus-card strong{font-size:19px}.focus-card small{color:#64748b;margin-top:4px}.dash-layout{display:grid;gap:18px;grid-template-columns:minmax(0,1fr) 340px}.focus-panel,.action-panel{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 14px 34px rgba(15,23,42,.06);padding:20px}.panel-head{align-items:center;display:flex;justify-content:space-between;margin-bottom:14px}.panel-head h2,.action-panel h2{font-size:22px;font-weight:850;margin:0}.focus-list{display:grid;gap:10px}.focus-list div{align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;display:flex;gap:10px;padding:12px}.focus-list i{color:#1d4ed8;font-size:20px}.action-panel{display:grid;gap:10px;align-content:start}.action-panel a{align-items:center;border:1px solid #e2e8f0;border-radius:8px;color:#334155;display:flex;gap:8px;padding:12px}.action-panel a:hover{background:#f8fafc;color:#1d4ed8}@media(max-width:992px){.dash-hero{flex-direction:column}.hero-quick{width:100%;flex-direction:column}.teacher-focus-grid{grid-template-columns:1fr}.dash-layout{grid-template-columns:1fr}}@media(max-width:576px){.dash-hero h1{font-size:28px}}
+</style>
+{% endblock %}

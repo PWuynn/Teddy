@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card border-0 shadow-lg rounded-5">
+
+                <div class="card-header bg-primary text-white p-4 rounded-top-5">
+
+                    <h2 class="mb-0">
+                        📝 Tạo công việc cá nhân
+                    </h2>
+
+                </div>
+
+                <div class="card-body p-5">
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <!-- Tên công việc -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                Tên công việc
+                            </label>
+
+                            <input
+                                type="text"
+                                name="title"
+                                class="form-control form-control-lg"
+                                placeholder="Nhập tên công việc..."
+                                required
+                            >
+
+                        </div>
+                        <div class="mb-3">
+    <label class="form-label">Mô tả công việc</label>
+    <textarea
+        name="description"
+        class="form-control"
+        rows="4"
+        placeholder="Nhập mô tả..."
+    ></textarea>
+</div>
+                        <!-- Người thực hiện -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                Người thực hiện
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control form-control-lg"
+                                value="{{ user.username }}"
+                                readonly
+                            >
+
+                        </div>
+
+                        <!-- Mức độ quan trọng -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                Mức độ quan trọng
+                            </label>
+
+                            <select
+                                name="priority"
+                                class="form-select form-select-lg"
+                            >
+                                <option value="low">
+                                    🟢 Thấp
+                                </option>
+
+                                <option value="medium">
+                                    🟡 Trung bình
+                                </option>
+
+                                <option value="high">
+                                    🔴 Cao
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Hạn hoàn thành -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                Thời hạn hoàn thành
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                id="deadline"
+                                name="deadline"
+                                class="form-control form-control-lg"
+                                required
+                            >
+
+                        </div>
+
+                        <!-- Đếm ngược -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                Thời gian còn lại
+                            </label>
+
+                            <div
+                                class="alert alert-info fs-5 fw-bold"
+                                id="countdown"
+                            >
+                                Chưa chọn thời hạn
+                            </div>
+
+                        </div>
+                        <div class="form-check mb-3">
+    <input
+        class="form-check-input"
+        type="checkbox"
+        name="is_public"
+        id="is_public">
+
+    <label class="form-check-label" for="is_public">
+        Công khai cho tất cả người dùng
+    </label>
+</div>
+                        <!-- Nút -->
+                        <div class="d-flex gap-3">
+
+                            <button
+                                type="submit"
+                                class="btn btn-success btn-lg flex-fill"
+                            >
+                                💾 Lưu công việc
+                            </button>
+
+                            <a
+                                href="{% url 'todo:todo_list' %}"
+                                class="btn btn-secondary btn-lg flex-fill"
+                            >
+                                ↩ Quay lại
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const deadlineInput = document.getElementById("deadline");
+const countdown = document.getElementById("countdown");
+
+let timer;
+
+deadlineInput.addEventListener("change", function() {
+
+    clearInterval(timer);
+
+    timer = setInterval(() => {
+
+        const target = new Date(deadlineInput.value).getTime();
+        const now = new Date().getTime();
+
+        const distance = target - now;
+
+        if (distance <= 0) {
+
+            countdown.innerHTML =
+                "⛔ Đã hết hạn";
+
+            countdown.classList.remove("alert-info");
+            countdown.classList.add("alert-danger");
+
+            clearInterval(timer);
+            return;
+        }
+
+        const days =
+            Math.floor(distance / (1000 * 60 * 60 * 24));
+
+        const hours =
+            Math.floor((distance % (1000 * 60 * 60 * 24))
+            / (1000 * 60 * 60));
+
+        const minutes =
+            Math.floor((distance % (1000 * 60 * 60))
+            / (1000 * 60));
+
+        const seconds =
+            Math.floor((distance % (1000 * 60))
+            / 1000);
+
+        countdown.innerHTML =
+            `⏳ ${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
+
+    }, 1000);
+
+});
+
+</script>
+
+{% endblock %}

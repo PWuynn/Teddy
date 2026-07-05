@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Kho tài liệu | TEDDY
+{% endblock %}
+
+{% block content %}
+<style>
+        * {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        body {
+            background: #f6f8fc;
+            overflow-x: hidden;
+            color: #1e293b;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            padding: 18px 0;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .navbar-brand {
+            font-size: 30px;
+            font-weight: 800;
+            color: #2563eb !important;
+        }
+
+        .nav-link {
+            color: #334155 !important;
+            font-weight: 500;
+            margin: 0 8px;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            width: 0%;
+            height: 3px;
+            background: #2563eb;
+            left: 0;
+            bottom: -6px;
+            border-radius: 20px;
+            transition: .3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .btn-login {
+            border: 2px solid #2563eb;
+            color: #2563eb;
+            border-radius: 14px;
+            padding: 10px 22px;
+            font-weight: 600;
+            transition: .3s;
+        }
+
+        .btn-login:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: white;
+            border-radius: 14px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: .3s;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menu">
+
+                <ul class="navbar-nav mx-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:stu_dashboard' %}">Trang chủ</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'courses:course_list' %}">Khóa học</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'quiz_ai:quiz_list' %}">Đề thi</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Tài liệu</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'todo:todo_list' %}">TodoList</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'quiz_ai:quiz_history' %}">Lịch sử làm bài</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex gap-2">
+                    {% if user.is_authenticated %}
+
+    <div class="dropdown">
+
+        <button class="btn btn-light dropdown-toggle"
+                data-bs-toggle="dropdown">
+
+            <i class="bi bi-person-circle me-2"></i>
+
+            {{ user.username }}
+
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+
+            <li>
+                <a class="dropdown-item text-danger"
+                   href="{% url 'accounts:logout' %}">
+
+                    Đăng xuất
+
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+
+{% else %}
+
+    <a href="{% url 'accounts:login' %}"
+       class="btn btn-light me-2">
+
+        Đăng nhập
+
+    </a>
+
+    <a href="{% url 'accounts:register' %}"
+       class="btn btn-warning">
+
+        Đăng ký
+
+    </a>
+
+{% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    </nav>
+<div class="container py-5">
+
+    <!-- HEADER -->
+
+    <div class="card border-0 shadow-sm mb-5"
+         style="border-radius:25px;">
+
+        <div class="card-body p-5">
+
+            <div class="row align-items-center">
+
+                <div class="col-lg-8">
+
+                    <span class="hero-tag">
+                        📚 TEDDY Documents
+                    </span>
+
+                    <h2 class="fw-bold mb-3">
+                        Kho tài liệu học tập
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Tìm kiếm, chia sẻ và tải xuống tài liệu học tập
+                        từ Tiểu học đến Đại học.
+                    </p>
+
+                </div>
+
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+
+                    <a href="{% url 'materials:upload_document' %}"
+                       class="btn btn-primary btn-lg">
+
+                        <i class="bi bi-cloud-upload"></i>
+                        Tải lên tài liệu
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SEARCH -->
+
+    <div class="card border-0 shadow-sm mb-5"
+         style="border-radius:20px;">
+
+        <div class="card-body p-4">
+
+            <form method="GET">
+
+                <div class="row g-3">
+
+                    <div class="col-lg-5">
+
+                        <input type="text"
+                               name="q"
+                               class="form-control form-control-lg"
+                               placeholder="🔍 Tìm kiếm tài liệu..."
+
+                               value="{{ request.GET.q }}">
+
+                    </div>
+
+                    <div class="col-lg-3">
+
+                        <select name="level"
+                                class="form-select form-select-lg">
+
+                            <option value="">
+                                Tất cả cấp học
+                            </option>
+
+                            <option value="Tiểu học">
+                                Tiểu học
+                            </option>
+
+                            <option value="THCS">
+                                THCS
+                            </option>
+
+                            <option value="THPT">
+                                THPT
+                            </option>
+
+                            <option value="Đại học">
+                                Đại học
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-2">
+
+                        <input type="text"
+                               name="subject"
+                               class="form-control form-control-lg"
+                               placeholder="Môn học">
+
+                    </div>
+
+                    <div class="col-lg-2">
+
+                        <button class="btn btn-primary btn-lg w-100">
+
+                            <i class="bi bi-search"></i>
+                            Tìm
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- DOCUMENT LIST -->
+
+    <div class="row g-4">
+
+        {% for doc in documents %}
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="card border-0 shadow-sm h-100"
+                 style="border-radius:25px;">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between mb-3">
+
+                        <span class="badge bg-primary">
+                            {{ doc.level }}
+                        </span>
+
+                        {% if doc.permission == 'download' %}
+
+                        <span class="badge bg-success">
+                            Tải xuống
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge bg-warning text-dark">
+                            Chỉ xem
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    <h5 class="fw-bold mb-3">
+
+                        {{ doc.title }}
+
+                    </h5>
+
+                    <p class="text-muted">
+
+                        {{ doc.description|truncatewords:20 }}
+
+                    </p>
+
+                    <div class="mb-3">
+
+                        <span class="badge bg-light text-dark border">
+
+                            📖 {{ doc.subject }}
+
+                        </span>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="small text-muted">
+
+                        <p class="mb-2">
+
+                            <i class="bi bi-person-circle"></i>
+
+                            {{ doc.owner.username }}
+
+                        </p>
+
+                        <p class="mb-0">
+
+                            <i class="bi bi-calendar-event"></i>
+
+                            {{ doc.created_at|date:"d/m/Y H:i" }}
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="card-footer bg-white border-0 p-4">
+
+                    <div class="d-grid gap-2">
+
+                        <a href="{% url 'materials:download_document' doc.id %}"
+                           class="btn btn-primary">
+
+                            <i class="bi bi-download"></i>
+
+                            Tải tài liệu
+
+                        </a>
+
+                        {% if request.user == doc.owner %}
+
+                        <div class="row g-2">
+
+                            <div class="col-6">
+
+                                <a href="{% url 'materials:edit_document' doc.id %}"
+                                   class="btn btn-outline-warning w-100">
+
+                                    <i class="bi bi-pencil-square"></i>
+
+                                    Sửa
+
+                                </a>
+
+                            </div>
+
+                            <div class="col-6">
+
+                                <a href="{% url 'materials:delete_document' doc.id %}"
+                                   class="btn btn-outline-danger w-100">
+
+                                    <i class="bi bi-trash"></i>
+
+                                    Xóa
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="col-12">
+
+            <div class="card border-0 shadow-sm"
+                 style="border-radius:25px;">
+
+                <div class="card-body text-center py-5">
+
+                    <div style="font-size:60px;">
+                        📂
+                    </div>
+
+                    <h4 class="fw-bold mt-3">
+
+                        Chưa có tài liệu nào
+
+                    </h4>
+
+                    <p class="text-muted">
+
+                        Hãy tải lên tài liệu đầu tiên của bạn.
+
+                    </p>
+
+                    <a href="{% url 'materials:upload_document' %}"
+                       class="btn btn-success">
+
+                        <i class="bi bi-upload"></i>
+
+                        Tải tài liệu
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

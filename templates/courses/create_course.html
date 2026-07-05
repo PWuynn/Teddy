@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Tạo khóa học | TEDDY{% endblock %}
+
+{% block content %}
+<div class="course-create-page py-5">
+    <div class="container">
+        <div class="create-shell">
+            <section class="create-hero">
+                <span class="courses-kicker">Course Studio</span>
+                <h1>Tạo khóa học</h1>
+                <p>Thiết lập khóa học, quyền tham gia và các lớp ban đầu.</p>
+            </section>
+
+            <form method="post" class="create-panel">
+                {% csrf_token %}
+
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <h2>Thông tin khóa học</h2>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tên khóa học</label>
+                            <input type="text" name="name" class="form-control" placeholder="Ví dụ: Python cơ bản" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea name="description" class="form-control" rows="5" placeholder="Mô tả mục tiêu, nội dung hoặc yêu cầu của khóa học..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quyền tham gia</label>
+                            <select name="join_permission" class="form-select">
+                                <option value="public">Công khai - tham gia ngay</option>
+                                <option value="approval">Yêu cầu kiểm duyệt bởi người tạo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                            <div>
+                                <h2 class="mb-1">Lớp học ban đầu</h2>
+                                <p class="text-muted mb-0">Có thể thêm hoặc sửa lớp sau khi tạo khóa học.</p>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary" id="addClassBtn">
+                                <i class="bi bi-plus-lg"></i> Thêm lớp
+                            </button>
+                        </div>
+
+                        <div id="classContainer" class="class-create-list">
+                            <div class="class-create-item">
+                                <div class="class-number">1</div>
+                                <div class="row g-3 flex-grow-1">
+                                    <div class="col-md-7">
+                                        <label class="form-label">Tên lớp</label>
+                                        <input type="text" name="class_name[]" class="form-control" placeholder="Ví dụ: Python A1" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Thành viên tối đa</label>
+                                        <input type="number" name="max_students[]" class="form-control" min="1" value="50" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="create-actions">
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary">Hủy</a>
+                    <button class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Tạo khóa học
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<template id="classTemplate">
+    <div class="class-create-item">
+        <div class="class-number">+</div>
+        <div class="row g-3 flex-grow-1">
+            <div class="col-md-7">
+                <label class="form-label">Tên lớp</label>
+                <input type="text" name="class_name[]" class="form-control" placeholder="Nhập tên lớp" required>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Thành viên tối đa</label>
+                <input type="number" name="max_students[]" class="form-control" min="1" value="50" required>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+.course-create-page{background:#f3f8f6;min-height:calc(100vh - 76px)}
+.create-shell{display:grid;gap:22px}
+.create-hero{background:#0f766e;border-radius:8px;color:white;padding:30px}
+.courses-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.create-hero h1{font-size:38px;font-weight:850;letter-spacing:0;margin:6px 0}
+.create-hero p{color:rgba(255,255,255,.78);margin:0}
+.create-panel{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);padding:24px}
+.create-panel h2{font-size:20px;font-weight:850}
+.class-create-list{display:grid;gap:14px}
+.class-create-item{align-items:flex-start;background:#fbfefd;border:1px solid #dbe8e3;border-radius:8px;display:flex;gap:14px;padding:16px}
+.class-number{align-items:center;background:#0f766e;border-radius:8px;color:white;display:flex;flex:0 0 auto;font-weight:850;height:42px;justify-content:center;width:42px}
+.create-actions{border-top:1px solid #e2e8f0;display:flex;gap:12px;justify-content:flex-end;margin-top:24px;padding-top:18px}
+@media(max-width:768px){.class-create-item,.create-actions{align-items:stretch;flex-direction:column}}
+</style>
+
+<script>
+(function(){
+    const button = document.getElementById('addClassBtn');
+    const container = document.getElementById('classContainer');
+    const template = document.getElementById('classTemplate');
+    if (!button || !container || !template) return;
+    button.addEventListener('click', function(){
+        container.appendChild(template.content.cloneNode(true));
+    });
+})();
+</script>
+{% endblock %}

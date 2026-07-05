@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Xem đề thi | TEDDY{% endblock %}
+
+{% block content %}
+<div class="quiz-view-page">
+    <div class="container py-4 py-lg-5">
+        <section class="quiz-hero">
+            <div>
+                <span class="eyebrow">Đề thi</span>
+                <h1>{{ quiz.title }}</h1>
+                <p>{{ quiz.description|default:'Chưa có mô tả cho đề thi này.' }}</p>
+                <div class="meta-row">
+                    <span><i class="bi bi-patch-question"></i> {{ questions|length }} câu hỏi</span>
+                    <span><i class="bi bi-clock"></i> {{ quiz.time_limit }} phút</span>
+                    <span><i class="bi bi-arrow-repeat"></i> {% if quiz.max_attempts %}{{ quiz.max_attempts }} lượt{% else %}Không giới hạn{% endif %}</span>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Danh sách</a>
+                {% if not blocked and questions %}
+                <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-primary btn-lg"><i class="bi bi-play-fill"></i> Làm bài</a>
+                {% endif %}
+            </div>
+        </section>
+
+        {% if blocked %}
+        <div class="alert alert-danger border-0 shadow-sm">Bạn đã hết lượt làm bài cho đề thi này.</div>
+        {% endif %}
+
+        <div class="question-stack">
+            {% for question in questions %}
+            <article class="question-card">
+                <div class="question-number">{{ forloop.counter }}</div>
+                <div class="question-body">
+                    <h2>{{ question.content|linebreaksbr }}</h2>
+                    <div class="choice-list">
+                        {% for choice in question.choices.all %}
+                        <div class="choice-item {% if choice.is_correct and request.user == quiz.created_by %}correct{% endif %}">
+                            <span class="choice-dot">{{ forloop.counter }}</span>
+                            <span>{{ choice.content|linebreaksbr }}</span>
+                            {% if choice.is_correct and request.user == quiz.created_by %}<i class="bi bi-check-circle-fill"></i>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h2>De nay chua co cau hoi</h2>
+                <p>Hay them cau hoi hoac tao lai tu file dung cau truc.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.quiz-view-page{background:#f4f7fb;min-height:calc(100vh - 76px)}.quiz-hero{align-items:flex-start;background:#12343b;border-radius:8px;color:#fff;display:flex;gap:18px;justify-content:space-between;margin-bottom:18px;padding:26px}.quiz-hero h1{font-size:34px;font-weight:850;letter-spacing:0;margin:4px 0}.quiz-hero p{color:rgba(255,255,255,.76);margin:0;max-width:760px}.eyebrow{color:#99f6e4;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.meta-row span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 10px}.hero-actions{display:flex;gap:10px;white-space:nowrap}.question-stack{display:grid;gap:14px}.question-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.06);display:grid;gap:16px;grid-template-columns:48px 1fr;padding:18px}.question-number{align-items:center;background:#0f766e;border-radius:8px;color:#fff;display:flex;font-weight:850;height:42px;justify-content:center;width:42px}.question-body h2{font-size:18px;font-weight:800;line-height:1.5;margin:0}.choice-list{display:grid;gap:10px;margin-top:14px}.choice-item{align-items:flex-start;border:1px solid #e5e7eb;border-radius:8px;display:flex;gap:10px;padding:12px}.choice-item.correct{background:#ecfdf5;border-color:#86efac;color:#166534}.choice-dot{align-items:center;background:#f1f5f9;border-radius:999px;color:#334155;display:flex;flex:0 0 28px;font-size:13px;font-weight:800;height:28px;justify-content:center}.choice-item.correct .choice-dot{background:#16a34a;color:#fff}.choice-item i{margin-left:auto}.empty-state{background:#fff;border:1px dashed #cbd5e1;border-radius:8px;padding:36px;text-align:center}.empty-state i{color:#94a3b8;font-size:42px}.empty-state h2{font-size:22px;font-weight:850;margin:10px 0 4px}.empty-state p{color:#64748b;margin:0}
+@media(max-width:768px){.quiz-hero{flex-direction:column}.hero-actions{width:100%;flex-direction:column}.hero-actions .btn{width:100%}.question-card{grid-template-columns:1fr}.question-number{height:36px;width:36px}}
+</style>
+{% endblock %}
