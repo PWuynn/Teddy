@@ -1,120 +1,66 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
+
+{% block title %}Tải lên tài liệu | TEDDY{% endblock %}
+
 {% block content %}
+<div class="form-page py-5">
+    <div class="container">
+        <section class="form-shell">
+            <aside class="form-side">
+                <span class="form-kicker">Resource Library</span>
+                <h1>Tải lên tài liệu</h1>
+                <p>Thêm tài liệu học tập, chọn cấp học, môn học và quyền truy cập cho người dùng khác.</p>
+            </aside>
 
-<div class="container py-5">
-
-    <div class="row justify-content-center">
-
-        <div class="col-lg-8">
-
-            <div class="card shadow">
-
-                <div class="card-header bg-primary text-white">
-                    <h4>
-                        Tải lên tài liệu
-                    </h4>
-                </div>
-
-                <div class="card-body">
-
-                    <form method="POST"
-                          enctype="multipart/form-data">
-
-                        {% csrf_token %}
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Tên tài liệu
-                            </label>
-                            <input type="text"
-                                   name="title"
-                                   class="form-control"
-                                   required>
+            <section class="form-panel">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Tên tài liệu</label>
+                            <input type="text" name="title" class="form-control form-control-lg" required>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Cấp học
-                            </label>
-
+                        <div class="col-md-6">
+                            <label class="form-label">Cấp học</label>
                             <select name="level" class="form-select">
-    <option value="Tiểu học">Tiểu học</option>
-    <option value="THCS">THCS</option>
-    <option value="THPT">THPT</option>
-    <option value="Đại học">Đại học</option>
-</select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Môn học
-                            </label>
-
-                            <input type="text"
-                                   name="subject"
-                                   class="form-control">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Mô tả
-                            </label>
-
-                            <textarea
-                                name="description"
-                                rows="4"
-                                class="form-control">
-                            </textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Chọn file
-                            </label>
-
-                            <input type="file"
-                                   name="file"
-                                   class="form-control"
-                                   required>
-                        </div>
-
-                        <div class="mb-3">
-
-                            <label class="form-label">
-                                Quyền truy cập
-                            </label>
-
-                            <select
-                                name="permission"
-                                class="form-select">
-
-                                <option value="view">
-                                    Chỉ xem
-                                </option>
-
-                                <option value="download">
-                                    Xem và tải xuống
-                                </option>
-
+                                <option value="Tiểu học">Tiểu học</option>
+                                <option value="THCS">THCS</option>
+                                <option value="THPT">THPT</option>
+                                <option value="Đại học">Đại học</option>
                             </select>
-
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Môn học</label>
+                            <input type="text" name="subject" class="form-control" placeholder="Ví dụ: Toán, Văn, Anh">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Mô tả</label>
+                            <textarea name="description" rows="4" class="form-control"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Chọn file</label>
+                            <input type="file" name="file" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quyền truy cập</label>
+                            <select name="permission" class="form-select">
+                                <option value="view">Chỉ xem</option>
+                                <option value="download">Xem và tải xuống</option>
+                            </select>
+                        </div>
+                    </div>
 
-                        <button class="btn btn-success">
-                            <i class="bi bi-cloud-upload"></i>
-                            Tải lên
-                        </button>
-
-                    </form>
-
-                </div>
-
-            </div>
-
-        </div>
-
+                    <div class="form-actions">
+                        <a href="{% url 'materials:document_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                        <button class="btn btn-primary btn-lg"><i class="bi bi-cloud-upload"></i> Tải lên</button>
+                    </div>
+                </form>
+            </section>
+        </section>
     </div>
-
 </div>
 
+<style>
+.form-page{background:#f3f8f6;min-height:calc(100vh - 76px)}.form-shell{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:22px;align-items:start}.form-side{background:#0f766e;border-radius:8px;color:white;padding:28px;position:sticky;top:96px}.form-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.form-side h1{font-size:34px;font-weight:850;letter-spacing:0;margin:10px 0}.form-side p{color:rgba(255,255,255,.78);margin:0}.form-panel{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);padding:24px}.form-actions{display:flex;gap:12px;justify-content:space-between;margin-top:22px}@media(max-width:992px){.form-shell{grid-template-columns:1fr}.form-side{position:static}}@media(max-width:576px){.form-actions{align-items:stretch;flex-direction:column}.form-actions .btn{width:100%}}
+</style>
 {% endblock %}

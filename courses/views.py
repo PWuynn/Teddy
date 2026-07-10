@@ -219,16 +219,16 @@ def join_course(request):
                 membership.save()
 
             if membership.status == 'approved':
-                messages.success(request, f'Da tham gia khoa hoc {course.name}.')
+                messages.success(request, f'Đã tham gia khóa học {course.name}.')
             elif membership.status == 'pending':
-                messages.info(request, f'Yeu cau tham gia {course.name} dang cho nguoi tao duyet.')
+                messages.info(request, f'Yêu cầu tham gia {course.name} đang chờ người tạo duyệt.')
             else:
-                messages.warning(request, f'Yeu cau tham gia {course.name} da bi tu choi.')
+                messages.warning(request, f'Yêu cầu tham gia {course.name} đã bị từ chối.')
 
             return redirect('courses:course_detail', pk=course.pk)
 
         except Course.DoesNotExist:
-            messages.error(request, 'Ma khoa hoc khong ton tai.')
+            messages.error(request, 'Mã khóa học không tồn tại.')
 
     return render(request, 'courses/join_course.html')
 
@@ -250,10 +250,10 @@ def review_course_member(request, pk, membership_id, action):
     if request.method == 'POST':
         if action == 'approve':
             membership.status = 'approved'
-            messages.success(request, f'Da chap nhan {membership.user.username}.')
+            messages.success(request, f'Đã chấp nhận {membership.user.username}.')
         elif action == 'reject':
             membership.status = 'rejected'
-            messages.warning(request, f'Da tu choi {membership.user.username}.')
+            messages.warning(request, f'Đã từ chối {membership.user.username}.')
         else:
             return HttpResponseForbidden("Hanh dong khong hop le.")
 

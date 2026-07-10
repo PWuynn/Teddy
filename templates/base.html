@@ -1,7 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +19,6 @@
 
     <link rel="stylesheet"
           href="{% static 'css/base.css' %}">
-
     {% block extra_css %}
     {% endblock %}
 
@@ -32,8 +30,7 @@
 
     <div class="container">
 
-        <a class="navbar-brand"
-           href="{% if user.is_authenticated and user.role == 'teacher' %}{% url 'accounts:tea_dashboard' %}{% else %}{% url 'accounts:stu_dashboard' %}{% endif %}">
+        <a class="navbar-brand" href="{% if user.is_admin %} {% url 'accounts:admin_dashboard' %} {% elif user.is_teacher %} {% url 'accounts:tea_dashboard' %} {% else %} {% url 'accounts:stu_dashboard' %} {% endif %}">
 
             <i class="bi bi-mortarboard-fill"></i>
             TEDDY
@@ -55,7 +52,7 @@
 
                 <li class="nav-item">
                     <a class="nav-link"
-                       href="{% if user.is_authenticated and user.role == 'teacher' %}{% url 'accounts:tea_dashboard' %}{% else %}{% url 'accounts:stu_dashboard' %}{% endif %}">
+                       href="{% if user.is_admin %}{% url 'accounts:admin_dashboard' %}{% elif user.is_teacher %}{% url 'accounts:tea_dashboard' %}{% else %}{% url 'accounts:stu_dashboard' %}{% endif %}">
                         Trang chủ
                     </a>
                 </li>
@@ -282,7 +279,6 @@
 })();
 </script>
 {% endif %}
-
 </body>
 </html>
 

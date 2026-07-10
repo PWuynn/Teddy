@@ -1,121 +1,60 @@
-{% extends "base.html" %}
+﻿{% extends 'base.html' %}
+
+{% block title %}Chỉnh sửa công việc | TEDDY{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="form-page py-5">
+    <div class="container">
+        <section class="form-shell">
+            <aside class="form-side">
+                <span class="form-kicker">Workboard</span>
+                <h1>Chỉnh sửa công việc</h1>
+                <p>Cập nhật nội dung, hạn chót, mức ưu tiên và trạng thái công khai của công việc.</p>
+            </aside>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-
-            <div class="card shadow border-0">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">
-                        <i class="bi bi-pencil-square"></i>
-                        Chỉnh sửa công việc
-                    </h3>
-                </div>
-
-                <div class="card-body p-4">
-
-                    <form method="post">
-                        {% csrf_token %}
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Tiêu đề
-                            </label>
-                            <input
-                                type="text"
-                                name="title"
-                                class="form-control"
-                                value="{{ todo.title }}"
-                                required>
+            <section class="form-panel">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Tiêu đề</label>
+                            <input type="text" name="title" class="form-control form-control-lg" value="{{ todo.title }}" required>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                Mô tả
-                            </label>
-                            <textarea
-                                name="description"
-                                rows="4"
-                                class="form-control">{{ todo.description }}</textarea>
+                        <div class="col-12">
+                            <label class="form-label">Mô tả</label>
+                            <textarea name="description" rows="4" class="form-control">{{ todo.description }}</textarea>
                         </div>
-
-                        <div class="row">
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">
-                                    Độ ưu tiên
-                                </label>
-
-                                <select name="priority" class="form-select">
-
-                                    <option value="low"
-                                        {% if todo.priority == 'low' %}selected{% endif %}>
-                                        🟢 Thấp
-                                    </option>
-
-                                    <option value="medium"
-                                        {% if todo.priority == 'medium' %}selected{% endif %}>
-                                        🟡 Trung bình
-                                    </option>
-
-                                    <option value="high"
-                                        {% if todo.priority == 'high' %}selected{% endif %}>
-                                        🔴 Cao
-                                    </option>
-
-                                </select>
+                        <div class="col-md-6">
+                            <label class="form-label">Độ ưu tiên</label>
+                            <select name="priority" class="form-select">
+                                <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>Thấp</option>
+                                <option value="medium" {% if todo.priority == 'medium' %}selected{% endif %}>Trung bình</option>
+                                <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>Cao</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hạn chót</label>
+                            <input type="datetime-local" name="deadline" class="form-control" value="{{ todo.deadline|date:'Y-m-d\TH:i' }}">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch public-switch">
+                                <input class="form-check-input" type="checkbox" name="is_public" id="isPublic" {% if todo.is_public %}checked{% endif %}>
+                                <label class="form-check-label" for="isPublic">Công khai công việc</label>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">
-                                    Hạn chót
-                                </label>
-
-                                <input
-                                    type="datetime-local"
-                                    name="deadline"
-                                    class="form-control"
-                                    value="{{ todo.deadline|date:'Y-m-d\\TH:i' }}">
-                            </div>
-
                         </div>
+                    </div>
 
-                        <div class="form-check form-switch mb-4">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="is_public"
-                                id="isPublic"
-                                {% if todo.is_public %}checked{% endif %}>
-
-                            <label class="form-check-label" for="isPublic">
-                                Công khai công việc
-                            </label>
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-
-                            <a href="{% url 'todo:todo_list' %}"
-                               class="btn btn-outline-secondary">
-                                ← Quay lại
-                            </a>
-
-                            <button type="submit"
-                                    class="btn btn-success">
-                                💾 Lưu thay đổi
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </div>
-            </div>
-
-        </div>
+                    <div class="form-actions">
+                        <a href="{% url 'todo:todo_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                        <button class="btn btn-primary btn-lg"><i class="bi bi-save"></i> Lưu thay đổi</button>
+                    </div>
+                </form>
+            </section>
+        </section>
     </div>
-
 </div>
+
+<style>
+.form-page{background:#f3f8f6;min-height:calc(100vh - 76px)}.form-shell{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:22px;align-items:start}.form-side{background:#0f766e;border-radius:8px;color:white;padding:28px;position:sticky;top:96px}.form-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.form-side h1{font-size:34px;font-weight:850;letter-spacing:0;margin:10px 0}.form-side p{color:rgba(255,255,255,.78);margin:0}.form-panel{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);padding:24px}.public-switch{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 14px 14px 48px}.form-actions{display:flex;gap:12px;justify-content:space-between;margin-top:22px}@media(max-width:992px){.form-shell{grid-template-columns:1fr}.form-side{position:static}}@media(max-width:576px){.form-actions{align-items:stretch;flex-direction:column}.form-actions .btn{width:100%}}
+</style>
 {% endblock %}

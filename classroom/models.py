@@ -1,20 +1,18 @@
 import uuid
-
 from django.conf import settings
 from django.db import models
-
 from courses.models import Course
 
 
 JOIN_CHOICES = (
-    ('free', 'Cong khai'),
-    ('approval', 'Yeu cau kiem duyet'),
+    ('free', 'Công khai'),
+    ('approval', 'Yêu cầu kiểm duyệt'),
 )
 
 MEMBER_STATUS_CHOICES = (
-    ('pending', 'Cho duyet'),
-    ('approved', 'Da chap nhan'),
-    ('rejected', 'Tu choi'),
+    ('pending', 'Chờ duyệt'),
+    ('approved', 'Đã chấp nhận'),
+    ('rejected', 'Từ chối'),
 )
 
 

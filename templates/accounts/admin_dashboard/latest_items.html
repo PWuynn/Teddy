@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | TEDDY{% endblock %}
+
+{% block content %}
+<div class="admin-latest-page">
+    <div class="container py-4 py-lg-5">
+        <section class="latest-hero">
+            <div>
+                <span class="latest-kicker">Dashboard Admin</span>
+                <h1>{{ page_title }}</h1>
+                <p>{{ page_subtitle }}</p>
+            </div>
+            <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Về dashboard</a>
+        </section>
+
+        <section class="latest-stat-grid">
+            <div><small>Tổng người dùng</small><strong>{{ total_users }}</strong></div>
+            <div><small>Giáo viên</small><strong>{{ total_teachers }}</strong></div>
+            <div><small>Học sinh</small><strong>{{ total_students }}</strong></div>
+            <div><small>Khóa học</small><strong>{{ total_courses }}</strong></div>
+            <div><small>Lớp học</small><strong>{{ total_classes }}</strong></div>
+            <div><small>Tài liệu</small><strong>{{ total_documents }}</strong></div>
+            <div><small>Quiz AI</small><strong>{{ total_quizzes }}</strong></div>
+            <div><small>Todo</small><strong>{{ total_todos }}</strong></div>
+        </section>
+
+        <section class="latest-panel">
+            <div class="latest-panel-head">
+                <div>
+                    <span class="latest-kicker dark">Sắp xếp theo mới nhất</span>
+                    <h2>{{ page_title }}</h2>
+                </div>
+                {% if latest_type == 'courses' %}
+                    <a href="/admin/courses/course/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm khóa học</a>
+                {% elif latest_type == 'quizzes' %}
+                    <a href="/admin/quiz_ai/quiz/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm quiz</a>
+                {% elif latest_type == 'documents' %}
+                    <a href="/admin/materials/document/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm tài liệu</a>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                {% if latest_type == 'courses' %}
+                    <table class="table latest-table align-middle mb-0">
+                        <thead><tr><th>Tên khóa học</th><th>Mã khóa</th><th>Người tạo</th><th>Ngày tạo</th><th></th></tr></thead>
+                        <tbody>
+                        {% for course in items %}
+                            <tr>
+                                <td><strong>{{ course.name }}</strong><small>{{ course.description|default:'Chưa có mô tả'|truncatechars:90 }}</small></td>
+                                <td><span class="latest-code">{{ course.course_code }}</span></td>
+                                <td>{{ course.creator.username }}</td>
+                                <td>{{ course.created_at|date:'d/m/Y H:i' }}</td>
+                                <td class="text-end"><a href="{% url 'courses:course_detail' course.id %}" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="latest-empty">Chưa có khóa học</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% elif latest_type == 'quizzes' %}
+                    <table class="table latest-table align-middle mb-0">
+                        <thead><tr><th>Tiêu đề</th><th>Lớp học</th><th>Người tạo</th><th>Ngày tạo</th><th></th></tr></thead>
+                        <tbody>
+                        {% for quiz in items %}
+                            <tr>
+                                <td><strong>{{ quiz.title }}</strong><small>{{ quiz.description|default:'Chưa có mô tả'|truncatechars:90 }}</small></td>
+                                <td>{{ quiz.classroom.name|default:'-' }}</td>
+                                <td>{{ quiz.created_by.username|default:'-' }}</td>
+                                <td>{{ quiz.created_at|date:'d/m/Y H:i' }}</td>
+                                <td class="text-end"><a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="latest-empty">Chưa có quiz</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% elif latest_type == 'documents' %}
+                    <table class="table latest-table align-middle mb-0">
+                        <thead><tr><th>Tiêu đề</th><th>Môn học</th><th>Lớp học</th><th>Người đăng</th><th>Ngày đăng</th><th></th></tr></thead>
+                        <tbody>
+                        {% for doc in items %}
+                            <tr>
+                                <td><strong>{{ doc.title }}</strong><small>{{ doc.description|default:'Chưa có mô tả'|truncatechars:90 }}</small></td>
+                                <td>{{ doc.subject }}</td>
+                                <td>{{ doc.classroom.name|default:'-' }}</td>
+                                <td>{{ doc.owner.username }}</td>
+                                <td>{{ doc.created_at|date:'d/m/Y H:i' }}</td>
+                                <td class="text-end"><a href="{% url 'materials:download_document' doc.id %}" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="6" class="latest-empty">Chưa có tài liệu</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+
+<style>
+.admin-latest-page{background:#f4f7fb;min-height:calc(100vh - 76px)}.latest-hero{align-items:flex-start;background:linear-gradient(135deg,#182033,#334155);border-radius:8px;color:#fff;display:flex;gap:18px;justify-content:space-between;margin-bottom:18px;padding:30px}.latest-kicker{color:#bfdbfe;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.latest-kicker.dark{color:#1d4ed8}.latest-hero h1{font-size:36px;font-weight:850;margin:8px 0}.latest-hero p{color:rgba(255,255,255,.82);margin:0;max-width:720px}.latest-stat-grid{display:grid;gap:12px;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}.latest-stat-grid div{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.05);padding:16px}.latest-stat-grid small{color:#64748b;display:block;font-weight:800}.latest-stat-grid strong{color:#0f172a;display:block;font-size:28px;font-weight:900;line-height:1;margin-top:6px}.latest-panel{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 14px 34px rgba(15,23,42,.06);overflow:hidden}.latest-panel-head{align-items:center;display:flex;justify-content:space-between;gap:12px;padding:20px}.latest-panel-head h2{font-size:24px;font-weight:850;margin:0}.latest-table{font-size:14px}.latest-table thead th{background:#f8fafc;color:#475569;font-size:12px;font-weight:850;text-transform:uppercase}.latest-table td{vertical-align:middle}.latest-table td strong,.latest-table td small{display:block}.latest-table td small{color:#64748b}.latest-code{background:#eff6ff;border-radius:999px;color:#1d4ed8;display:inline-flex;font-weight:850;padding:5px 10px}.latest-empty{color:#94a3b8;height:72px;text-align:center}@media(max-width:992px){.latest-hero{flex-direction:column}.latest-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:576px){.latest-hero h1{font-size:28px}.latest-stat-grid{grid-template-columns:1fr}.latest-panel-head{align-items:flex-start;flex-direction:column}}
+</style>
+{% endblock %}

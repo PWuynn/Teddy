@@ -1,223 +1,97 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
+
+{% block title %}Tạo công việc | TEDDY{% endblock %}
 
 {% block content %}
+<div class="form-page py-5">
+    <div class="container">
+        <section class="form-shell">
+            <aside class="form-side">
+                <span class="form-kicker">Workboard</span>
+                <h1>Tạo công việc cá nhân</h1>
+                <p>Đặt tiêu đề, mức ưu tiên, hạn hoàn thành và chọn có công khai công việc cho mọi người hay không.</p>
+            </aside>
 
-<div class="container py-5">
-
-    <div class="row justify-content-center">
-
-        <div class="col-lg-8">
-
-            <div class="card border-0 shadow-lg rounded-5">
-
-                <div class="card-header bg-primary text-white p-4 rounded-top-5">
-
-                    <h2 class="mb-0">
-                        📝 Tạo công việc cá nhân
-                    </h2>
-
-                </div>
-
-                <div class="card-body p-5">
-
-                    <form method="POST">
-
-                        {% csrf_token %}
-
-                        <!-- Tên công việc -->
-                        <div class="mb-4">
-
-                            <label class="form-label fw-bold">
-                                Tên công việc
-                            </label>
-
-                            <input
-                                type="text"
-                                name="title"
-                                class="form-control form-control-lg"
-                                placeholder="Nhập tên công việc..."
-                                required
-                            >
-
+            <section class="form-panel">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Tên công việc</label>
+                            <input type="text" name="title" class="form-control form-control-lg" placeholder="Nhập tên công việc..." required>
                         </div>
-                        <div class="mb-3">
-    <label class="form-label">Mô tả công việc</label>
-    <textarea
-        name="description"
-        class="form-control"
-        rows="4"
-        placeholder="Nhập mô tả..."
-    ></textarea>
-</div>
-                        <!-- Người thực hiện -->
-                        <div class="mb-4">
-
-                            <label class="form-label fw-bold">
-                                Người thực hiện
-                            </label>
-
-                            <input
-                                type="text"
-                                class="form-control form-control-lg"
-                                value="{{ user.username }}"
-                                readonly
-                            >
-
+                        <div class="col-12">
+                            <label class="form-label">Mô tả công việc</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Nhập mô tả..."></textarea>
                         </div>
-
-                        <!-- Mức độ quan trọng -->
-                        <div class="mb-4">
-
-                            <label class="form-label fw-bold">
-                                Mức độ quan trọng
-                            </label>
-
-                            <select
-                                name="priority"
-                                class="form-select form-select-lg"
-                            >
-                                <option value="low">
-                                    🟢 Thấp
-                                </option>
-
-                                <option value="medium">
-                                    🟡 Trung bình
-                                </option>
-
-                                <option value="high">
-                                    🔴 Cao
-                                </option>
-
+                        <div class="col-md-6">
+                            <label class="form-label">Người thực hiện</label>
+                            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Mức độ quan trọng</label>
+                            <select name="priority" class="form-select">
+                                <option value="low">Thấp</option>
+                                <option value="medium">Trung bình</option>
+                                <option value="high">Cao</option>
                             </select>
-
                         </div>
-
-                        <!-- Hạn hoàn thành -->
-                        <div class="mb-4">
-
-                            <label class="form-label fw-bold">
-                                Thời hạn hoàn thành
-                            </label>
-
-                            <input
-                                type="datetime-local"
-                                id="deadline"
-                                name="deadline"
-                                class="form-control form-control-lg"
-                                required
-                            >
-
+                        <div class="col-md-6">
+                            <label class="form-label">Thời hạn hoàn thành</label>
+                            <input type="datetime-local" id="deadline" name="deadline" class="form-control" required>
                         </div>
-
-                        <!-- Đếm ngược -->
-                        <div class="mb-4">
-
-                            <label class="form-label fw-bold">
-                                Thời gian còn lại
-                            </label>
-
-                            <div
-                                class="alert alert-info fs-5 fw-bold"
-                                id="countdown"
-                            >
-                                Chưa chọn thời hạn
+                        <div class="col-md-6">
+                            <label class="form-label">Thời gian còn lại</label>
+                            <div class="countdown-box" id="countdown">Chưa chọn thời hạn</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch public-switch">
+                                <input class="form-check-input" type="checkbox" name="is_public" id="is_public">
+                                <label class="form-check-label" for="is_public">Công khai cho tất cả người dùng</label>
                             </div>
-
                         </div>
-                        <div class="form-check mb-3">
-    <input
-        class="form-check-input"
-        type="checkbox"
-        name="is_public"
-        id="is_public">
+                    </div>
 
-    <label class="form-check-label" for="is_public">
-        Công khai cho tất cả người dùng
-    </label>
-</div>
-                        <!-- Nút -->
-                        <div class="d-flex gap-3">
-
-                            <button
-                                type="submit"
-                                class="btn btn-success btn-lg flex-fill"
-                            >
-                                💾 Lưu công việc
-                            </button>
-
-                            <a
-                                href="{% url 'todo:todo_list' %}"
-                                class="btn btn-secondary btn-lg flex-fill"
-                            >
-                                ↩ Quay lại
-                            </a>
-
-                        </div>
-
-                    </form>
-
-                </div>
-
-            </div>
-
-        </div>
-
+                    <div class="form-actions">
+                        <a href="{% url 'todo:todo_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                        <button class="btn btn-primary btn-lg"><i class="bi bi-save"></i> Lưu công việc</button>
+                    </div>
+                </form>
+            </section>
+        </section>
     </div>
-
 </div>
+
+<style>
+.form-page{background:#f3f8f6;min-height:calc(100vh - 76px)}.form-shell{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:22px;align-items:start}.form-side{background:#0f766e;border-radius:8px;color:white;padding:28px;position:sticky;top:96px}.form-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.form-side h1{font-size:34px;font-weight:850;letter-spacing:0;margin:10px 0}.form-side p{color:rgba(255,255,255,.78);margin:0}.form-panel{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);padding:24px}.countdown-box{align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#0f766e;display:flex;font-weight:800;min-height:48px;padding:10px 14px}.countdown-box.is-expired{background:#fef2f2;border-color:#fecaca;color:#dc2626}.public-switch{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 14px 14px 48px}.form-actions{display:flex;gap:12px;justify-content:space-between;margin-top:22px}@media(max-width:992px){.form-shell{grid-template-columns:1fr}.form-side{position:static}}@media(max-width:576px){.form-actions{align-items:stretch;flex-direction:column}.form-actions .btn{width:100%}}
+</style>
 
 <script>
-
-const deadlineInput = document.getElementById("deadline");
-const countdown = document.getElementById("countdown");
-
+const deadlineInput = document.getElementById('deadline');
+const countdown = document.getElementById('countdown');
 let timer;
 
-deadlineInput.addEventListener("change", function() {
-
+deadlineInput.addEventListener('change', function() {
     clearInterval(timer);
-
-    timer = setInterval(() => {
-
+    timer = setInterval(function() {
         const target = new Date(deadlineInput.value).getTime();
         const now = new Date().getTime();
-
         const distance = target - now;
 
         if (distance <= 0) {
-
-            countdown.innerHTML =
-                "⛔ Đã hết hạn";
-
-            countdown.classList.remove("alert-info");
-            countdown.classList.add("alert-danger");
-
+            countdown.textContent = 'Đã hết hạn';
+            countdown.classList.add('is-expired');
             clearInterval(timer);
             return;
         }
 
-        const days =
-            Math.floor(distance / (1000 * 60 * 60 * 24));
-
-        const hours =
-            Math.floor((distance % (1000 * 60 * 60 * 24))
-            / (1000 * 60 * 60));
-
-        const minutes =
-            Math.floor((distance % (1000 * 60 * 60))
-            / (1000 * 60));
-
-        const seconds =
-            Math.floor((distance % (1000 * 60))
-            / 1000);
-
-        countdown.innerHTML =
-            `⏳ ${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
-
+        countdown.classList.remove('is-expired');
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        countdown.textContent = days + ' ngày ' + hours + ' giờ ' + minutes + ' phút ' + seconds + ' giây';
     }, 1000);
-
 });
-
 </script>
-
 {% endblock %}

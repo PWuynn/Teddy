@@ -9,31 +9,45 @@ from django.db.models import Q
 from django.db import transaction
 from classroom.models import ClassroomMember
 from django.template.loader import get_template
+import re
+import unicodedata
 
+
+_CHOICE_MARKER_RE = re.compile(r'(?<!\w)[\s\-*]*(?:\(?[A-Fa-f]\)?)[\s]*[\.\):\-/\u2013\u2014]\s+')
+_CHOICE_LINE_RE = re.compile(r'^[\s\-*]*(?:\(?[A-Fa-f]\)?)[\s]*(?:[\.\):\-/\u2013\u2014]|\s+)')
+_NAMED_CHOICE_LINE_RE = re.compile(r'^[\s\-*]*(?:dap an|phuong an|option|choice)\s+([a-f])\s*[\.\):\-/\u2013\u2014]\s+')
+_NUMERIC_CHOICE_LINE_RE = re.compile(r'^[\s\-*]*[1-9][0-9]*[\.\):\-/\u2013\u2014]\s+')
+_ANSWER_PREFIXES = (
+    'dap an:', 'dap an dung:', 'answer:', 'answer key:', 'correct:',
+)
+
+
+def _fold_quiz_text(value):
+    normalized = unicodedata.normalize('NFD', value.lower().strip())
+    without_marks = ''.join(ch for ch in normalized if unicodedata.category(ch) != 'Mn')
+    return without_marks.replace(chr(273), 'd')
 
 
 def _decode_uploaded_text(uploaded_file):
     raw_content = uploaded_file.read()
-    for encoding in ("utf-8-sig", "utf-8", "cp1258", "cp1252"):
+    for encoding in ('utf-8-sig', 'utf-8', 'cp1258', 'cp1252'):
         try:
             return raw_content.decode(encoding)
         except UnicodeDecodeError:
             continue
-    return raw_content.decode("utf-8", errors="replace")
+    return raw_content.decode('utf-8', errors='replace')
 
 
 def _normalize_quiz_text(value):
-    return value.strip().replace("<br />", "\n").replace("<br/>", "\n").replace("<br>", "\n")
-
-
+    return value.strip().replace('<br />', '\n').replace('<br/>', '\n').replace('<br>', '\n')
 
 
 def _split_manual_question_blocks(text):
-    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = text.replace('\r\n', '\n').replace('\r', '\n')
     blocks = []
     current = []
 
-    for line in normalized.split("\n"):
+    for line in normalized.split('\n'):
         stripped = line.strip()
         if not stripped:
             if current:
@@ -52,39 +66,14 @@ def _split_manual_question_blocks(text):
 
     return blocks
 
-def _split_question_blocks(lines):
-    blocks = []
-    current = []
-
-    for line_number, line in lines:
-        stripped = line.strip()
-        if not stripped:
-            if current:
-                blocks.append(current)
-                current = []
-            continue
-
-        if stripped.startswith("'"):
-            if current:
-                blocks.append(current)
-                current = []
-            continue
-
-        current.append((line_number, stripped))
-
-    if current:
-        blocks.append(current)
-
-    return blocks
-
 
 def _extract_correct_letters(lines):
     correct_letters = set()
     clean_lines = []
 
     for line_number, line in lines:
-        lowered = line.lower().strip()
-        if lowered.startswith(('dap an:', 'đáp án:', 'answer:', 'correct:')):
+        lowered = _fold_quiz_text(line)
+        if lowered.startswith(_ANSWER_PREFIXES):
             letters = lowered.split(':', 1)[1]
             for letter in ('a', 'b', 'c', 'd', 'e', 'f'):
                 if letter in letters:
@@ -93,6 +82,36 @@ def _extract_correct_letters(lines):
         clean_lines.append((line_number, line))
 
     return correct_letters, clean_lines
+
+
+def _strip_inline_answer_key(line):
+    lowered = _fold_quiz_text(line)
+    positions = [lowered.find(prefix) for prefix in _ANSWER_PREFIXES if lowered.find(prefix) >= 0]
+    if not positions:
+        return line, set()
+
+    marker_index = min(positions)
+    answer_key = lowered[marker_index:].split(':', 1)[1] if ':' in lowered[marker_index:] else ''
+    correct_letters = {letter for letter in ('a', 'b', 'c', 'd', 'e', 'f') if letter in answer_key}
+    return line[:marker_index].strip(), correct_letters
+
+
+def _split_inline_choices(line):
+    line, inline_correct_letters = _strip_inline_answer_key(line)
+    matches = list(_CHOICE_MARKER_RE.finditer(line))
+    if len(matches) < 2:
+        return None, [], inline_correct_letters
+
+    question_text = line[:matches[0].start()].strip()
+    answers = []
+
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(line)
+        answer_text = line[match.start():end].strip()
+        if answer_text:
+            answers.append(answer_text)
+
+    return question_text, answers, inline_correct_letters
 
 
 def _is_question_line(line):
@@ -106,7 +125,7 @@ def _is_question_line(line):
         marker_index = 1
         while marker_index < len(value) and value[marker_index].isdigit():
             marker_index += 1
-        return marker_index < len(value) and value[marker_index] in '. )'
+        return marker_index < len(value) and value[marker_index] in '. ):'
     return False
 
 
@@ -114,23 +133,36 @@ def _is_choice_line(line):
     value = line.strip()
     if value.startswith('*'):
         value = value[1:].strip()
-    return len(value) >= 2 and value[0].lower() in 'abcdef' and value[1] in '.):'
+    return bool(_CHOICE_LINE_RE.match(value) or _NUMERIC_CHOICE_LINE_RE.match(value) or _NAMED_CHOICE_LINE_RE.match(_fold_quiz_text(value)))
 
 
 def _choice_letter(answer, index):
     value = answer.strip()
     if value.startswith('*'):
         value = value[1:].strip()
-    if len(value) >= 2 and value[0].lower() in 'abcdef' and value[1] in '.):':
-        return value[0].lower()
+    named_match = _NAMED_CHOICE_LINE_RE.match(_fold_quiz_text(value))
+    if named_match:
+        return named_match.group(1).lower()
+    match = _CHOICE_LINE_RE.match(value)
+    if match:
+        for char in match.group(0):
+            if char.lower() in 'abcdef':
+                return char.lower()
     return chr(ord('a') + index)
 
 
 def _clean_choice_prefix(answer):
-    value = answer.strip().strip('*').strip()
-    if len(value) >= 2 and value[0].lower() in 'abcdef' and value[1] in '.):':
-        return value[2:].strip()
-    return value
+    value = answer.strip()
+    if value.startswith('*'):
+        value = value[1:].strip()
+    if value.endswith('*'):
+        value = value[:-1].strip()
+    if _NAMED_CHOICE_LINE_RE.match(_fold_quiz_text(value)):
+        for separator in (':', '.', ')', '-', '/', chr(8211), chr(8212)):
+            if separator in value:
+                return value.split(separator, 1)[1].strip()
+    value = _NUMERIC_CHOICE_LINE_RE.sub('', value, count=1).strip()
+    return _CHOICE_LINE_RE.sub('', value, count=1).strip()
 
 
 def _parse_question_block(first_line_number, question_lines, answer_lines):
@@ -138,21 +170,25 @@ def _parse_question_block(first_line_number, question_lines, answer_lines):
     correct_letters, answer_lines = _extract_correct_letters(answer_lines)
 
     if not question_text:
-        return None, f"Dòng {first_line_number}: câu hỏi không hợp lệ."
+        return None, f'Dòng {first_line_number}: câu hỏi không hợp lệ.'
 
     if len(answer_lines) < 2:
-        return None, f"Dòng {first_line_number}: moi cau hỏi cần ít nhất 2 đáp án."
+        return None, f'Dòng {first_line_number}: mỗi câu hỏi cần ít nhất 2 đáp án.'
 
     choices = []
     correct_count = 0
 
     for index, (line_number, answer) in enumerate(answer_lines):
         raw_answer = answer.strip()
-        is_correct = raw_answer.startswith('*') or raw_answer.endswith('*') or _choice_letter(raw_answer, index) in correct_letters
+        is_correct = (
+            raw_answer.startswith('*')
+            or raw_answer.endswith('*')
+            or _choice_letter(raw_answer, index) in correct_letters
+        )
         choice_text = _normalize_quiz_text(_clean_choice_prefix(raw_answer))
 
         if not choice_text:
-            return None, f"Dòng {line_number}: đáp án không dược để trống."
+            return None, f'Dòng {line_number}: đáp án không được để trống.'
 
         if is_correct:
             correct_count += 1
@@ -189,13 +225,31 @@ def _parse_uploaded_quiz_file(uploaded_file):
     for line_number, raw_line in enumerate(text.split('\n'), start=1):
         line = raw_line.strip()
         if not line:
+            if question_lines or answer_lines:
+                flush_current()
             continue
         if line.startswith("'"):
             flush_current()
             continue
 
-        lowered = line.lower()
-        is_answer_marker = lowered.startswith(('dap an:', 'đáp án:', 'answer:', 'correct:'))
+        lowered = _fold_quiz_text(line)
+        is_answer_marker = lowered.startswith(_ANSWER_PREFIXES)
+        inline_question, inline_answers, inline_correct_letters = _split_inline_choices(line)
+
+        if inline_answers and inline_question:
+            if question_lines or answer_lines:
+                flush_current()
+            first_line_number = line_number
+            question_lines.append(inline_question)
+            answer_lines.extend((line_number, answer) for answer in inline_answers)
+            if inline_correct_letters:
+                answer_lines.append((line_number, "Đáp án: " + ",".join(sorted(inline_correct_letters))))
+            continue
+
+        if question_lines and (_is_choice_line(line) or is_answer_marker or line.startswith('*')):
+            answer_lines.append((line_number, line))
+            continue
+
         if _is_question_line(line) and (question_lines or answer_lines):
             flush_current()
 
@@ -238,8 +292,11 @@ def _generate_ai_questions(topic, count):
 
 
 def _can_access_quiz(user, quiz):
-    if quiz.created_by == user or not quiz.classroom_id:
-        return True
+    def _can_access_quiz(user, quiz):
+        if user.is_admin:
+            return True
+        if quiz.created_by == user or not quiz.classroom_id:
+            return True
 
     return ClassroomMember.objects.filter(
         classroom=quiz.classroom,
@@ -330,7 +387,7 @@ def create_quiz(request):
 def add_question(request, quiz_id):
     quiz = get_object_or_404(Quiz.objects.prefetch_related('questions__choices'), id=quiz_id)
 
-    if quiz.created_by != request.user:
+    if not request.user.is_admin and  quiz.created_by != request.user:
         return HttpResponseForbidden("Bạn không có quyền chỉnh sửa bài kiểm tra này.")
 
     if request.method == 'POST':
@@ -388,7 +445,7 @@ def quiz_detail(request, quiz_id):
         id=quiz_id
     )
 
-    if not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền xem đề thi này.")
 
     questions = list(quiz.questions.all())
@@ -413,7 +470,7 @@ def take_quiz(request, quiz_id):
         id=quiz_id
     )
 
-    if not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền làm bài kiểm tra này.")
 
     attempt_count = QuizResult.objects.filter(user=request.user, quiz=quiz).count()
@@ -443,7 +500,7 @@ def submit_quiz(request, quiz_id):
         id=quiz_id
     )
 
-    if not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền nộp bài kiểm tra này.")
 
     total_questions = quiz.questions.count()
@@ -497,7 +554,7 @@ def edit_question(request, question_id):
         id=question_id
     )
 
-    if question.quiz.created_by != request.user:
+    if not request.user.is_admin and question.quiz.created_by != request.user:
         return HttpResponseForbidden("Bạn không có quyền chỉnh sửa câu hỏi này.")
 
     if request.method == 'POST':
@@ -531,7 +588,7 @@ def delete_question(request, question_id):
     question = get_object_or_404(Question.objects.select_related('quiz'), id=question_id)
     quiz = question.quiz
 
-    if quiz.created_by != request.user:
+    if not request.user.is_admin and quiz.created_by != request.user:
         return HttpResponseForbidden("Bạn không có quyền xóa câu hỏi này.")
 
     if request.method == 'POST':
@@ -545,7 +602,7 @@ def delete_question(request, question_id):
 def delete_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
 
-    if quiz.created_by != request.user:
+    if not request.user.is_admin and quiz.created_by != request.user:
         return HttpResponseForbidden("Bạn không có quyền xóa đề thi này.")
 
     if request.method == 'POST':
@@ -559,7 +616,7 @@ def delete_quiz(request, quiz_id):
 def flashcards(request, quiz_id):
     quiz = get_object_or_404(Quiz.objects.prefetch_related('questions__choices'), id=quiz_id)
 
-    if not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền xem flashcards của đề này.")
 
     questions = list(quiz.questions.all())
@@ -591,7 +648,7 @@ def quiz_history(request):
 def delete_result(request, result_id):
     result = get_object_or_404(QuizResult, id=result_id)
 
-    if result.quiz.created_by != request.user:
+    if not request.user.is_admin and result.quiz.created_by != request.user:
         return HttpResponseForbidden("Bạn không có quyền xóa lịch sử này")
 
     if request.method == "POST":

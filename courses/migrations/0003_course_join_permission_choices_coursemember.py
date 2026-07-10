@@ -29,8 +29,8 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('status', models.CharField(
                     choices=[
-                        ('pending', 'Cho duyet'),
-                        ('approved', 'Da chap nhan'),
+                        ('pending', 'Chờ duyệt'),
+                        ('approved', 'Đã chấp nhận'),
                         ('rejected', 'Tu choi'),
                     ],
                     default='pending',

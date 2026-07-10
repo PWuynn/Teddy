@@ -1,88 +1,154 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
-{% block title %}
-Dashboard Admin
-{% endblock %}
+{% block title %}Dashboard Admin | TEDDY{% endblock %}
 
 {% block content %}
-
-<div class="container mt-5">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-danger">Dashboard Admin</h2>
-
-        <form method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">
-                Làm mới dữ liệu
-            </button>
-        </form>
-    </div>
-
-    <div class="row g-4">
-
-        <div class="col-md-3">
-            <div class="card shadow border-0 text-center p-4">
-                <h5>Tổng người dùng</h5>
-                <h2 class="text-primary">120</h2>
+<div class="dashboard-page admin-page">
+    <div class="container py-4 py-lg-5">
+        <section class="dash-hero admin">
+            <div>
+                <span class="dash-kicker">Bảng điều khiển quản trị</span>
+                <h1>Chào {{ request.user.full_name|default:request.user.username }}</h1>
+                <p>Quản lý người dùng, khóa học, lớp học, tài liệu, quiz và todo trong một màn hình tổng quan.</p>
             </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow border-0 text-center p-4">
-                <h5>Giáo viên</h5>
-                <h2 class="text-success">15</h2>
+            <div class="hero-quick">
+                <a href="/admin/accounts/customuser/" class="btn btn-light"><i class="bi bi-people-fill"></i> Người dùng</a>
+                <a href="/admin/" class="btn btn-primary"><i class="bi bi-gear-fill"></i> Django Admin</a>
             </div>
-        </div>
+        </section>
 
-        <div class="col-md-3">
-            <div class="card shadow border-0 text-center p-4">
-                <h5>Học sinh</h5>
-                <h2 class="text-warning">95</h2>
+        <section class="admin-focus-grid">
+            <a href="/admin/accounts/customuser/" class="focus-card blue"><span><i class="bi bi-people-fill"></i></span><strong>Người dùng</strong><small>Quản lý tài khoản, vai trò và quyền truy cập.</small></a>
+            <a href="/admin/courses/course/" class="focus-card indigo"><span><i class="bi bi-journal-bookmark"></i></span><strong>Khóa học</strong><small>Theo dõi và chỉnh sửa toàn bộ khóa học.</small></a>
+            <a href="/admin/classroom/classroom/" class="focus-card violet"><span><i class="bi bi-easel2"></i></span><strong>Lớp học</strong><small>Quản lý lớp, giáo viên và thành viên.</small></a>
+            <a href="/admin/materials/document/" class="focus-card red"><span><i class="bi bi-file-earmark-text"></i></span><strong>Tài liệu</strong><small>Kiểm tra tài liệu đã đăng trong hệ thống.</small></a>
+            <a href="/admin/quiz_ai/quiz/" class="focus-card teal"><span><i class="bi bi-ui-checks"></i></span><strong>Quiz AI</strong><small>Quản lý đề thi, câu hỏi và hoạt động ôn tập.</small></a>
+            <a href="/admin/todo/todo/" class="focus-card amber"><span><i class="bi bi-list-check"></i></span><strong>Todo</strong><small>Theo dõi bài giao và công việc học tập.</small></a>
+        </section>
+
+        <section class="admin-stat-grid">
+            <div class="stat-card blue"><span><i class="bi bi-people-fill"></i></span><div><small>Tổng người dùng</small><strong>{{ total_users|default:0 }}</strong></div></div>
+            <div class="stat-card green"><span><i class="bi bi-person-workspace"></i></span><div><small>Giáo viên</small><strong>{{ total_teachers|default:0 }}</strong></div></div>
+            <div class="stat-card amber"><span><i class="bi bi-mortarboard-fill"></i></span><div><small>Học sinh</small><strong>{{ total_students|default:0 }}</strong></div></div>
+            <div class="stat-card indigo"><span><i class="bi bi-book-half"></i></span><div><small>Khóa học</small><strong>{{ total_courses|default:0 }}</strong></div></div>
+            <div class="stat-card cyan"><span><i class="bi bi-building"></i></span><div><small>Lớp học</small><strong>{{ total_classes|default:0 }}</strong></div></div>
+            <div class="stat-card red"><span><i class="bi bi-file-earmark-text-fill"></i></span><div><small>Tài liệu</small><strong>{{ total_documents|default:0 }}</strong></div></div>
+            <div class="stat-card purple"><span><i class="bi bi-journal-check"></i></span><div><small>Quiz AI</small><strong>{{ total_quizzes|default:0 }}</strong></div></div>
+            <div class="stat-card teal"><span><i class="bi bi-check2-square"></i></span><div><small>Todo</small><strong>{{ total_todos|default:0 }}</strong></div></div>
+        </section>
+
+        <section class="dash-layout charts-layout">
+            <div class="focus-panel chart-panel">
+                <div class="panel-head"><div><span class="dash-kicker dark">Thống kê</span><h2>Người dùng đăng ký theo tháng</h2></div></div>
+                <div class="chart-box"><canvas id="userChart"></canvas></div>
             </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow border-0 text-center p-4">
-                <h5>Đề kiểm tra</h5>
-                <h2 class="text-info">30</h2>
+            <div class="action-panel role-panel">
+                <h2>Vai trò người dùng</h2>
+                <div class="chart-box small"><canvas id="roleChart"></canvas></div>
             </div>
-        </div>
+        </section>
 
-    </div>
-
-    <div class="card shadow border-0 mt-5">
-        <div class="card-header bg-danger text-white">
-            Quản trị hệ thống
-        </div>
-
-        <div class="card-body">
-
-            <div class="row g-3">
-
-                <div class="col-md-4">
-                    <a href="#" class="btn btn-outline-primary w-100">
-                        Quản lý người dùng
-                    </a>
+        <section class="admin-data-grid">
+            <div class="focus-panel">
+                <div class="panel-head"><div><span class="dash-kicker dark">Mới nhất</span><h2>Người dùng mới</h2></div><a href="/admin/accounts/customuser/" class="btn btn-outline-primary btn-sm">Xem tất cả</a></div>
+                <div class="table-responsive">
+                    <table class="table dashboard-table align-middle mb-0">
+                        <thead><tr><th>Tên</th><th>Vai trò</th><th>Ngày tham gia</th></tr></thead>
+                        <tbody>
+                        {% for user in latest_users %}
+                            <tr>
+                                <td><strong>{{ user.full_name|default:user.username }}</strong><small>{{ user.email|default:'Chưa có email' }}</small></td>
+                                <td>
+                                    {% if user.is_superuser or user.role == 'admin' %}<span class="status-badge danger">Admin</span>
+                                    {% elif user.role == 'teacher' %}<span class="status-badge success">Teacher</span>
+                                    {% else %}<span class="status-badge warning">Student</span>{% endif %}
+                                </td>
+                                <td>{{ user.date_joined|date:'d/m/Y' }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="empty-cell">Chưa có dữ liệu</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="col-md-4">
-                    <a href="#" class="btn btn-outline-success w-100">
-                        Quản lý đề thi
-                    </a>
-                </div>
-
-                <div class="col-md-4">
-                    <a href="#" class="btn btn-outline-dark w-100">
-                        Quản lý tài liệu
-                    </a>
-                </div>
-
             </div>
 
-        </div>
-    </div>
+            <div class="focus-panel">
+                <div class="panel-head"><div><span class="dash-kicker dark">Mới nhất</span><h2>Khóa học mới</h2></div><a href="{% url 'accounts:admin_latest_courses' %}" class="btn btn-outline-primary btn-sm">Xem tất cả</a></div>
+                <div class="table-responsive">
+                    <table class="table dashboard-table align-middle mb-0">
+                        <thead><tr><th>Tên khóa học</th><th>Người tạo</th><th>Ngày tạo</th></tr></thead>
+                        <tbody>
+                        {% for course in latest_courses %}
+                            <tr><td><strong>{{ course.name }}</strong></td><td>{{ course.creator.username }}</td><td>{{ course.created_at|date:'d/m/Y' }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="empty-cell">Chưa có khóa học</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
+            <div class="focus-panel">
+                <div class="panel-head"><div><span class="dash-kicker dark">Mới nhất</span><h2>Quiz mới</h2></div><a href="{% url 'accounts:admin_latest_quizzes' %}" class="btn btn-outline-primary btn-sm">Xem tất cả</a></div>
+                <div class="table-responsive">
+                    <table class="table dashboard-table align-middle mb-0">
+                        <thead><tr><th>Tiêu đề</th><th>Người tạo</th><th>Ngày tạo</th></tr></thead>
+                        <tbody>
+                        {% for quiz in latest_quizzes %}
+                            <tr><td><strong>{{ quiz.title }}</strong></td><td>{{ quiz.created_by.username|default:'-' }}</td><td>{{ quiz.created_at|date:'d/m/Y' }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="empty-cell">Chưa có Quiz</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="focus-panel">
+                <div class="panel-head"><div><span class="dash-kicker dark">Mới nhất</span><h2>Tài liệu mới</h2></div><a href="{% url 'accounts:admin_latest_documents' %}" class="btn btn-outline-primary btn-sm">Xem tất cả</a></div>
+                <div class="table-responsive">
+                    <table class="table dashboard-table align-middle mb-0">
+                        <thead><tr><th>Tiêu đề</th><th>Môn học</th><th>Người đăng</th><th>Ngày đăng</th></tr></thead>
+                        <tbody>
+                        {% for doc in latest_documents %}
+                            <tr><td><strong>{{ doc.title }}</strong></td><td>{{ doc.subject }}</td><td>{{ doc.owner.username }}</td><td>{{ doc.created_at|date:'d/m/Y' }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="empty-cell">Chưa có tài liệu</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    const userChart = document.getElementById('userChart');
+    const roleChart = document.getElementById('roleChart');
+
+    if (userChart && window.Chart) {
+        new Chart(userChart, {
+            type: 'bar',
+            data: { labels: {{ month_labels|safe }}, datasets: [{ label: 'Người dùng', data: {{ month_values|safe }}, backgroundColor: '#2563eb', borderRadius: 8, maxBarThickness: 38 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+    }
+
+    if (roleChart && window.Chart) {
+        new Chart(roleChart, {
+            type: 'doughnut',
+            data: { labels: {{ role_labels|safe }}, datasets: [{ data: {{ role_values|safe }}, backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '64%', plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+})();
+</script>
+
+<style>
+.dashboard-page{background:#f4f7fb;min-height:calc(100vh - 76px)}.dash-hero{align-items:flex-start;border-radius:8px;color:#fff;display:flex;gap:20px;justify-content:space-between;padding:30px}.dash-hero.admin{background:linear-gradient(135deg,#182033,#334155)}.dash-kicker{color:#bfdbfe;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.dash-kicker.dark{color:#1d4ed8}.dash-hero h1{font-size:36px;font-weight:850;letter-spacing:0;margin:8px 0}.dash-hero p{color:rgba(255,255,255,.82);line-height:1.6;margin:0;max-width:760px}.hero-quick{display:flex;gap:10px;white-space:nowrap}.admin-focus-grid{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));margin:18px 0}.focus-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.05);color:#0f172a;display:block;padding:20px}.focus-card:hover{border-color:#b6c6d8;color:#0f172a;transform:translateY(-2px)}.focus-card span{align-items:center;border-radius:8px;display:flex;font-size:25px;height:48px;justify-content:center;margin-bottom:14px;width:48px}.focus-card.blue span{background:#e0f2fe;color:#0369a1}.focus-card.indigo span{background:#e0e7ff;color:#4338ca}.focus-card.violet span{background:#ede9fe;color:#6d28d9}.focus-card.red span{background:#fee2e2;color:#b91c1c}.focus-card.teal span{background:#ccfbf1;color:#0f766e}.focus-card.amber span{background:#fffbeb;color:#b45309}.focus-card strong,.focus-card small{display:block}.focus-card strong{font-size:19px}.focus-card small{color:#64748b;margin-top:4px}.admin-stat-grid{display:grid;gap:14px;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}.stat-card{align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.05);display:flex;gap:14px;min-height:112px;padding:18px}.stat-card span{align-items:center;border-radius:8px;color:#fff;display:flex;font-size:24px;height:50px;justify-content:center;width:50px}.stat-card small{color:#64748b;display:block;font-size:14px;font-weight:800}.stat-card strong{color:#0f172a;display:block;font-size:34px;font-weight:900;line-height:1;margin-top:6px}.stat-card.blue span{background:#2563eb}.stat-card.green span{background:#16a34a}.stat-card.amber span{background:#f59e0b}.stat-card.indigo span{background:#4f46e5}.stat-card.cyan span{background:#0891b2}.stat-card.red span{background:#dc2626}.stat-card.purple span{background:#7c3aed}.stat-card.teal span{background:#0f766e}.dash-layout{display:grid;gap:18px;grid-template-columns:minmax(0,1fr) 340px}.charts-layout{margin-bottom:18px}.focus-panel,.action-panel{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 14px 34px rgba(15,23,42,.06);padding:20px}.panel-head{align-items:center;display:flex;justify-content:space-between;margin-bottom:14px}.panel-head h2,.action-panel h2{font-size:22px;font-weight:850;margin:0}.chart-box{height:300px}.chart-box.small{height:280px}.admin-data-grid{display:grid;gap:18px;grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-table{font-size:14px}.dashboard-table thead th{background:#f8fafc;color:#475569;font-size:12px;font-weight:850;text-transform:uppercase}.dashboard-table td strong,.dashboard-table td small{display:block}.dashboard-table td small{color:#64748b}.status-badge{border-radius:999px;display:inline-flex;font-size:12px;font-weight:850;padding:5px 10px}.status-badge.success{background:#dcfce7;color:#166534}.status-badge.warning{background:#fef3c7;color:#92400e}.status-badge.danger{background:#fee2e2;color:#991b1b}.empty-cell{color:#94a3b8;height:68px;text-align:center}@media(max-width:1200px){.admin-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-data-grid{grid-template-columns:1fr}}@media(max-width:992px){.dash-hero{flex-direction:column}.hero-quick{width:100%;flex-direction:column}.admin-focus-grid{grid-template-columns:1fr}.dash-layout{grid-template-columns:1fr}}@media(max-width:576px){.dash-hero h1{font-size:28px}.admin-stat-grid{grid-template-columns:1fr}.panel-head{align-items:flex-start;flex-direction:column;gap:10px}}
+</style>
 {% endblock %}

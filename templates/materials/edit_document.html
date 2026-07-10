@@ -1,171 +1,72 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
+
+{% block title %}Chỉnh sửa tài liệu | TEDDY{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="form-page py-5">
+    <div class="container">
+        <section class="form-shell">
+            <aside class="form-side">
+                <span class="form-kicker">Resource Library</span>
+                <h1>Chỉnh sửa tài liệu</h1>
+                <p>Cập nhật thông tin, quyền truy cập hoặc thay thế file tài liệu hiện tại.</p>
+            </aside>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-
-            <div class="card shadow border-0">
-                <div class="card-header bg-warning text-dark">
-                    <h3 class="mb-0">
-                        <i class="fas fa-edit"></i>
-                        Chỉnh sửa tài liệu
-                    </h3>
-                </div>
-
-                <div class="card-body">
-
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Tiêu đề tài liệu
-                            </label>
-                            <input
-                                type="text"
-                                name="title"
-                                class="form-control"
-                                value="{{ doc.title }}"
-                                required>
+            <section class="form-panel">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Tiêu đề tài liệu</label>
+                            <input type="text" name="title" class="form-control form-control-lg" value="{{ doc.title }}" required>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Mô tả
-                            </label>
-                            <textarea
-                                name="description"
-                                rows="4"
-                                class="form-control">{{ doc.description }}</textarea>
+                        <div class="col-12">
+                            <label class="form-label">Mô tả</label>
+                            <textarea name="description" rows="4" class="form-control">{{ doc.description }}</textarea>
                         </div>
-
-                        <div class="row">
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">
-                                    Cấp học
-                                </label>
-
-                                <select
-                                    name="level"
-                                    class="form-select">
-
-                                    <option value="primary"
-                                        {% if doc.level == "primary" %}selected{% endif %}>
-                                        Tiểu học
-                                    </option>
-
-                                    <option value="secondary"
-                                        {% if doc.level == "secondary" %}selected{% endif %}>
-                                        THCS
-                                    </option>
-
-                                    <option value="highschool"
-                                        {% if doc.level == "highschool" %}selected{% endif %}>
-                                        THPT
-                                    </option>
-
-                                    <option value="college"
-                                        {% if doc.level == "college" %}selected{% endif %}>
-                                        Cao đẳng
-                                    </option>
-
-                                    <option value="university"
-                                        {% if doc.level == "university" %}selected{% endif %}>
-                                        Đại học
-                                    </option>
-
-                                </select>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">
-                                    Môn học
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="subject"
-                                    class="form-control"
-                                    value="{{ doc.subject }}"
-                                    placeholder="Ví dụ: Toán, Văn, Anh,...">
-                            </div>
-
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Quyền truy cập
-                            </label>
-
-                            <select
-                                name="permission"
-                                class="form-select">
-
-                                <option value="view"
-                                    {% if doc.permission == "view" %}selected{% endif %}>
-                                    Chỉ xem
-                                </option>
-
-                                <option value="download"
-                                    {% if doc.permission == "download" %}selected{% endif %}>
-                                    Xem và tải xuống
-                                </option>
-
+                        <div class="col-md-6">
+                            <label class="form-label">Cấp học</label>
+                            <select name="level" class="form-select">
+                                <option value="Tiểu học" {% if doc.level == "Tiểu học" %}selected{% endif %}>Tiểu học</option>
+                                <option value="THCS" {% if doc.level == "THCS" %}selected{% endif %}>THCS</option>
+                                <option value="THPT" {% if doc.level == "THPT" %}selected{% endif %}>THPT</option>
+                                <option value="Đại học" {% if doc.level == "Đại học" %}selected{% endif %}>Đại học</option>
                             </select>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Tài liệu hiện tại
-                            </label>
-
-                            <div class="alert alert-light border">
-                                {% if doc.file %}
-                                    📄
-                                    <a href="{{ doc.file.url }}" target="_blank">
-                                        {{ doc.file.name }}
-                                    </a>
-                                {% else %}
-                                    Chưa có file
-                                {% endif %}
+                        <div class="col-md-6">
+                            <label class="form-label">Môn học</label>
+                            <input type="text" name="subject" class="form-control" value="{{ doc.subject }}" placeholder="Ví dụ: Toán, Văn, Anh">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quyền truy cập</label>
+                            <select name="permission" class="form-select">
+                                <option value="view" {% if doc.permission == "view" %}selected{% endif %}>Chỉ xem</option>
+                                <option value="download" {% if doc.permission == "download" %}selected{% endif %}>Xem và tải xuống</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Thay thế file mới</label>
+                            <input type="file" name="file" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <div class="current-file">
+                                <span>Tài liệu hiện tại</span>
+                                {% if doc.file %}<a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name }}</a>{% else %}<strong>Chưa có file</strong>{% endif %}
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">
-                                Thay thế tài liệu mới (không bắt buộc)
-                            </label>
-
-                            <input
-                                type="file"
-                                name="file"
-                                class="form-control">
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-
-                            <a href="{% url 'materials:document_list' %}"
-                               class="btn btn-secondary">
-                                ← Quay lại
-                            </a>
-
-                            <button type="submit"
-                                    class="btn btn-warning">
-                                💾 Lưu thay đổi
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </div>
-            </div>
-
-        </div>
+                    <div class="form-actions">
+                        <a href="{% url 'materials:document_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                        <button class="btn btn-primary btn-lg"><i class="bi bi-save"></i> Lưu thay đổi</button>
+                    </div>
+                </form>
+            </section>
+        </section>
     </div>
-
 </div>
+
+<style>
+.form-page{background:#f3f8f6;min-height:calc(100vh - 76px)}.form-shell{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:22px;align-items:start}.form-side{background:#0f766e;border-radius:8px;color:white;padding:28px;position:sticky;top:96px}.form-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.form-side h1{font-size:34px;font-weight:850;letter-spacing:0;margin:10px 0}.form-side p{color:rgba(255,255,255,.78);margin:0}.form-panel{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);padding:24px}.current-file{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;display:grid;gap:4px;padding:14px}.current-file span{color:#64748b;font-size:12px}.form-actions{display:flex;gap:12px;justify-content:space-between;margin-top:22px}@media(max-width:992px){.form-shell{grid-template-columns:1fr}.form-side{position:static}}@media(max-width:576px){.form-actions{align-items:stretch;flex-direction:column}.form-actions .btn{width:100%}}
+</style>
 {% endblock %}

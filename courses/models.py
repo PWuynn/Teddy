@@ -11,8 +11,8 @@ JOIN_PERMISSION_CHOICES = (
 
 
 MEMBERSHIP_STATUS_CHOICES = (
-    ('pending', 'Cho duyet'),
-    ('approved', 'Da chap nhan'),
+    ('pending', 'Chờ duyệt'),
+    ('approved', 'Đã chấp nhận'),
     ('rejected', 'Tu choi'),
 )
 

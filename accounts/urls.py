@@ -3,54 +3,19 @@ from . import views
 
 app_name = 'accounts'
 urlpatterns = [
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
+    path('profile/', views.profile_view, name='profile'),
+    path('login_required/', views.login_required_view, name='login_required'),
 
-    path(
-        'login/',
-        views.login_view,
-        name='login'
-        
-    ),
+    path('student/', views.stu_dashboard, name='stu_dashboard'),
+    path('teacher/', views.tea_dashboard, name='tea_dashboard'),
 
-    path(
-        'register/',
-        views.register_view,
-        name='register'
-    ),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-dashboard/latest-courses/', views.admin_latest_courses, name='admin_latest_courses'),
+    path('admin-dashboard/latest-quizzes/', views.admin_latest_quizzes, name='admin_latest_quizzes'),
+    path('admin-dashboard/latest-documents/', views.admin_latest_documents, name='admin_latest_documents'),
 
-    path(
-        'logout/',
-        views.logout_view,
-        name='logout'
-    ),
-    path(
-        'profile/',
-        views.profile_view,
-        name='profile'
-    ),
-      path(
-        'login_required/',
-        views.login_required_view,
-        name='login_required'
-    ),
-    # Dashboard học sinh
-    path(
-        'student/',
-        views.stu_dashboard,
-        name='stu_dashboard'
-    ),
-
-    # Dashboard giáo viên
-    path(
-        'teacher/',
-        views.tea_dashboard,
-        name='tea_dashboard'
-    ),
-
-    # Dashboard admin
-    path(
-        'admin/',
-        views.admin_dashboard,
-        name='admin_dashboard'
-    ),
-
+    path('users/', views.user_list, name='user_list'),
 ]

@@ -1,183 +1,18 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Kho đề thi | TEDDY{% endblock %}
 
-{% block content %}<style>
-        * {
-            font-family: 'Be Vietnam Pro', sans-serif;
-        }
-
-        body {
-            background: #f6f8fc;
-            overflow-x: hidden;
-            color: #1e293b;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        /* ===== NAVBAR ===== */
-        .navbar {
-            padding: 18px 0;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-        }
-
-        .navbar-brand {
-            font-size: 30px;
-            font-weight: 800;
-            color: #2563eb !important;
-        }
-
-        .nav-link {
-            color: #334155 !important;
-            font-weight: 500;
-            margin: 0 8px;
-            transition: 0.3s;
-            position: relative;
-        }
-
-        .nav-link::after {
-            content: "";
-            position: absolute;
-            width: 0%;
-            height: 3px;
-            background: #2563eb;
-            left: 0;
-            bottom: -6px;
-            border-radius: 20px;
-            transition: .3s;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        .btn-login {
-            border: 2px solid #2563eb;
-            color: #2563eb;
-            border-radius: 14px;
-            padding: 10px 22px;
-            font-weight: 600;
-            transition: .3s;
-        }
-
-        .btn-login:hover {
-            background: #2563eb;
-            color: white;
-        }
-
-        .btn-register {
-            background: linear-gradient(135deg, #2563eb, #4f46e5);
-            color: white;
-            border-radius: 14px;
-            padding: 10px 24px;
-            font-weight: 600;
-            transition: .3s;
-        }
-
-        .btn-register:hover {
-            transform: translateY(-2px);
-        }
-    </style>
-
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="menu">
-
-                <ul class="navbar-nav mx-auto">
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'accounts:stu_dashboard' %}">Trang chủ</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'courses:course_list' %}">Khóa học</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'quiz_ai:quiz_list' %}">Đề thi</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Tài liệu</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'todo:todo_list' %}">TodoList</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'quiz_ai:quiz_history' %}">Lịch sử làm bài</a>
-                    </li>
-                </ul>
-
-                <div class="d-flex gap-2">
-                    {% if user.is_authenticated %}
-
-    <div class="dropdown">
-
-        <button class="btn btn-light dropdown-toggle"
-                data-bs-toggle="dropdown">
-
-            <i class="bi bi-person-circle me-2"></i>
-
-            {{ user.username }}
-
-        </button>
-
-        <ul class="dropdown-menu dropdown-menu-end">
-
-            <li>
-                <a class="dropdown-item text-danger"
-                   href="{% url 'accounts:logout' %}">
-
-                    Đăng xuất
-
-                </a>
-            </li>
-
-        </ul>
-
-    </div>
-
-{% else %}
-
-    <a href="{% url 'accounts:login' %}"
-       class="btn btn-light me-2">
-
-        Đăng nhập
-
-    </a>
-
-    <a href="{% url 'accounts:register' %}"
-       class="btn btn-warning">
-
-        Đăng ký
-
-    </a>
-
-{% endif %}
-                </div>
-
-            </div>
-
-        </div>
-
-    </nav>
+{% block content %}
 <div class="quiz-hub-page py-5">
     <div class="container">
         <section class="quiz-hub-hero">
             <div>
                 <span class="quiz-kicker">Assessment Hub</span>
                 <h1>Kho đề kiểm tra</h1>
-                <p>Quản lý, tìm kiếm và làm bài trắc nghiệm trong một không gian riêng cho đánh giá năng lực.</p>
+                <p>Quản lý, tìm kiếm và làm bài trắc nghiệm trong một không gian gọn gàng cho đánh giá năng lực.</p>
             </div>
 
-            <a href="{% url 'create_quiz' %}" class="btn btn-dark">
+            <a href="{% url 'quiz_ai:create_quiz' %}" class="btn btn-light">
                 <i class="bi bi-plus-lg"></i> Tạo đề mới
             </a>
         </section>
@@ -186,13 +21,8 @@
             <div class="quiz-search-icon">
                 <i class="bi bi-search"></i>
             </div>
-            <input
-                type="text"
-                name="q"
-                value="{{ keyword }}"
-                placeholder="Tìm theo tên đề, mô tả hoặc lớp học..."
-            >
-            <button class="btn btn-warning text-dark">Tìm kiếm</button>
+            <input type="text" name="q" value="{{ keyword }}" placeholder="Tìm theo tên đề, mô tả hoặc lớp học...">
+            <button class="btn btn-primary">Tìm kiếm</button>
             {% if keyword %}
                 <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-outline-secondary">Xóa lọc</a>
             {% endif %}
@@ -202,12 +32,9 @@
             {% for quiz in quizzes %}
                 <article class="quiz-card-v2">
                     <div class="quiz-card-top">
-                        <div class="quiz-mark">
-                            <i class="bi bi-ui-checks"></i>
-                        </div>
-
+                        <div class="quiz-mark"><i class="bi bi-ui-checks"></i></div>
                         {% if quiz.created_by == request.user %}
-                            <span class="quiz-owner-badge">Tác giả</span>
+                            <span class="status-badge owner">Tác giả</span>
                         {% endif %}
                     </div>
 
@@ -217,18 +44,9 @@
                     </div>
 
                     <div class="quiz-stat-strip">
-                        <div>
-                            <span>Câu hỏi</span>
-                            <strong>{{ quiz.questions.count }}</strong>
-                        </div>
-                        <div>
-                            <span>Thời gian</span>
-                            <strong>{{ quiz.time_limit }}p</strong>
-                        </div>
-                        <div>
-                            <span>Lượt làm</span>
-                            <strong>{% if quiz.max_attempts %}{{ quiz.max_attempts }}{% else %}∞{% endif %}</strong>
-                        </div>
+                        <div><span>Câu hỏi</span><strong>{{ quiz.questions.count }}</strong></div>
+                        <div><span>Thời gian</span><strong>{{ quiz.time_limit }}p</strong></div>
+                        <div><span>Lượt làm</span><strong>{% if quiz.max_attempts %}{{ quiz.max_attempts }}{% else %}∞{% endif %}</strong></div>
                     </div>
 
                     <div class="quiz-meta-line">
@@ -239,12 +57,8 @@
                     </div>
 
                     <div class="quiz-actions">
-                        <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-dark">
-                            Xem đề
-                        </a>
-                        <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-warning text-dark">
-                            Làm bài
-                        </a>
+                        <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-primary">Xem đề</a>
+                        <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-primary">Làm bài</a>
                     </div>
 
                     {% if quiz.created_by == request.user %}
@@ -266,7 +80,7 @@
                     <i class="bi bi-clipboard-x"></i>
                     <h2>Không tìm thấy đề kiểm tra</h2>
                     <p>Thử từ khóa khác hoặc tạo đề mới cho lớp học của bạn.</p>
-                    <a href="{% url 'create_quiz' %}" class="btn btn-warning text-dark">Tạo đề ngay</a>
+                    <a href="{% url 'quiz_ai:create_quiz' %}" class="btn btn-primary">Tạo đề ngay</a>
                 </div>
             {% endfor %}
         </div>
@@ -274,218 +88,23 @@
 </div>
 
 <style>
-.quiz-hub-page {
-    background: #fff8eb;
-}
-
-.quiz-hub-hero {
-    align-items: center;
-    background: #241f35;
-    border-radius: 8px;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 30px;
-}
-
-.quiz-kicker {
-    color: #facc15;
-    font-size: 12px;
-    font-weight: 850;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-
-.quiz-hub-hero h1 {
-    font-size: 38px;
-    font-weight: 850;
-    letter-spacing: 0;
-    margin: 6px 0;
-}
-
-.quiz-hub-hero p {
-    color: rgba(255,255,255,.76);
-    margin: 0;
-    max-width: 720px;
-}
-
-.quiz-search-panel {
-    align-items: center;
-    background: white;
-    border: 1px solid #fde68a;
-    border-radius: 8px;
-    box-shadow: 0 14px 32px rgba(120, 53, 15, .08);
-    display: flex;
-    gap: 10px;
-    margin: 24px 0;
-    padding: 12px;
-}
-
-.quiz-search-icon {
-    align-items: center;
-    background: #fef3c7;
-    border-radius: 8px;
-    color: #92400e;
-    display: flex;
-    height: 42px;
-    justify-content: center;
-    width: 42px;
-}
-
-.quiz-search-panel input {
-    border: 0;
-    flex: 1;
-    min-height: 42px;
-    outline: 0;
-}
-
-.quiz-grid {
-    display: grid;
-    gap: 18px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.quiz-card-v2 {
-    background: white;
-    border: 1px solid #fde68a;
-    border-radius: 8px;
-    box-shadow: 0 14px 32px rgba(120, 53, 15, .08);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-}
-
-.quiz-card-top,
-.quiz-actions,
-.quiz-admin-actions,
-.quiz-meta-line {
-    align-items: center;
-    display: flex;
-    gap: 10px;
-}
-
-.quiz-card-top,
-.quiz-actions,
-.quiz-admin-actions {
-    justify-content: space-between;
-}
-
-.quiz-mark {
-    align-items: center;
-    background: #241f35;
-    border-radius: 8px;
-    color: #facc15;
-    display: flex;
-    font-size: 24px;
-    height: 52px;
-    justify-content: center;
-    width: 52px;
-}
-
-.quiz-owner-badge {
-    background: #fef3c7;
-    border-radius: 999px;
-    color: #92400e;
-    font-size: 12px;
-    font-weight: 800;
-    padding: 7px 10px;
-}
-
-.quiz-card-body {
-    margin: 18px 0;
-}
-
-.quiz-card-body h2 {
-    font-size: 21px;
-    font-weight: 850;
-    letter-spacing: 0;
-    margin-bottom: 8px;
-}
-
-.quiz-card-body p {
-    color: #64748b;
-    margin: 0;
-    min-height: 52px;
-}
-
-.quiz-stat-strip {
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    border-radius: 8px;
-    display: grid;
-    gap: 8px;
-    grid-template-columns: repeat(3, 1fr);
-    margin-bottom: 14px;
-    padding: 12px;
-}
-
-.quiz-stat-strip span {
-    color: #92400e;
-    display: block;
-    font-size: 12px;
-}
-
-.quiz-stat-strip strong {
-    color: #241f35;
-    font-size: 18px;
-}
-
-.quiz-meta-line {
-    color: #64748b;
-    flex-wrap: wrap;
-    font-size: 13px;
-    margin-bottom: 16px;
-}
-
-.quiz-actions {
-    margin-top: auto;
-}
-
-.quiz-actions .btn {
-    flex: 1;
-}
-
-.quiz-admin-actions {
-    border-top: 1px solid #fde68a;
-    margin-top: 14px;
-    padding-top: 14px;
-}
-
-.quiz-admin-actions form {
-    margin: 0;
-}
-
-.quiz-empty {
-    background: white;
-    border: 1px dashed #f59e0b;
-    border-radius: 8px;
-    grid-column: 1 / -1;
-    padding: 54px;
-    text-align: center;
-}
-
-.quiz-empty i {
-    color: #92400e;
-    font-size: 44px;
-}
-
-@media (max-width: 992px) {
-    .quiz-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    .quiz-hub-hero,
-    .quiz-search-panel {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .quiz-grid {
-        grid-template-columns: 1fr;
-    }
-}
+.quiz-hub-page{background:#f3f8f6;min-height:calc(100vh - 76px)}
+.quiz-hub-hero{align-items:center;background:#0f766e;border-radius:8px;color:white;display:flex;justify-content:space-between;gap:24px;padding:30px}
+.quiz-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.quiz-hub-hero h1{font-size:40px;font-weight:850;letter-spacing:0;margin:6px 0}
+.quiz-hub-hero p{color:rgba(255,255,255,.78);margin:0;max-width:760px}
+.quiz-search-panel{align-items:center;background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);display:flex;gap:10px;margin:24px 0;padding:12px}
+.quiz-search-icon{align-items:center;background:#ecfdf5;border-radius:8px;color:#0f766e;display:flex;height:42px;justify-content:center;width:42px}
+.quiz-search-panel input{border:0;flex:1;min-height:42px;outline:0}
+.quiz-grid{display:grid;gap:18px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.quiz-card-v2{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);display:flex;flex-direction:column;padding:20px}
+.quiz-card-top,.quiz-actions,.quiz-admin-actions,.quiz-meta-line{align-items:center;display:flex;gap:10px}.quiz-card-top,.quiz-actions,.quiz-admin-actions{justify-content:space-between}
+.quiz-mark{align-items:center;background:#ecfdf5;border-radius:8px;color:#0f766e;display:flex;font-size:24px;height:52px;justify-content:center;width:52px}
+.quiz-card-body{margin:18px 0}.quiz-card-body h2{font-size:21px;font-weight:850;letter-spacing:0;margin-bottom:8px}.quiz-card-body p{color:#64748b;margin:0;min-height:52px}
+.quiz-stat-strip{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;display:grid;gap:8px;grid-template-columns:repeat(3,1fr);margin-bottom:14px;padding:12px}.quiz-stat-strip span{color:#64748b;display:block;font-size:12px}.quiz-stat-strip strong{color:#0f172a;font-size:18px}
+.quiz-meta-line{color:#64748b;flex-wrap:wrap;font-size:13px;margin-bottom:16px}.quiz-actions{margin-top:auto}.quiz-actions .btn{flex:1}.quiz-admin-actions{border-top:1px solid #e2e8f0;margin-top:14px;padding-top:14px}.quiz-admin-actions form{margin:0}
+.quiz-empty{background:white;border:1px dashed #cbd5e1;border-radius:8px;grid-column:1/-1;padding:54px;text-align:center}.quiz-empty i{color:#0f766e;font-size:44px}
+@media(max-width:992px){.quiz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:768px){.quiz-hub-hero,.quiz-search-panel{align-items:stretch;flex-direction:column}.quiz-grid{grid-template-columns:1fr}.quiz-actions,.quiz-admin-actions{align-items:stretch;flex-direction:column}.quiz-actions .btn,.quiz-admin-actions .btn,.quiz-admin-actions form{width:100%}}
 </style>
 {% endblock %}

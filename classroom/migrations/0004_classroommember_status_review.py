@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='classroommember',
             name='status',
-            field=models.CharField(choices=[('pending', 'Cho duyet'), ('approved', 'Da chap nhan'), ('rejected', 'Tu choi')], default='approved', max_length=20),
+            field=models.CharField(choices=[('pending', 'Chờ duyệt'), ('approved', 'Đã chấp nhận'), ('rejected', 'Tu choi')], default='approved', max_length=20),
         ),
         migrations.AddField(
             model_name='classroommember',

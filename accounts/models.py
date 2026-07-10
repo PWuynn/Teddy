@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-
 class CustomUser(AbstractUser):
 
     ROLE_CHOICES = (
@@ -15,6 +14,11 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default='student'
     )
+    
+    def save(self, *args, **kwargs):
+        if self.is_superuser:
+            self.role = 'admin'
+        super().save(*args, **kwargs)
 
     full_name = models.CharField(
         max_length=255,
@@ -46,3 +50,14 @@ class CustomUser(AbstractUser):
         blank=True,
         verbose_name='Anh dai dien'
     )
+    @property
+    def is_admin(self):
+        return self.is_superuser or self.role == 'admin'
+
+    @property
+    def is_teacher(self):
+        return self.role == 'teacher'
+
+    @property
+    def is_student(self):
+        return self.role == 'student'

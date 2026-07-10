@@ -389,10 +389,8 @@ def remove_classroom_member(
         pk=pk
     )
 
-    if classroom.teacher != request.user:
-        return HttpResponseForbidden(
-            "Bạn không có quyền quản lý lớp này."
-        )
+    if not request.user.is_admin and classroom.teacher != request.user:
+        return HttpResponseForbidden("Bạn không có quyền quản lý lớp này.")
 
     membership = get_object_or_404(
         ClassroomMember,

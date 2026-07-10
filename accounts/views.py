@@ -2,9 +2,22 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models.functions import ExtractMonth
+from collections import Counter
+import json
+
 from .forms import ProfileForm
+from accounts.models import CustomUser
+from classroom.models import Classroom
+from courses.models import Course
+from materials.models import Document
+from quiz_ai.models import Quiz
+from todo.models import PersonalTodo, Todo
+
 
 User = get_user_model()
+
 
 def _dashboard_for(user):
     if user.is_superuser or user.role == 'admin':
@@ -14,45 +27,49 @@ def _dashboard_for(user):
     return 'accounts:stu_dashboard'
 
 
-# LOGIN
-def login_view(request):
-    if request.method == "POST":
+def _admin_totals():
+    total_quizzes = Quiz.objects.count()
+    return {
+        'total_users': User.objects.count(),
+        'total_teachers': User.objects.filter(role='teacher').count(),
+        'total_students': User.objects.filter(role='student').count(),
+        'total_courses': Course.objects.count(),
+        'total_classes': Classroom.objects.count(),
+        'total_documents': Document.objects.count(),
+        'total_quizzes': total_quizzes,
+        'total_quiz_ai': total_quizzes,
+        'total_todos': Todo.objects.count() + PersonalTodo.objects.count(),
+    }
 
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = authenticate(
             request,
             username=username,
             password=password
         )
         if user is not None:
-
             login(request, user)
-
             return redirect(_dashboard_for(user))
 
-        else:
-            messages.error(request, "Sai tài khoản hoặc mật khẩu")
+        messages.error(request, 'Sai tài khoản hoặc mật khẩu')
 
     return render(request, 'accounts/login.html')
 
-# LOGOUT
+
 def logout_view(request):
-
     logout(request)
-
     return redirect('home')
 
 
-# REGISTER
 def register_view(request):
-
     if request.method == 'POST':
-
         username = request.POST.get('username')
         email = request.POST.get('email')
         role = request.POST.get('role')
-
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
 
@@ -67,38 +84,108 @@ def register_view(request):
                 role=role,
                 password=password1
             )
-
             user.save()
-
             return redirect('accounts:login')
 
-        else:
-            messages.error(request, "Mật khẩu không khớp")
+        messages.error(request, 'Mật khẩu không khớp')
 
     return render(request, 'accounts/register.html')
 
 
 @login_required
 def login_required_view(request):
-
     return render(request, 'accounts/login_required.html')
 
 
-@login_required
+@staff_member_required
 def admin_dashboard(request):
+    totals = _admin_totals()
+    total_admins = (
+        User.objects.filter(role='admin').count()
+        + User.objects.filter(is_superuser=True).exclude(role='admin').count()
+    )
 
-    return render(request, 'accounts/admin_dashboard/admin_dashboard.html')
+    latest_users = CustomUser.objects.order_by('-date_joined')[:5]
+    latest_courses = Course.objects.select_related('creator').order_by('-created_at')[:5]
+    latest_quizzes = Quiz.objects.select_related('created_by').order_by('-created_at')[:5]
+    latest_documents = Document.objects.select_related('owner').order_by('-created_at')[:5]
+
+    month_data = (
+        CustomUser.objects
+        .annotate(month=ExtractMonth('date_joined'))
+        .values('month')
+    )
+    counter = Counter()
+    for item in month_data:
+        counter[item['month']] += 1
+
+    month_labels = [
+        'T1', 'T2', 'T3', 'T4', 'T5', 'T6',
+        'T7', 'T8', 'T9', 'T10', 'T11', 'T12',
+    ]
+    month_values = [counter.get(i, 0) for i in range(1, 13)]
+
+    context = {
+        **totals,
+        'latest_users': latest_users,
+        'latest_courses': latest_courses,
+        'latest_quizzes': latest_quizzes,
+        'latest_documents': latest_documents,
+        'month_labels': json.dumps(month_labels),
+        'month_values': json.dumps(month_values),
+        'role_labels': json.dumps(['Giáo viên', 'Học sinh', 'Quản trị'], ensure_ascii=False),
+        'role_values': json.dumps([
+            totals['total_teachers'],
+            totals['total_students'],
+            total_admins,
+        ]),
+    }
+    return render(request, 'accounts/admin_dashboard/admin_dashboard.html', context)
+
+
+@staff_member_required
+def admin_latest_courses(request):
+    courses = Course.objects.select_related('creator').order_by('-created_at')
+    return render(request, 'accounts/admin_dashboard/latest_items.html', {
+        **_admin_totals(),
+        'latest_type': 'courses',
+        'page_title': 'Khóa học mới',
+        'page_subtitle': 'Danh sách khóa học được tạo gần đây nhất trong hệ thống.',
+        'items': courses,
+    })
+
+
+@staff_member_required
+def admin_latest_quizzes(request):
+    quizzes = Quiz.objects.select_related('created_by', 'classroom').order_by('-created_at')
+    return render(request, 'accounts/admin_dashboard/latest_items.html', {
+        **_admin_totals(),
+        'latest_type': 'quizzes',
+        'page_title': 'Quiz mới',
+        'page_subtitle': 'Danh sách quiz được tạo gần đây nhất trong hệ thống.',
+        'items': quizzes,
+    })
+
+
+@staff_member_required
+def admin_latest_documents(request):
+    documents = Document.objects.select_related('owner', 'classroom').order_by('-created_at')
+    return render(request, 'accounts/admin_dashboard/latest_items.html', {
+        **_admin_totals(),
+        'latest_type': 'documents',
+        'page_title': 'Tài liệu mới',
+        'page_subtitle': 'Danh sách tài liệu được đăng gần đây nhất trong hệ thống.',
+        'items': documents,
+    })
 
 
 @login_required
 def tea_dashboard(request):
-
     return render(request, 'accounts/teacher/tea_dashboard.html')
 
 
 @login_required
 def stu_dashboard(request):
-
     return render(request, 'accounts/student/stu_dashboard.html')
 
 
@@ -111,7 +198,7 @@ def profile_view(request):
 
         if form.is_valid():
             form.save()
-            messages.success(request, "Đã lưu hồ sơ.")
+            messages.success(request, 'Đã lưu hồ sơ.')
             return redirect('accounts:profile')
     else:
         form = ProfileForm(instance=request.user)
@@ -125,4 +212,10 @@ def profile_view(request):
     })
 
 
+@login_required
+def user_list(request):
+    users = CustomUser.objects.all()
+    return render(request, 'accounts/user_list.html', {
+        'users': users
+    })
 

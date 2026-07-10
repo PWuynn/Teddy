@@ -375,7 +375,7 @@
                                                             </a>
                                                         {% endif %}
                                                     {% elif not can_interact %}
-                                                        <span class="badge bg-secondary">Dang cho duyet, chua the nop bai</span>
+                                                        <span class="badge bg-secondary">Dang Chờ duyệt, chua the nop bai</span>
                                                     {% elif group.is_late %}
                                                         <span class="badge bg-danger">Đã quá hạn, không thể nộp bài</span>
                                                     {% else %}
@@ -494,7 +494,7 @@
                                     </a>
                                     {% endif %}
                                     {% else %}
-                                    <span class="btn btn-secondary btn-sm disabled">Cho duyet</span>
+                                    <span class="btn btn-secondary btn-sm disabled">Chờ duyệt</span>
                                     {% endif %}
                                     {% if request.user == quiz.created_by %}
                                         <a class="btn btn-warning btn-sm" href="{% url 'quiz_ai:add_question' quiz.id %}">

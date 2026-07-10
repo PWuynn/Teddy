@@ -1,174 +1,8 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}TodoList | TEDDY{% endblock %}
 
 {% block content %}
-<style>
-        * {
-            font-family: 'Be Vietnam Pro', sans-serif;
-        }
-
-        body {
-            background: #f6f8fc;
-            overflow-x: hidden;
-            color: #1e293b;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        /* ===== NAVBAR ===== */
-        .navbar {
-            padding: 18px 0;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-        }
-
-        .navbar-brand {
-            font-size: 30px;
-            font-weight: 800;
-            color: #2563eb !important;
-        }
-
-        .nav-link {
-            color: #334155 !important;
-            font-weight: 500;
-            margin: 0 8px;
-            transition: 0.3s;
-            position: relative;
-        }
-
-        .nav-link::after {
-            content: "";
-            position: absolute;
-            width: 0%;
-            height: 3px;
-            background: #2563eb;
-            left: 0;
-            bottom: -6px;
-            border-radius: 20px;
-            transition: .3s;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        .btn-login {
-            border: 2px solid #2563eb;
-            color: #2563eb;
-            border-radius: 14px;
-            padding: 10px 22px;
-            font-weight: 600;
-            transition: .3s;
-        }
-
-        .btn-login:hover {
-            background: #2563eb;
-            color: white;
-        }
-
-        .btn-register {
-            background: linear-gradient(135deg, #2563eb, #4f46e5);
-            color: white;
-            border-radius: 14px;
-            padding: 10px 24px;
-            font-weight: 600;
-            transition: .3s;
-        }
-
-        .btn-register:hover {
-            transform: translateY(-2px);
-        }
-    </style>
-
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="menu">
-
-                <ul class="navbar-nav mx-auto">
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'accounts:stu_dashboard' %}">Trang chủ</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'courses:course_list' %}">Khóa học</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'quiz_ai:quiz_list' %}">Đề thi</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Tài liệu</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'todo:todo_list' %}">TodoList</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'quiz_ai:quiz_history' %}">Lịch sử làm bài</a>
-                    </li>
-                </ul>
-
-                <div class="d-flex gap-2">
-                    {% if user.is_authenticated %}
-
-    <div class="dropdown">
-
-        <button class="btn btn-light dropdown-toggle"
-                data-bs-toggle="dropdown">
-
-            <i class="bi bi-person-circle me-2"></i>
-
-            {{ user.username }}
-
-        </button>
-
-        <ul class="dropdown-menu dropdown-menu-end">
-
-            <li>
-                <a class="dropdown-item text-danger"
-                   href="{% url 'accounts:logout' %}">
-
-                    Đăng xuất
-
-                </a>
-            </li>
-
-        </ul>
-
-    </div>
-
-{% else %}
-
-    <a href="{% url 'accounts:login' %}"
-       class="btn btn-light me-2">
-
-        Đăng nhập
-
-    </a>
-
-    <a href="{% url 'accounts:register' %}"
-       class="btn btn-warning">
-
-        Đăng ký
-
-    </a>
-
-{% endif %}
-                </div>
-
-            </div>
-
-        </div>
-
-    </nav>
 <div class="todo-page py-5">
     <div class="container">
         <section class="todo-hero">
@@ -177,186 +11,120 @@
                 <h1>TodoList</h1>
                 <p>Theo dõi việc cá nhân và bài được giao từ lớp học theo hạn, ưu tiên và trạng thái hoàn thành.</p>
             </div>
-            <a href="{% url 'todo:create_personal_todo' %}" class="btn btn-dark">
+            <a href="{% url 'todo:create_personal_todo' %}" class="btn btn-light">
                 <i class="bi bi-plus-lg"></i> Thêm công việc
             </a>
         </section>
 
-        <div class="row g-4 mt-1">
-            <div class="col-md-3">
-                <div class="todo-metric">
-                    <span>Việc cá nhân</span>
-                    <strong>{{ personal_done }}/{{ personal_total }}</strong>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="todo-metric">
-                    <span>Bài được giao</span>
-                    <strong>{{ assigned_done }}/{{ assigned_total }}</strong>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="todo-metric">
-                    <span>Đang mở</span>
-                    <strong>{{ personal_total|add:assigned_total }}</strong>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="todo-metric">
-                    <span>Người dùng</span>
-                    <strong>{{ request.user.username }}</strong>
-                </div>
-            </div>
+        <div class="todo-metrics">
+            <div class="todo-metric"><span>Việc cá nhân</span><strong>{{ personal_done }}/{{ personal_total }}</strong></div>
+            <div class="todo-metric"><span>Bài được giao</span><strong>{{ assigned_done }}/{{ assigned_total }}</strong></div>
+            <div class="todo-metric"><span>Đang mở</span><strong>{{ personal_total|add:assigned_total }}</strong></div>
+            <div class="todo-metric"><span>Người dùng</span><strong>{{ request.user.username }}</strong></div>
         </div>
 
-        <div class="row g-4 mt-1">
-            <div class="col-xl-6">
-                <section class="todo-panel">
-                    <div class="panel-heading">
-                        <div>
-                            <h2>Việc cá nhân</h2>
-                            <p>Những việc bạn tự tạo hoặc công khai từ người khác.</p>
-                        </div>
+        <div class="todo-columns">
+            <section class="todo-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Việc cá nhân</h2>
+                        <p>Những việc bạn tự tạo hoặc công khai từ người khác.</p>
                     </div>
+                </div>
 
-                    <div class="todo-stack">
-                        {% for todo in todos %}
-                            <article class="todo-row priority-{{ todo.priority }} {% if todo.completed %}is-done{% endif %}">
-                                <div class="todo-check">
-                                    {% if todo.completed %}
-                                        <i class="bi bi-check2"></i>
-                                    {% else %}
-                                        <i class="bi bi-circle"></i>
-                                    {% endif %}
-                                </div>
-
-                                <div class="todo-main">
-                                    <div class="todo-title-line">
-                                        <h3>{{ todo.title }}</h3>
-                                    </div>
-                                    <p>{{ todo.description|default:"Không có mô tả." }}</p>
-                                    <div class="todo-meta">
-                                        <span><i class="bi bi-person"></i> {{ todo.user.username }}</span>
-                                        <span><i class="bi bi-calendar-event"></i> {{ todo.deadline|date:"d/m/Y H:i" }}</span>
-                                        <span class="countdown" data-deadline="{{ todo.deadline|date:'c' }}">Đang tính...</span>
-                                    </div>
-                                </div>
-
-                                <div class="todo-actions">
-                                    {% if todo.user == request.user %}
-                                        <a href="{% url 'todo:edit_personal_todo' todo.id %}" class="btn btn-sm btn-outline-primary">Sửa</a>
-                                        <a href="{% url 'todo:delete_personal_todo' todo.id %}" class="btn btn-sm btn-outline-danger">Xóa</a>
-                                        <a href="{% url 'todo:complete_personal_todo' todo.id %}" class="btn btn-sm btn-success">
-                                            {% if todo.completed %}Mở lại{% else %}Hoàn thành{% endif %}
-                                        </a>
-                                    {% endif %}
-                                </div>
-                            </article>
-                        {% empty %}
-                            <div class="todo-empty">
-                                <i class="bi bi-check2-square"></i>
-                                <h3>Chưa có việc cá nhân</h3>
-                                <p>Tạo công việc đầu tiên để bắt đầu quản lý lịch học.</p>
+                <div class="todo-stack">
+                    {% for todo in todos %}
+                        <article class="todo-row priority-{{ todo.priority }} {% if todo.completed %}is-done{% endif %}">
+                            <div class="todo-check">
+                                {% if todo.completed %}<i class="bi bi-check2"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
                             </div>
-                        {% endfor %}
-                    </div>
-                </section>
-            </div>
 
-            <div class="col-xl-6">
-                <section class="todo-panel">
-                    <div class="panel-heading">
-                        <div>
-                            <h2>Bài được giao từ lớp</h2>
-                            <p>Bài tập/todo giáo viên giao cho bạn trong classroom.</p>
-                        </div>
-                    </div>
-
-                    <div class="todo-stack">
-                        {% for todo in assigned_todos %}
-                            <article class="todo-row priority-{{ todo.priority }} {% if todo.completed %}is-done{% endif %}">
-                                <div class="todo-check">
-                                    {% if todo.completed %}
-                                        <i class="bi bi-check2"></i>
-                                    {% else %}
-                                        <i class="bi bi-circle"></i>
-                                    {% endif %}
+                            <div class="todo-main">
+                                <div class="todo-title-line"><h3>{{ todo.title }}</h3></div>
+                                <p>{{ todo.description|default:"Không có mô tả." }}</p>
+                                <div class="todo-meta">
+                                    <span><i class="bi bi-person"></i> {{ todo.user.username }}</span>
+                                    <span><i class="bi bi-calendar-event"></i> {{ todo.deadline|date:"d/m/Y H:i" }}</span>
+                                    <span class="countdown" data-deadline="{{ todo.deadline|date:'c' }}">Đang tính...</span>
                                 </div>
+                            </div>
 
-                                <div class="todo-main">
-                                    <div class="todo-title-line">
-                                        <h3>{{ todo.title }}</h3>
-                                        {% if todo.completed %}
-                                            <span class="badge bg-success">Hoàn thành</span>
-                                        {% else %}
-                                            <span class="badge bg-warning text-dark">Đang làm</span>
-                                        {% endif %}
-                                    </div>
-                                    <p>{{ todo.description|default:"Không có mô tả." }}</p>
-                                    <div class="todo-meta">
-                                        {% if todo.classroom %}
-                                            <span><i class="bi bi-easel2"></i> {{ todo.classroom.name }}</span>
-                                        {% endif %}
-                                        {% if todo.assigned_by %}
-                                            <span><i class="bi bi-person-badge"></i> {{ todo.assigned_by.username }}</span>
-                                        {% endif %}
-                                        <span><i class="bi bi-calendar-event"></i> {{ todo.deadline|date:"d/m/Y H:i" }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="todo-actions">
-                                    <a href="{% url 'todo:toggle_todo' todo.id %}" class="btn btn-sm btn-success">
+                            <div class="todo-actions">
+                                {% if todo.user == request.user %}
+                                    <a href="{% url 'todo:edit_personal_todo' todo.id %}" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <a href="{% url 'todo:delete_personal_todo' todo.id %}" class="btn btn-sm btn-outline-danger">Xóa</a>
+                                    <a href="{% url 'todo:complete_personal_todo' todo.id %}" class="btn btn-sm btn-success">
                                         {% if todo.completed %}Mở lại{% else %}Hoàn thành{% endif %}
                                     </a>
-                                    {% if todo.classroom %}
-                                        <a href="{% url 'classroom:class_detail' todo.classroom.id %}" class="btn btn-sm btn-outline-primary">Vào lớp</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% empty %}
+                        <div class="todo-empty">
+                            <i class="bi bi-check2-square"></i>
+                            <h3>Chưa có việc cá nhân</h3>
+                            <p>Tạo công việc đầu tiên để bắt đầu quản lý lịch học.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="todo-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Bài được giao từ lớp</h2>
+                        <p>Bài tập/todo giáo viên giao cho bạn trong classroom.</p>
+                    </div>
+                </div>
+
+                <div class="todo-stack">
+                    {% for todo in assigned_todos %}
+                        <article class="todo-row priority-{{ todo.priority }} {% if todo.completed %}is-done{% endif %}">
+                            <div class="todo-check">
+                                {% if todo.completed %}<i class="bi bi-check2"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                            </div>
+
+                            <div class="todo-main">
+                                <div class="todo-title-line">
+                                    <h3>{{ todo.title }}</h3>
+                                    {% if todo.completed %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Đang làm</span>
                                     {% endif %}
                                 </div>
-                            </article>
-                        {% empty %}
-                            <div class="todo-empty">
-                                <i class="bi bi-inbox"></i>
-                                <h3>Chưa có bài được giao</h3>
-                                <p>Khi giáo viên giao bài trong classroom, danh sách sẽ hiện ở đây.</p>
+                                <p>{{ todo.description|default:"Không có mô tả." }}</p>
+                                <div class="todo-meta">
+                                    {% if todo.classroom %}<span><i class="bi bi-easel2"></i> {{ todo.classroom.name }}</span>{% endif %}
+                                    {% if todo.assigned_by %}<span><i class="bi bi-person-badge"></i> {{ todo.assigned_by.username }}</span>{% endif %}
+                                    <span><i class="bi bi-calendar-event"></i> {{ todo.deadline|date:"d/m/Y H:i" }}</span>
+                                </div>
                             </div>
-                        {% endfor %}
-                    </div>
-                </section>
-            </div>
+
+                            <div class="todo-actions">
+                                {% if todo.classroom %}
+                                    <a href="{% url 'classroom:class_detail' todo.classroom.id %}" class="btn btn-sm btn-outline-primary">Vào lớp</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% empty %}
+                        <div class="todo-empty">
+                            <i class="bi bi-inbox"></i>
+                            <h3>Chưa có bài được giao</h3>
+                            <p>Khi giáo viên giao bài trong classroom, danh sách sẽ hiện ở đây.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
         </div>
     </div>
 </div>
 
 <style>
-.todo-page{background:#f7f7fb;min-height:calc(100vh - 76px)}
-.todo-hero{align-items:center;background:#29223f;border-radius:8px;color:white;display:flex;justify-content:space-between;gap:24px;padding:30px}
-.todo-kicker{color:#c4b5fd;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
-.todo-hero h1{font-size:40px;font-weight:850;letter-spacing:0;margin:6px 0}
-.todo-hero p{color:rgba(255,255,255,.76);margin:0;max-width:760px}
-.todo-metric,.todo-panel{background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 14px 32px rgba(41,34,63,.07)}
-.todo-metric{display:grid;gap:4px;padding:18px}
-.todo-metric span{color:#64748b}
-.todo-metric strong{font-size:24px}
-.todo-panel{padding:22px}
-.panel-heading{align-items:center;display:flex;justify-content:space-between;margin-bottom:18px}
-.panel-heading h2{font-size:22px;font-weight:850;margin:0}
-.panel-heading p{color:#64748b;margin:4px 0 0}
-.todo-stack{display:grid;gap:12px}
-.todo-row{align-items:flex-start;border:1px solid #e5e7eb;border-left:5px solid #8b5cf6;border-radius:8px;display:grid;gap:14px;grid-template-columns:36px minmax(0,1fr) auto;padding:14px}
-.todo-row.priority-high{border-left-color:#ef4444}
-.todo-row.priority-medium{border-left-color:#f59e0b}
-.todo-row.priority-low{border-left-color:#10b981}
-.todo-row.is-done{background:#f8fafc;opacity:.78}
-.todo-check{align-items:center;background:#f5f3ff;border-radius:8px;color:#6d28d9;display:flex;height:36px;justify-content:center;width:36px}
-.todo-title-line{align-items:center;display:flex;gap:8px;justify-content:space-between}
-.todo-title-line h3{font-size:17px;font-weight:850;margin:0}
-.todo-main p{color:#64748b;margin:6px 0 10px}
-.todo-meta{color:#64748b;display:flex;flex-wrap:wrap;font-size:13px;gap:10px}
-.todo-actions{display:flex;flex-direction:column;gap:8px}
-.todo-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;padding:38px;text-align:center}
-.todo-empty i{color:#6d28d9;font-size:38px}
-.todo-empty h3{color:#0f172a;font-size:19px;margin-top:10px}
-@media(max-width:768px){.todo-hero,.todo-row{grid-template-columns:1fr;align-items:stretch;flex-direction:column}.todo-actions{flex-direction:row;flex-wrap:wrap}}
+.todo-page{background:#f3f8f6;min-height:calc(100vh - 76px)}.todo-hero{align-items:center;background:#0f766e;border-radius:8px;color:white;display:flex;justify-content:space-between;gap:24px;padding:30px}.todo-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.todo-hero h1{font-size:40px;font-weight:850;letter-spacing:0;margin:6px 0}.todo-hero p{color:rgba(255,255,255,.78);margin:0;max-width:760px}
+.todo-metrics{display:grid;gap:18px;grid-template-columns:repeat(4,minmax(0,1fr));margin:24px 0}.todo-metric,.todo-panel{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08)}.todo-metric{display:grid;gap:4px;padding:18px}.todo-metric span{color:#64748b}.todo-metric strong{font-size:24px;overflow-wrap:anywhere}.todo-columns{display:grid;gap:18px;grid-template-columns:repeat(2,minmax(0,1fr))}.todo-panel{padding:22px}.panel-heading{align-items:center;display:flex;justify-content:space-between;margin-bottom:18px}.panel-heading h2{font-size:22px;font-weight:850;margin:0}.panel-heading p{color:#64748b;margin:4px 0 0}.todo-stack{display:grid;gap:12px}
+.todo-row{align-items:flex-start;border:1px solid #e2e8f0;border-left:5px solid #0f766e;border-radius:8px;display:grid;gap:14px;grid-template-columns:36px minmax(0,1fr) auto;padding:14px}.todo-row.priority-high{border-left-color:#ef4444}.todo-row.priority-medium{border-left-color:#f59e0b}.todo-row.priority-low{border-left-color:#10b981}.todo-row.is-done{background:#f8fafc;opacity:.78}.todo-check{align-items:center;background:#ecfdf5;border-radius:8px;color:#0f766e;display:flex;height:36px;justify-content:center;width:36px}.todo-title-line{align-items:center;display:flex;gap:8px;justify-content:space-between}.todo-title-line h3{font-size:17px;font-weight:850;margin:0}.todo-main p{color:#64748b;margin:6px 0 10px}.todo-meta{color:#64748b;display:flex;flex-wrap:wrap;font-size:13px;gap:10px}.todo-actions{display:flex;flex-direction:column;gap:8px}.todo-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;padding:38px;text-align:center}.todo-empty i{color:#0f766e;font-size:38px}.todo-empty h3{color:#0f172a;font-size:19px;margin-top:10px}
+@media(max-width:992px){.todo-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.todo-columns{grid-template-columns:1fr}}@media(max-width:768px){.todo-hero{align-items:stretch;flex-direction:column}.todo-row{grid-template-columns:1fr}.todo-actions{flex-direction:row;flex-wrap:wrap}}@media(max-width:576px){.todo-metrics{grid-template-columns:1fr}.todo-actions .btn{flex:1}}
 </style>
 
 <script>
