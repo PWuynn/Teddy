@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from cloudinary.models import CloudinaryField
 class CustomUser(AbstractUser):
 
     ROLE_CHOICES = (
@@ -44,11 +44,11 @@ class CustomUser(AbstractUser):
         blank=True,
         verbose_name='Mo ta khac'
     )
-    avatar = models.ImageField(
-        upload_to='avatars/',
-        null=True,
-        blank=True,
-        verbose_name='Anh dai dien'
+    avatar = CloudinaryField(
+    "avatar",
+    folder="avatars",
+    blank=True,
+    null=True,
     )
     @property
     def is_admin(self):

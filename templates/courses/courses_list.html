@@ -21,11 +21,9 @@
                 <a href="{% url 'courses:join_course' %}" class="btn btn-light">
                     <i class="bi bi-key"></i> Nhập mã khóa
                 </a>
-                {% if request.user.role == 'teacher' %}
                     <a href="{% url 'courses:create_course' %}" class="btn btn-dark">
                         <i class="bi bi-plus-lg"></i> Tạo khóa học
                     </a>
-                {% endif %}
             </div>
         </section>
 

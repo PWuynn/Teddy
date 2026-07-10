@@ -3,6 +3,7 @@ import os
 from importlib.util import find_spec
 from dotenv import load_dotenv
 import dj_database_url
+import cloudinary
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,7 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+     "cloudinary",
     'accounts',
     'quiz_ai',
     'classroom',
@@ -107,7 +108,12 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
+cloudinary.config(
+    cloud_name=os.getenv("ujnnuday"),
+    api_key=os.getenv("794331186292349"),
+    api_secret=os.getenv("_aS_LZh50ma17vQu83vW7jdKzQg"),
+    secure=True,
+)
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'

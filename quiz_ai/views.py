@@ -445,7 +445,7 @@ def quiz_detail(request, quiz_id):
         id=quiz_id
     )
 
-    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and  _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền xem đề thi này.")
 
     questions = list(quiz.questions.all())
@@ -470,7 +470,7 @@ def take_quiz(request, quiz_id):
         id=quiz_id
     )
 
-    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and  _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền làm bài kiểm tra này.")
 
     attempt_count = QuizResult.objects.filter(user=request.user, quiz=quiz).count()
@@ -500,7 +500,7 @@ def submit_quiz(request, quiz_id):
         id=quiz_id
     )
 
-    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền nộp bài kiểm tra này.")
 
     total_questions = quiz.questions.count()
@@ -616,7 +616,7 @@ def delete_quiz(request, quiz_id):
 def flashcards(request, quiz_id):
     quiz = get_object_or_404(Quiz.objects.prefetch_related('questions__choices'), id=quiz_id)
 
-    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền xem flashcards của đề này.")
 
     questions = list(quiz.questions.all())
