@@ -144,7 +144,7 @@
 .stat-cyan i { background: #0891b2; }
 .stat-red i { background: #dc2626; }
 .stat-purple i { background: #7c3aed; }
-.stat-teal i { background: #0f766e; }
+.stat-teal i { background: linear-gradient(135deg,#2563eb,#3b82f6); }
 
 .admin-panel {
     border: 1px solid #e5e7eb;

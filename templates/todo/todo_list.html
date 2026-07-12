@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}TodoList | TEDDY{% endblock %}
 
@@ -28,7 +28,7 @@
                 <div class="panel-heading">
                     <div>
                         <h2>Việc cá nhân</h2>
-                        <p>Những việc bạn tự tạo hoặc công khai từ người khác.</p>
+                        <p>Những việc bạn tự tạo và chỉ bạn mới có thể xem.</p>
                     </div>
                 </div>
 
@@ -73,21 +73,21 @@
                 <div class="panel-heading">
                     <div>
                         <h2>Bài được giao từ lớp</h2>
-                        <p>Bài tập/todo giáo viên giao cho bạn trong classroom.</p>
+                        <p>Những việc bạn tự tạo và chỉ bạn mới có thể xem.</p>
                     </div>
                 </div>
 
                 <div class="todo-stack">
                     {% for todo in assigned_todos %}
-                        <article class="todo-row priority-{{ todo.priority }} {% if todo.completed %}is-done{% endif %}">
+                        <article class="todo-row priority-{{ todo.priority }} {% if todo.todo_completed %}is-done{% endif %}">
                             <div class="todo-check">
-                                {% if todo.completed %}<i class="bi bi-check2"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                                {% if todo.todo_completed %}<i class="bi bi-check2"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
                             </div>
 
                             <div class="todo-main">
                                 <div class="todo-title-line">
                                     <h3>{{ todo.title }}</h3>
-                                    {% if todo.completed %}
+                                    {% if todo.todo_completed %}
                                         <span class="badge bg-success">Hoàn thành</span>
                                     {% else %}
                                         <span class="badge bg-warning text-dark">Đang làm</span>
@@ -105,6 +105,7 @@
                                 {% if todo.classroom %}
                                     <a href="{% url 'classroom:class_detail' todo.classroom.id %}" class="btn btn-sm btn-outline-primary">Vào lớp</a>
                                 {% endif %}
+                                <a href="{% url 'todo:toggle_todo' todo.id %}" class="btn btn-sm btn-success">{% if todo.todo_completed %}Mở lại{% else %}Hoàn thành{% endif %}</a>
                             </div>
                         </article>
                     {% empty %}
@@ -121,9 +122,9 @@
 </div>
 
 <style>
-.todo-page{background:#f3f8f6;min-height:calc(100vh - 76px)}.todo-hero{align-items:center;background:#0f766e;border-radius:8px;color:white;display:flex;justify-content:space-between;gap:24px;padding:30px}.todo-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.todo-hero h1{font-size:40px;font-weight:850;letter-spacing:0;margin:6px 0}.todo-hero p{color:rgba(255,255,255,.78);margin:0;max-width:760px}
+.todo-page{background:#f3f8f6;min-height:calc(100vh - 76px)}.todo-hero{align-items:center;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:8px;color:white;display:flex;justify-content:space-between;gap:24px;padding:30px}.todo-kicker{color:#fff;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.todo-hero h1{font-size:40px;font-weight:850;letter-spacing:0;margin:6px 0}.todo-hero p{color:rgba(255,255,255,.78);margin:0;max-width:760px}
 .todo-metrics{display:grid;gap:18px;grid-template-columns:repeat(4,minmax(0,1fr));margin:24px 0}.todo-metric,.todo-panel{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08)}.todo-metric{display:grid;gap:4px;padding:18px}.todo-metric span{color:#64748b}.todo-metric strong{font-size:24px;overflow-wrap:anywhere}.todo-columns{display:grid;gap:18px;grid-template-columns:repeat(2,minmax(0,1fr))}.todo-panel{padding:22px}.panel-heading{align-items:center;display:flex;justify-content:space-between;margin-bottom:18px}.panel-heading h2{font-size:22px;font-weight:850;margin:0}.panel-heading p{color:#64748b;margin:4px 0 0}.todo-stack{display:grid;gap:12px}
-.todo-row{align-items:flex-start;border:1px solid #e2e8f0;border-left:5px solid #0f766e;border-radius:8px;display:grid;gap:14px;grid-template-columns:36px minmax(0,1fr) auto;padding:14px}.todo-row.priority-high{border-left-color:#ef4444}.todo-row.priority-medium{border-left-color:#f59e0b}.todo-row.priority-low{border-left-color:#10b981}.todo-row.is-done{background:#f8fafc;opacity:.78}.todo-check{align-items:center;background:#ecfdf5;border-radius:8px;color:#0f766e;display:flex;height:36px;justify-content:center;width:36px}.todo-title-line{align-items:center;display:flex;gap:8px;justify-content:space-between}.todo-title-line h3{font-size:17px;font-weight:850;margin:0}.todo-main p{color:#64748b;margin:6px 0 10px}.todo-meta{color:#64748b;display:flex;flex-wrap:wrap;font-size:13px;gap:10px}.todo-actions{display:flex;flex-direction:column;gap:8px}.todo-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;padding:38px;text-align:center}.todo-empty i{color:#0f766e;font-size:38px}.todo-empty h3{color:#0f172a;font-size:19px;margin-top:10px}
+.todo-row{align-items:flex-start;border:1px solid #e2e8f0;border-left:5px solid linear-gradient(135deg,#2563eb,#3b82f6);border-radius:8px;display:grid;gap:14px;grid-template-columns:36px minmax(0,1fr) auto;padding:14px}.todo-row.priority-high{border-left-color:#ef4444}.todo-row.priority-medium{border-left-color:#f59e0b}.todo-row.priority-low{border-left-color:#10b981}.todo-row.is-done{background:#f8fafc;opacity:.78}.todo-check{align-items:center;background:#ecfdf5;border-radius:8px;color:linear-gradient(135deg,#2563eb,#3b82f6);display:flex;height:36px;justify-content:center;width:36px}.todo-title-line{align-items:center;display:flex;gap:8px;justify-content:space-between}.todo-title-line h3{font-size:17px;font-weight:850;margin:0}.todo-main p{color:#64748b;margin:6px 0 10px}.todo-meta{color:#64748b;display:flex;flex-wrap:wrap;font-size:13px;gap:10px}.todo-actions{display:flex;flex-direction:column;gap:8px}.todo-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;padding:38px;text-align:center}.todo-empty i{color:linear-gradient(135deg,#2563eb,#3b82f6);font-size:38px}.todo-empty h3{color:#0f172a;font-size:19px;margin-top:10px}
 @media(max-width:992px){.todo-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.todo-columns{grid-template-columns:1fr}}@media(max-width:768px){.todo-hero{align-items:stretch;flex-direction:column}.todo-row{grid-template-columns:1fr}.todo-actions{flex-direction:row;flex-wrap:wrap}}@media(max-width:576px){.todo-metrics{grid-template-columns:1fr}.todo-actions .btn{flex:1}}
 </style>
 

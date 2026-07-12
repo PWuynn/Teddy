@@ -53,6 +53,9 @@ class Todo(models.Model):
 
     completed = models.BooleanField(default=False)
 
+    # Personal progress only; it must never be treated as a classroom submission.
+    todo_completed = models.BooleanField(default=False)
+
     submission_text = models.TextField(blank=True)
 
     submission_file = models.FileField(

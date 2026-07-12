@@ -238,7 +238,7 @@ textarea.form-control{
     background:white;
     border-radius:24px;
     padding:24px;
-    box-shadow:0 10px 30px rgba(15,23,42,.05);
+    box-shadow:0 10px 30px rgba(6, 117, 243, 0.774);
     height:100%;
     transition:.3s;
 }
@@ -264,7 +264,7 @@ textarea.form-control{
     background:white;
     border-radius:20px;
     padding:20px;
-    box-shadow:0 8px 20px rgba(0,0,0,.05);
+    box-shadow:0 8px 20px rgba(6, 117, 243, 0.774);
     margin-bottom:15px;
 }
 
@@ -281,7 +281,7 @@ textarea.form-control{
     background:white;
     border-radius:24px;
     padding:25px;
-    box-shadow:0 10px 25px rgba(0,0,0,.05);
+    box-shadow:0 10px 25px rgba(6, 117, 243, 0.774);
 }
 
 .quiz-score{
@@ -299,7 +299,7 @@ textarea.form-control{
     border-radius:20px;
     padding:24px;
     height:100%;
-    box-shadow:0 10px 25px rgba(0,0,0,.05);
+    box-shadow:0 10px 25px rgba(6, 117, 243, 0.774);
     transition:.3s;
 }
 
@@ -384,7 +384,7 @@ footer{
 
 .assistant-toggle{
     align-items:center;
-    background:#0f766e;
+    background:linear-gradient(135deg,#2563eb,#3b82f6);
     border:0;
     border-radius:50%;
     box-shadow:0 16px 35px rgba(15,118,110,.32);
@@ -410,7 +410,7 @@ footer{
 
 .assistant-head{
     align-items:center;
-    background:#0f766e;
+    background:linear-gradient(135deg,#2563eb,#3b82f6);
     color:white;
     display:flex;
     justify-content:space-between;
@@ -472,11 +472,11 @@ footer{
 
 .assistant-result:hover{
     background:#f8fafc;
-    color:#0f766e;
+    color:linear-gradient(135deg,#2563eb,#3b82f6);
 }
 
 .assistant-result span{
-    color:#0f766e;
+    color:linear-gradient(135deg,#2563eb,#3b82f6);
     display:block;
     font-size:12px;
     font-weight:700;

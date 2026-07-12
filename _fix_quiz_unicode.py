@@ -7,9 +7,9 @@ for line in lines:
     stripped = line.strip()
     if stripped.startswith('return without_marks.replace('):
         out.append("    return without_marks.replace(chr(273), 'd')")
-    elif 'ít nhất 2' in line or 'Ã­t nháº¥t 2' in line or 'mỗi câu' in line or 'má»—i' in line:
+    elif 'ít nhất 1' in line or 'Ã­t nháº¥t 1' in line or 'mỗi câu' in line or 'má»—i' in line:
         if 'return None' in line:
-            out.append("        return None, f'Dòng {first_line_number}: mỗi câu hỏi cần ít nhất 2 đáp án.'")
+            out.append("        return None, f'Dòng {first_line_number}: mỗi câu hỏi cần ít nhất 1 đáp án.'")
         else:
             out.append(line)
     elif 'errors.append(' in line and 'nh' in line and 'di' in line:

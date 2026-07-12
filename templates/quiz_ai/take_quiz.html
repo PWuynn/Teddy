@@ -1,8 +1,30 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Làm bài | TEDDY{% endblock %}
 
 {% block content %}
+{% if show_order_setup %}
+<div class="order-setup-backdrop">
+    <section class="order-setup-card" role="dialog" aria-modal="true" aria-labelledby="orderSetupTitle">
+        <span class="eyebrow dark">Thiết lập làm bài</span>
+        <h2 id="orderSetupTitle">Chọn thứ tự hiển thị</h2>
+        <p>Thiết lập có bật đảo sẽ được tạo ngẫu nhiên lại mỗi lần bạn tải lại trang.</p>
+        <form method="get" action="{% url 'quiz_ai:take_quiz' quiz.id %}">
+            <fieldset>
+                <legend>Thứ tự câu hỏi</legend>
+                <label><input type="radio" name="shuffle_questions" value="0" checked> Giữ nguyên</label>
+                <label><input type="radio" name="shuffle_questions" value="1"> Đảo câu hỏi ngẫu nhiên</label>
+            </fieldset>
+            <fieldset>
+                <legend>Thứ tự đáp án</legend>
+                <label><input type="radio" name="shuffle_answers" value="0" checked> Giữ nguyên</label>
+                <label><input type="radio" name="shuffle_answers" value="1"> Đảo đáp án ngẫu nhiên</label>
+            </fieldset>
+            <button type="submit" class="btn btn-primary w-100">Bắt đầu làm bài</button>
+        </form>
+    </section>
+</div>
+{% endif %}
 <div class="take-page">
     <div class="container py-4 py-lg-5">
         <form method="POST" action="{% url 'quiz_ai:submit_quiz' quiz.id %}" id="quizForm" class="take-layout">
@@ -21,7 +43,7 @@
                     <div><strong>{% if quiz.max_attempts %}{{ quiz.max_attempts }}{% else %}∞{% endif %}</strong><span>Lượt làm</span></div>
                 </div>
 
-                {% if quiz.time_limit %}
+                {% if quiz.time_limit and not show_order_setup %}
                 <div class="timer-box" id="timerBox">
                     <i class="bi bi-stopwatch"></i>
                     <div>
@@ -75,7 +97,7 @@
                     {% endif %}
 
                     <div class="answer-list">
-                        {% for choice in question.choices.all %}
+                        {% for choice in question.display_choices %}
                         <label class="answer-option" for="choice{{ choice.id }}">
                             {% if question.allows_multiple %}
                             <input class="form-check-input" type="checkbox" name="question_{{ question.id }}" value="{{ choice.id }}" id="choice{{ choice.id }}">
@@ -153,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     syncProgress();
 
-    {% if quiz.time_limit %}
+    {% if quiz.time_limit and not show_order_setup %}
     let remainingSeconds = {{ quiz.time_limit }} * 60;
     const timer = document.getElementById('timer');
     const timerBox = document.getElementById('timerBox');
@@ -181,6 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <style>
+.order-setup-backdrop{align-items:center;background:rgba(15,23,42,.58);display:flex;inset:0;justify-content:center;padding:20px;position:fixed;z-index:2000}.order-setup-card{background:#fff;border-radius:12px;box-shadow:0 24px 60px rgba(15,23,42,.3);max-width:500px;padding:26px;width:100%}.order-setup-card h2{font-size:24px;font-weight:850;margin:8px 0}.order-setup-card p{color:#64748b}.order-setup-card fieldset{border:1px solid #dbe4ef;border-radius:8px;margin:16px 0;padding:14px}.order-setup-card legend{float:none;font-size:15px;font-weight:850;margin:0;padding:0 5px;width:auto}.order-setup-card label{display:block;margin:9px 0}.eyebrow.dark{color:#0369a1}
 .take-page{background:#f4f7fb;min-height:calc(100vh - 76px)}
 .take-layout{align-items:start;display:grid;gap:22px;grid-template-columns:340px minmax(0,1fr)}
 .take-sidebar{background:#12343b;border-radius:8px;color:#fff;padding:24px;position:sticky;top:96px}.eyebrow{color:#99f6e4;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.take-sidebar h1{font-size:28px;font-weight:850;letter-spacing:0;margin:8px 0}.take-sidebar p{color:rgba(255,255,255,.76);line-height:1.6;margin:0}.side-stats{display:grid;gap:10px;grid-template-columns:repeat(3,1fr);margin-top:18px}.side-stats div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px}.side-stats strong,.side-stats span{display:block}.side-stats span{color:rgba(255,255,255,.72);font-size:12px}.timer-box,.rule-box,.progress-panel{background:#fff;border-radius:8px;color:#0f172a;margin-top:14px;padding:14px}.timer-box{align-items:flex-start;display:flex;gap:12px}.timer-box i{color:#dc2626;font-size:24px}.timer-box span{color:#64748b;display:block;font-size:13px}.timer-box strong{font-size:26px}.timer-box.urgent{background:#fee2e2;color:#991b1b}.progress-label{align-items:center;display:flex;justify-content:space-between}.progress-label span{color:#64748b;font-size:13px}.progress-label strong{font-size:18px}.answer-progress{background:#e2e8f0;border-radius:999px;height:9px;margin-top:10px;overflow:hidden}.answer-progress span{background:#10b981;display:block;height:100%;transition:width .2s ease;width:0}.question-nav{display:grid;gap:8px;grid-template-columns:repeat(6,1fr);margin-top:14px}.question-pill{align-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#fff;display:flex;font-weight:850;height:38px;justify-content:center}.question-pill:hover{background:rgba(255,255,255,.2);color:#fff}.question-pill.answered{background:#10b981;border-color:#34d399;color:#052e2b}.rule-box{align-items:flex-start;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;display:flex;font-size:13px;gap:10px;line-height:1.5}.rule-box i{font-size:18px;margin-top:1px}

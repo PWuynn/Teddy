@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Kho tài liệu | TEDDY{% endblock %}
 
@@ -88,12 +88,12 @@
 
 <style>
 .documents-page{background:#f3f8f6;min-height:calc(100vh - 76px)}
-.documents-hero{align-items:center;background:#0f766e;border-radius:8px;color:white;display:flex;justify-content:space-between;gap:24px;padding:30px}
-.documents-kicker{color:#ccfbf1;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.documents-hero h1{font-size:40px;font-weight:850;letter-spacing:0;margin:6px 0}.documents-hero p{color:rgba(255,255,255,.78);margin:0;max-width:760px}
-.documents-filter{align-items:center;background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);display:grid;gap:10px;grid-template-columns:minmax(260px,1fr) 190px 170px auto;margin:24px 0;padding:12px}.documents-search{align-items:center;display:flex;gap:10px}.documents-search i{color:#0f766e;font-size:18px;padding-left:8px}.documents-search input{border:0;flex:1;min-height:42px;outline:0}
-.documents-grid{display:grid;gap:18px;grid-template-columns:repeat(3,minmax(0,1fr))}.document-card-v2{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);display:flex;flex-direction:column;padding:20px}.document-card-head{align-items:flex-start;display:flex;justify-content:space-between;gap:12px;margin-bottom:18px}.document-icon{align-items:center;background:#ecfdf5;border-radius:8px;color:#0f766e;display:flex;font-size:26px;height:56px;justify-content:center;width:56px}.document-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}.document-card-v2 h2{font-size:21px;font-weight:850;letter-spacing:0;margin-bottom:8px}.document-card-v2 p{color:#64748b;min-height:58px}
+.documents-hero{align-items:center;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:8px;color:white;display:flex;justify-content:space-between;gap:24px;padding:30px}
+.documents-kicker{color:#fff;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.documents-hero h1{font-size:40px;font-weight:850;letter-spacing:0;margin:6px 0}.documents-hero p{color:rgba(255,255,255,.78);margin:0;max-width:760px}
+.documents-filter{align-items:center;background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);display:grid;gap:10px;grid-template-columns:minmax(260px,1fr) 190px 170px auto;margin:24px 0;padding:12px}.documents-search{align-items:center;display:flex;gap:10px}.documents-search i{color:linear-gradient(135deg,#2563eb,#3b82f6);font-size:18px;padding-left:8px}.documents-search input{border:0;flex:1;min-height:42px;outline:0}
+.documents-grid{display:grid;gap:18px;grid-template-columns:repeat(3,minmax(0,1fr))}.document-card-v2{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);display:flex;flex-direction:column;padding:20px}.document-card-head{align-items:flex-start;display:flex;justify-content:space-between;gap:12px;margin-bottom:18px}.document-icon{align-items:center;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:8px;color:#fff;display:flex;font-size:26px;height:56px;justify-content:center;width:56px}.document-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}.document-card-v2 h2{font-size:21px;font-weight:850;letter-spacing:0;margin-bottom:8px}.document-card-v2 p{color:#64748b;min-height:58px}
 .document-facts{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;display:grid;gap:10px;margin:14px 0;padding:14px}.document-facts span{color:#64748b;display:block;font-size:12px}.document-facts strong{color:#0f172a}.document-actions{display:grid;gap:10px;margin-top:auto}.document-actions .btn{width:100%}.owner-actions{display:grid;gap:10px;grid-template-columns:1fr 1fr}
-.documents-empty{background:white;border:1px dashed #cbd5e1;border-radius:8px;grid-column:1/-1;padding:56px;text-align:center}.documents-empty i{color:#0f766e;font-size:42px}
+.documents-empty{background:white;border:1px dashed #cbd5e1;border-radius:8px;grid-column:1/-1;padding:56px;text-align:center}.documents-empty i{color:linear-gradient(135deg,#2563eb,#3b82f6);font-size:42px}
 @media(max-width:992px){.documents-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.documents-filter{grid-template-columns:1fr 1fr}}
 @media(max-width:768px){.documents-hero{align-items:stretch;flex-direction:column}.documents-grid,.documents-filter{grid-template-columns:1fr}.owner-actions{grid-template-columns:1fr}}
 </style>

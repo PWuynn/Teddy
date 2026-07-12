@@ -21,6 +21,13 @@
           href="{% static 'css/base.css' %}">
     {% block extra_css %}
     {% endblock %}
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]] },
+            options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] }
+        };
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 </head>
 
@@ -112,9 +119,9 @@
                     <li>
 
                         <a class="dropdown-item"
-                           href="{% url 'accounts:profile' %}">
+                           href="{% url 'accounts:settings' %}">
 
-                            Hồ sơ
+                            <i class="bi bi-gear me-2"></i> Cài đặt
 
                         </a>
 

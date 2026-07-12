@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Quiz, Question, Choice, QuizResult
 from django.http import HttpResponseForbidden
@@ -9,14 +9,20 @@ from django.db.models import Q
 from django.db import transaction
 from classroom.models import ClassroomMember
 from django.template.loader import get_template
+from django.core.files.base import ContentFile
 import re
 import unicodedata
+import random
+from io import BytesIO
 
 
-_CHOICE_MARKER_RE = re.compile(r'(?<!\w)[\s\-*]*(?:\(?[A-Fa-f]\)?)[\s]*[\.\):\-/\u2013\u2014]\s+')
+_CHOICE_MARKER_RE = re.compile(r'(?<!\w)[\s\-*]*(?:\(?[A-Fa-f]\)?)[\s]*[\.\):\-/\u2013\u2014]\s*')
 _CHOICE_LINE_RE = re.compile(r'^[\s\-*]*(?:\(?[A-Fa-f]\)?)[\s]*(?:[\.\):\-/\u2013\u2014]|\s+)')
 _NAMED_CHOICE_LINE_RE = re.compile(r'^[\s\-*]*(?:dap an|phuong an|option|choice)\s+([a-f])\s*[\.\):\-/\u2013\u2014]\s+')
-_NUMERIC_CHOICE_LINE_RE = re.compile(r'^[\s\-*]*[1-9][0-9]*[\.\):\-/\u2013\u2014]\s+')
+_NUMERIC_CHOICE_LINE_RE = re.compile(r'^[\s\-*]*[1-9][0-9]*[\.)]\s*\S+$')
+_NUMERIC_CHOICE_PREFIX_RE = re.compile(r'^[\s\-*]*[1-9][0-9]*[\.)]\s*')
+_BULLET_CHOICE_LINE_RE = re.compile(r'^[\s]*(?:[-\u2022\u2013\u2014]|\*)\s+\S+$')
+_BULLET_CHOICE_PREFIX_RE = re.compile(r'^[\s]*(?:[-\u2022\u2013\u2014]|\*)\s+')
 _ANSWER_PREFIXES = (
     'dap an:', 'dap an dung:', 'answer:', 'answer key:', 'correct:',
 )
@@ -40,6 +46,111 @@ def _decode_uploaded_text(uploaded_file):
 
 def _normalize_quiz_text(value):
     return value.strip().replace('<br />', '\n').replace('<br/>', '\n').replace('<br>', '\n')
+
+
+
+def _decode_uploaded_bytes(raw_content):
+    for encoding in ('utf-8-sig', 'utf-8', 'cp1258', 'cp1252'):
+        try:
+            return raw_content.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return raw_content.decode('utf-8', errors='replace')
+
+
+
+def _extract_uploaded_quiz_images(uploaded_file):
+    """Return embedded Word images in document order for automatic quizzes."""
+    filename = (getattr(uploaded_file, 'name', '') or '').lower()
+    if not filename.endswith('.docx'):
+        return []
+
+    try:
+        from docx import Document
+        raw_content = uploaded_file.read()
+        uploaded_file.seek(0)
+        document = Document(BytesIO(raw_content))
+    except Exception:
+        return []
+
+    images = []
+    extension_by_type = {
+        'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif',
+        'image/webp': 'webp', 'image/bmp': 'bmp',
+    }
+    for index, shape in enumerate(document.inline_shapes, start=1):
+        try:
+            relationship_id = shape._inline.graphic.graphicData.pic.blipFill.blip.embed
+            image_part = document.part.related_parts[relationship_id]
+            extension = extension_by_type.get(image_part.content_type, 'png')
+            images.append(ContentFile(image_part.blob, name=f'question_{index}.{extension}'))
+        except Exception:
+            continue
+    return images
+
+
+def _extract_uploaded_quiz_text(uploaded_file):
+    raw_content = uploaded_file.read()
+    try:
+        uploaded_file.seek(0)
+    except (AttributeError, OSError):
+        pass
+
+    filename = (getattr(uploaded_file, 'name', '') or '').lower()
+    extension = filename.rsplit('.', 1)[-1] if '.' in filename else ''
+
+    if extension in {'txt', 'text', 'csv'}:
+        return _decode_uploaded_bytes(raw_content), []
+
+    if extension == 'docx':
+        try:
+            from docx import Document
+        except ImportError:
+            return '', ['Máy chủ chưa có thư viện đọc Word. Vui lòng cài python-docx.']
+        try:
+            document = Document(BytesIO(raw_content))
+        except Exception:
+            return '', ['Không thể đọc tệp Word. Vui lòng tải tệp .docx hợp lệ.']
+
+        blocks = [paragraph.text.strip() for paragraph in document.paragraphs if paragraph.text.strip()]
+        for table in document.tables:
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells]
+                if len(cells) < 2 or not cells[0] or not cells[1]:
+                    continue
+                header = _fold_quiz_text(f'{cells[0]} {cells[1]}')
+                if 'cau hoi' in header and ('dap an' in header or 'lua chon' in header):
+                    continue
+                blocks.append(f'{cells[0]}\n{cells[1]}')
+        # Each Word paragraph is a consecutive quiz line. Separating every
+        # paragraph with a blank line flushes the parser before its choices.
+        return '\n'.join(blocks), []
+
+    if extension == 'pdf':
+        try:
+            import pdfplumber
+        except ImportError:
+            return '', ['Máy chủ chưa có thư viện đọc PDF. Vui lòng cài pdfplumber.']
+        try:
+            with pdfplumber.open(BytesIO(raw_content)) as pdf:
+                table_blocks = []
+                plain_text = []
+                for page in pdf.pages:
+                    plain_text.append(page.extract_text() or '')
+                    for table in page.extract_tables() or []:
+                        for row in table:
+                            cells = [(cell or '').strip() for cell in row]
+                            if len(cells) < 2 or not cells[0] or not cells[1]:
+                                continue
+                            header = _fold_quiz_text(f'{cells[0]} {cells[1]}')
+                            if 'cau hoi' in header and ('dap an' in header or 'lua chon' in header):
+                                continue
+                            table_blocks.append(f'{cells[0]}\n{cells[1]}')
+        except Exception:
+            return '', ['Không thể đọc tệp PDF. Vui lòng tải PDF có thể chọn/sao chép văn bản.']
+        return ('\n\n'.join(table_blocks) if table_blocks else '\n'.join(plain_text)), []
+
+    return '', ['Chỉ hỗ trợ tệp .docx, .pdf, .txt, .text hoặc .csv.']
 
 
 def _split_manual_question_blocks(text):
@@ -74,10 +185,15 @@ def _extract_correct_letters(lines):
     for line_number, line in lines:
         lowered = _fold_quiz_text(line)
         if lowered.startswith(_ANSWER_PREFIXES):
-            letters = lowered.split(':', 1)[1]
-            for letter in ('a', 'b', 'c', 'd', 'e', 'f'):
-                if letter in letters:
-                    correct_letters.add(letter)
+            answer_value = line.split(':', 1)[1].strip() if ':' in line else ''
+            compact_key = re.sub(r'[\s,;/&]+', '', _fold_quiz_text(answer_value))
+            compact_key = compact_key.replace('va', '').replace('and', '')
+            if compact_key and all(letter in 'abcdef' for letter in compact_key):
+                correct_letters.update(compact_key)
+                continue
+            # A line such as "Đáp án: Hà Nội" is itself the only choice,
+            # not an answer-key label. Keep its value as the choice text.
+            clean_lines.append((line_number, answer_value))
             continue
         clean_lines.append((line_number, line))
 
@@ -129,11 +245,23 @@ def _is_question_line(line):
     return False
 
 
+def _is_section_heading(line):
+    value = _fold_quiz_text(line).strip()
+    while value and not value[0].isalnum():
+        value = value[1:]
+    return value.startswith('phan ') or value.startswith('section ')
+
+
 def _is_choice_line(line):
     value = line.strip()
     if value.startswith('*'):
         value = value[1:].strip()
-    return bool(_CHOICE_LINE_RE.match(value) or _NUMERIC_CHOICE_LINE_RE.match(value) or _NAMED_CHOICE_LINE_RE.match(_fold_quiz_text(value)))
+    return bool(
+        _CHOICE_LINE_RE.match(value)
+        or _NUMERIC_CHOICE_LINE_RE.match(value)
+        or _BULLET_CHOICE_LINE_RE.match(value)
+        or _NAMED_CHOICE_LINE_RE.match(_fold_quiz_text(value))
+    )
 
 
 def _choice_letter(answer, index):
@@ -161,7 +289,8 @@ def _clean_choice_prefix(answer):
         for separator in (':', '.', ')', '-', '/', chr(8211), chr(8212)):
             if separator in value:
                 return value.split(separator, 1)[1].strip()
-    value = _NUMERIC_CHOICE_LINE_RE.sub('', value, count=1).strip()
+    value = _NUMERIC_CHOICE_PREFIX_RE.sub('', value, count=1).strip()
+    value = _BULLET_CHOICE_PREFIX_RE.sub('', value, count=1).strip()
     return _CHOICE_LINE_RE.sub('', value, count=1).strip()
 
 
@@ -172,8 +301,8 @@ def _parse_question_block(first_line_number, question_lines, answer_lines):
     if not question_text:
         return None, f'Dòng {first_line_number}: câu hỏi không hợp lệ.'
 
-    if len(answer_lines) < 2:
-        return None, f'Dòng {first_line_number}: mỗi câu hỏi cần ít nhất 2 đáp án.'
+    if not answer_lines:
+        return None, f'Dòng {first_line_number}: câu hỏi chưa có đáp án.'
 
     choices = []
     correct_count = 0
@@ -201,15 +330,30 @@ def _parse_question_block(first_line_number, question_lines, answer_lines):
     return (question_text, choices), None
 
 
+
+def _parse_answers_for_question(question_text, answers):
+    """Parse answers from the manual add/edit forms with import rules."""
+    answer_lines = [
+        (line_number, line.strip())
+        for line_number, line in enumerate(answers.splitlines(), start=1)
+        if line.strip()
+    ]
+    parsed, error = _parse_question_block(1, [question_text], answer_lines)
+    if error:
+        return [], error
+    return parsed[1], None
+
+
 def _parse_uploaded_quiz_file(uploaded_file):
-    text = _decode_uploaded_text(uploaded_file).replace('\r\n', '\n').replace('\r', '\n')
+    text, errors = _extract_uploaded_quiz_text(uploaded_file)
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
     questions = []
-    errors = []
     question_lines = []
     answer_lines = []
     first_line_number = None
 
     def flush_current():
+        
         nonlocal question_lines, answer_lines, first_line_number
         if not question_lines and not answer_lines:
             return
@@ -236,6 +380,19 @@ def _parse_uploaded_quiz_file(uploaded_file):
         is_answer_marker = lowered.startswith(_ANSWER_PREFIXES)
         inline_question, inline_answers, inline_correct_letters = _split_inline_choices(line)
 
+        if _is_section_heading(line):
+            if question_lines and answer_lines:
+                flush_current()
+            elif question_lines:
+                question_lines = []
+                first_line_number = None
+            continue
+
+        # A numbered line after choices starts the next question; check this
+        # before numeric-choice recognition (e.g. "1. ...").
+        if question_lines and answer_lines and _is_question_line(line):
+            flush_current()
+
         if inline_answers and inline_question:
             if question_lines or answer_lines:
                 flush_current()
@@ -245,13 +402,20 @@ def _parse_uploaded_quiz_file(uploaded_file):
             if inline_correct_letters:
                 answer_lines.append((line_number, "Đáp án: " + ",".join(sorted(inline_correct_letters))))
             continue
-
+            
         if question_lines and (_is_choice_line(line) or is_answer_marker or line.startswith('*')):
             answer_lines.append((line_number, line))
             continue
 
         if _is_question_line(line) and (question_lines or answer_lines):
             flush_current()
+
+        # Files exported as alternating question/answer rows often do not
+        # label the answer with A., B. or a bullet. Treat the next line as
+        # the answer when the question itself has an explicit number/label.
+        if question_lines and not answer_lines and _is_question_line(question_lines[0]):
+            answer_lines.append((line_number, line))
+            continue
 
         if not question_lines:
             first_line_number = line_number
@@ -267,29 +431,13 @@ def _parse_uploaded_quiz_file(uploaded_file):
             answer_lines[-1] = (prev_line_number, prev_text + '\n' + line)
         else:
             question_lines.append(line)
-
+    
     flush_current()
 
     if not questions and not errors:
         errors.append('File chưa có câu hỏi hoặc đáp án có thể nhận diện được.')
 
     return questions, errors
-
-def _generate_ai_questions(topic, count):
-    base = topic.strip() or "chủ đề học tập"
-    templates = [
-        ("Khái niệm cốt lõi nhất của {topic} là gì?", ["Một nguyên tắc nền tảng giúp giải thích và áp dụng kiến thức", "Một chi tiết phụ ít liên quan", "Một công cụ trang trí giao diện", "Một lỗi thường gặp"]),
-        ("Khi học {topic}, bước nào nên làm trước?", ["Nắm mục tiêu và các khái niệm chính", "Bỏ qua lý thuyết", "Chỉ ghi nhớ đáp án", "Không cần luyện tập"]),
-        ("Dấu hiệu nào cho thấy bạn đã hiểu {topic}?", ["Giải thích được bằng lời của mình và áp dụng vào bài tập", "Chỉ đọc lướt tiêu đề", "Chỉ nhớ một ví dụ", "Không trả lời được câu hỏi mới"]),
-        ("Cách ôn tập {topic} hiệu quả là gì?", ["Chia nhỏ kiến thức, luyện câu hỏi và tự kiểm tra", "Học dồn vào phút cuối", "Không ghi chú", "Chỉ xem đáp án"]),
-        ("Sai lầm phổ biến khi học {topic} là gì?", ["Không liên hệ kiến thức với ví dụ hoặc bài tập", "Ôn tập đều đặn", "Đặt câu hỏi khi chưa hiểu", "Tự đánh giá tiến độ"]),
-    ]
-    questions = []
-    for index in range(max(1, min(count, 20))):
-        content, choices = templates[index % len(templates)]
-        questions.append((content.format(topic=base), choices))
-    return questions
-
 
 def _can_access_quiz(user, quiz):
     def _can_access_quiz(user, quiz):
@@ -326,18 +474,9 @@ def create_quiz(request):
         if mode == 'ai':
             quiz_file = request.FILES.get('quiz_file')
             if not quiz_file:
-                generated_questions = _generate_ai_questions(title or description or "chủ đề học tập", 10)
-                with transaction.atomic():
-                    for content, choices in generated_questions:
-                        question = Question.objects.create(quiz=quiz, content=content)
-                        for index, choice_text in enumerate(choices):
-                            Choice.objects.create(
-                                question=question,
-                                content=choice_text,
-                                is_correct=index == 0
-                            )
-                messages.success(request, "Đã tạo nhanh 10 câu hỏi AI mẫu. Bạn có thể chỉnh sửa lại đáp án nếu cần.")
-                return redirect('quiz_ai:add_question', quiz.id)
+                quiz.delete()
+                messages.error(request, "Vui lòng tải file Word (.docx), PDF hoặc file văn bản có câu hỏi trước khi tạo đề tự động.")
+                return render(request, 'quiz_ai/create_quiz.html')
 
             parsed_questions, parse_errors = _parse_uploaded_quiz_file(quiz_file)
             if not parsed_questions:
@@ -347,9 +486,14 @@ def create_quiz(request):
                     messages.warning(request, error)
                 return render(request, 'quiz_ai/create_quiz.html')
 
+            question_images = _extract_uploaded_quiz_images(quiz_file)
             with transaction.atomic():
-                for content, choices in parsed_questions:
-                    question = Question.objects.create(quiz=quiz, content=content)
+                for index, (content, choices) in enumerate(parsed_questions):
+                    question = Question.objects.create(
+                        quiz=quiz,
+                        content=content,
+                        image=question_images[index] if index < len(question_images) else None,
+                    )
                     for choice_text, is_correct in choices:
                         Choice.objects.create(
                             question=question,
@@ -368,14 +512,18 @@ def create_quiz(request):
             for lines in _split_manual_question_blocks(manual_questions):
                 if len(lines) < 2:
                     continue
-                question = Question.objects.create(quiz=quiz, content=_normalize_quiz_text(lines[0]))
-                for line in lines[1:]:
-                    is_correct = line.startswith('*')
-                    Choice.objects.create(
-                        question=question,
-                        content=_normalize_quiz_text(line[1:].strip() if is_correct else line),
-                        is_correct=is_correct
-                    )
+                parsed, error = _parse_question_block(
+                    1,
+                    [lines[0]],
+                    list(enumerate(lines[1:], start=2)),
+                )
+                if error:
+                    messages.warning(request, error)
+                    continue
+                content, choices = parsed
+                question = Question.objects.create(quiz=quiz, content=content)
+                for choice_text, is_correct in choices:
+                    Choice.objects.create(question=question, content=choice_text, is_correct=is_correct)
             return redirect('quiz_ai:quiz_detail', quiz.id)
 
         return redirect('quiz_ai:add_question', quiz.id)
@@ -394,19 +542,18 @@ def add_question(request, quiz_id):
         content = _normalize_quiz_text(request.POST.get('content', ''))
         answers = request.POST.get('answers', '').splitlines()
 
-        question = Question.objects.create(quiz=quiz, content=content)
+        choices, error = _parse_answers_for_question(content, '\n'.join(answers))
+        if error:
+            messages.error(request, error)
+            return redirect('quiz_ai:add_question', quiz.id)
 
-        for ans in answers:
-            ans = ans.strip()
-            if not ans:
-                continue
-
-            is_correct = ans.startswith('*')
-            Choice.objects.create(
-                question=question,
-                content=_normalize_quiz_text(ans[1:].strip() if is_correct else ans),
-                is_correct=is_correct
-            )
+        question = Question.objects.create(
+            quiz=quiz,
+            content=content,
+            image=request.FILES.get('image') or None,
+        )
+        for choice_text, is_correct in choices:
+            Choice.objects.create(question=question, content=choice_text, is_correct=is_correct)
 
         messages.success(request, "Đã thêm câu hỏi mới.")
         return redirect('quiz_ai:add_question', quiz.id)
@@ -477,16 +624,32 @@ def take_quiz(request, quiz_id):
     if quiz.max_attempts and attempt_count >= quiz.max_attempts and quiz.created_by != request.user:
         return render(request, 'quiz_ai/attempt_limit.html', {'quiz': quiz})
 
+    question_order = request.GET.get('shuffle_questions')
+    answer_order = request.GET.get('shuffle_answers')
+    show_order_setup = question_order is None or answer_order is None
+    shuffle_questions = question_order == '1'
+    shuffle_answers = answer_order == '1'
+
     questions = list(quiz.questions.all())
+    if shuffle_questions:
+        random.shuffle(questions)
+
     for question in questions:
         question.allows_multiple = sum(1 for choice in question.choices.all() if choice.is_correct) > 1
+        question.display_choices = list(question.choices.all())
+        if shuffle_answers:
+            random.shuffle(question.display_choices)
 
-    request.session[f'quiz_start_{quiz.id}'] = timezone.now().isoformat()
+    if not show_order_setup:
+        request.session[f'quiz_start_{quiz.id}'] = timezone.now().isoformat()
 
     return render(request, 'quiz_ai/take_quiz.html', {
         'quiz': quiz,
         'questions': questions,
         'attempt_count': attempt_count,
+        'show_order_setup': show_order_setup,
+        'shuffle_questions': shuffle_questions,
+        'shuffle_answers': shuffle_answers,
     })
 
 
@@ -563,19 +726,22 @@ def edit_question(request, question_id):
         question.quiz.save(update_fields=['title', 'description'])
 
         question.content = _normalize_quiz_text(request.POST.get('content', ''))
-        question.save(update_fields=['content'])
+        image = request.FILES.get('image')
+        if request.POST.get('remove_image') and question.image:
+            question.image.delete(save=False)
+            question.image = None
+        elif image:
+            question.image = image
+        question.save()
+
+        choices, error = _parse_answers_for_question(question.content, request.POST.get('answers', ''))
+        if error:
+            messages.error(request, error)
+            return redirect('quiz_ai:edit_question', question.id)
 
         question.choices.all().delete()
-        for answer in request.POST.get('answers', '').splitlines():
-            answer = answer.strip()
-            if not answer:
-                continue
-            is_correct = answer.startswith('*')
-            Choice.objects.create(
-                question=question,
-                content=_normalize_quiz_text(answer[1:].strip() if is_correct else answer),
-                is_correct=is_correct
-            )
+        for choice_text, is_correct in choices:
+            Choice.objects.create(question=question, content=choice_text, is_correct=is_correct)
 
         messages.success(request, "Đã lưu thay đổi câu hỏi.")
         return redirect('quiz_ai:add_question', question.quiz.id)

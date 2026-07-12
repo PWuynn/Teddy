@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Cài đặt | TEDDY{% endblock %}
+
+{% block content %}
+<div class="settings-page"><div class="container py-5">
+<section class="settings-hero"><div><span class="settings-kicker">Tài khoản</span><h1>Cài đặt</h1><p>Quản lý thông tin tài khoản và bảo mật của bạn.</p></div></section>
+<section class="settings-grid mt-4">
+<a class="settings-card" href="{% url 'accounts:profile' %}"><span class="settings-icon"><i class="bi bi-person-vcard"></i></span><span><strong>Hồ sơ</strong><small>Cập nhật thông tin cá nhân, ảnh đại diện và liên hệ.</small></span><i class="bi bi-chevron-right settings-arrow"></i></a>
+<a class="settings-card" href="{% url 'accounts:change_password' %}"><span class="settings-icon"><i class="bi bi-shield-lock"></i></span><span><strong>Thay đổi mật khẩu</strong><small>Đặt mật khẩu mới để giữ an toàn cho tài khoản.</small></span><i class="bi bi-chevron-right settings-arrow"></i></a>
+</section></div></div>
+<style>.settings-page{background:#f4f7fb;min-height:calc(100vh - 76px)}.settings-hero{background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:8px;color:#fff;padding:28px}.settings-kicker{color:#fff;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.settings-hero h1{font-size:34px;font-weight:800;margin:5px 0}.settings-hero p{color:rgba(255,255,255,.82);margin:0}.settings-grid{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}.settings-card{align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 28px rgba(15,23,42,.06);color:#0f172a;display:grid;gap:16px;grid-template-columns:56px minmax(0,1fr) auto;padding:20px;transition:.2s}.settings-card:hover{border-color:#93c5fd;box-shadow:0 16px 32px rgba(37,99,235,.12);color:#0f172a;transform:translateY(-2px)}.settings-icon{align-items:center;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:8px;color:#fff;display:flex;font-size:24px;height:56px;justify-content:center;width:56px}.settings-card strong,.settings-card small{display:block}.settings-card strong{font-size:18px;font-weight:800;margin-bottom:4px}.settings-card small{color:#64748b;line-height:1.5}.settings-arrow{color:#2563eb}@media(max-width:768px){.settings-grid{grid-template-columns:1fr}}</style>
+{% endblock %}

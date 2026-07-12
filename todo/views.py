@@ -45,7 +45,7 @@ def teacher_todo(request):
         group = grouped[key]
         group['items'].append(todo)
 
-        if todo.completed or todo.submission_file:
+        if todo.submission_text.strip() or todo.submission_file:
             group['submitted'].append(todo)
         else:
             group['pending'].append(todo)
@@ -71,8 +71,7 @@ def create_personal_todo(request):
         description = request.POST.get("description")
         priority = request.POST.get("priority")
         deadline = request.POST.get("deadline")
-
-        is_public = request.POST.get("is_public") == "on"
+        is_public = False
 
         PersonalTodo.objects.create(
             user=request.user,
@@ -100,18 +99,15 @@ def student_todo(request):
 @login_required
 def todo_list(request):
 
-    todos = PersonalTodo.objects.filter(
-        Q(user=request.user) |
-        Q(is_public=True)
-    ).order_by("deadline")
+    todos = PersonalTodo.objects.filter(user=request.user).order_by("deadline")
     assigned_todos = Todo.objects.filter(
         user=request.user
-    ).select_related('classroom', 'assigned_by').order_by('completed', 'deadline')
+    ).select_related('classroom', 'assigned_by').order_by('todo_completed', 'deadline')
 
     personal_total = todos.count()
     personal_done = todos.filter(completed=True).count()
     assigned_total = assigned_todos.count()
-    assigned_done = assigned_todos.filter(completed=True).count()
+    assigned_done = assigned_todos.filter(todo_completed=True).count()
 
     return render(
         request,
@@ -138,7 +134,7 @@ def edit_personal_todo(request, pk):
         todo.description = request.POST.get("description")
         todo.priority = request.POST.get("priority")
         todo.deadline = request.POST.get("deadline")
-        todo.is_public = "is_public" in request.POST
+        todo.is_public = False
 
         todo.save()
 
@@ -158,12 +154,8 @@ def toggle_todo(request, pk):
         user=request.user
     )
 
-    if not todo.completed and todo.deadline and timezone.now() > todo.deadline:
-        messages.error(request, "Bài đã quá hạn, bạn không thể hoàn thành/nộp bài.")
-        return redirect('todo:todo_list')
-
-    todo.completed = not todo.completed
-    todo.save()
+    todo.todo_completed = not todo.todo_completed
+    todo.save(update_fields=['todo_completed'])
 
     return redirect('todo:todo_list')
 
@@ -191,7 +183,9 @@ def submit_todo(request, pk):
 
         if form.is_valid():
 
-            form.save()
+            submitted_todo = form.save(commit=False)
+            submitted_todo.completed = True
+            submitted_todo.save()
 
             messages.success(request, 'Nộp bài thành công.')
 

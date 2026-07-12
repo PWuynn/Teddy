@@ -57,7 +57,7 @@ def _build_assignment_groups(assignments):
         group = grouped[key]
         group['items'].append(assignment)
 
-        if assignment.completed or assignment.submission_file:
+        if assignment.submission_text.strip() or assignment.submission_file:
             group['submitted'].append(assignment)
         else:
             group['pending'].append(assignment)

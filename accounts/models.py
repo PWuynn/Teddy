@@ -44,12 +44,12 @@ class CustomUser(AbstractUser):
         blank=True,
         verbose_name='Mo ta khac'
     )
-    avatar = CloudinaryField(
-    "avatar",
-    folder="avatars",
-    blank=True,
+    avatar = models.ImageField(
+    upload_to="avatars/",
     null=True,
-    )
+    blank=True,
+    verbose_name="Anh dai dien",
+)
     @property
     def is_admin(self):
         return self.is_superuser or self.role == 'admin'

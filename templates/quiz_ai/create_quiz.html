@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Tạo đề kiểm tra | TEDDY{% endblock %}
 
@@ -9,9 +9,9 @@
             <aside class="builder-side">
                 <span class="builder-kicker">Quiz Studio</span>
                 <h1>Tạo đề kiểm tra</h1>
-                <p>Thiết lập đề, chọn cách tạo câu hỏi và xuất bản nhanh cho học sinh. Chế độ AI sẽ tự tạo câu hỏi trắc nghiệm kèm đáp án đúng để bạn chỉnh sửa tiếp.</p>
+                <p>Thiết lập đề, chọn cách tạo câu hỏi và xuất bản nhanh cho học sinh. Chế độ AI sẽ đọc file Word hoặc PDF, nhận dạng câu hỏi và đáp án để tạo đề.</p>
                 <div class="builder-stats">
-                    <div><strong>AI</strong><span>Tự sinh câu hỏi</span></div>
+                    <div><strong>AI</strong><span>Đọc Word/PDF</span></div>
                     <div><strong>30</strong><span>Câu tối đa/lần</span></div>
                     <div><strong>MCQ</strong><span>Trắc nghiệm</span></div>
                 </div>
@@ -67,7 +67,7 @@
                             <label class="mode-card">
                                 <input type="radio" name="mode" value="ai">
                                 <span class="mode-icon"><i class="bi bi-stars"></i></span>
-                                <span><strong>Tự động bằng AI</strong><small>Nhập chủ đề, hệ thống sinh câu hỏi và đáp án.</small></span>
+                                <span><strong>Tự động bằng AI</strong><small>Quét file Word/PDF để tạo câu hỏi và đáp án.</small></span>
                             </label>
                         </div>
 
@@ -78,14 +78,12 @@
                         </div>
 
                         <div class="mode-section ai-section" id="aiSection" style="display:none;">
-                            <label class="form-label">File câu hỏi (không bắt buộc)</label>
-                            <input type="file" name="quiz_file" class="form-control" accept=".txt,.text,.csv">
+                            <label class="form-label">File câu hỏi <span class="text-danger">*</span></label>
+                            <input type="file" name="quiz_file" class="form-control" accept=".docx,.pdf,.txt,.text,.csv">
                             <div class="ai-note align-items-start">
                                 <i class="bi bi-info-circle mt-1"></i>
                                 <div>
-                                    <div>Có thể bỏ trống file để TEDDY tự tạo 10 câu hỏi mẫu từ tên đề. Nếu tải file, hệ thống nhận cả dạng mỗi đáp án một dòng hoặc A/B/C/D nằm cùng dòng với câu hỏi.</div>
-                                    <div>Đáp án đúng có thể đánh dấu bằng <strong>*</strong>, hoặc thêm dòng <strong>Đáp án: A</strong>. Nếu thiếu đánh dấu, hệ thống tạm chọn đáp án đầu tiên.</div>
-                                    <div>Muốn xuống dòng trong câu hỏi hoặc đáp án, đặt <strong>&lt;br /&gt;</strong> tại vị trí cần xuống dòng.</div>
+                                    <div>Tải file <strong>Word (.docx)</strong>, <strong>PDF</strong> hoặc văn bản chứa câu hỏi. TEDDY đọc đoạn văn và bảng hai cột <strong>Câu hỏi | Đáp án</strong>.</div><div>Đánh dấu <strong>*</strong> trước đáp án đúng, ví dụ: <strong>*A. Đáp án đúng</strong>. Mỗi câu cần ít nhất hai đáp án.</div>
                                 </div>
                             </div>
                             <pre class="file-sample">Câu 1. Python là gì?
@@ -125,7 +123,7 @@ Câu 2. HTML dùng để làm gì? A. Tạo cấu trúc trang web B. Lưu databa
 .builder-panel{background:#fff;border:1px solid #e5eaf0;border-radius:8px;box-shadow:0 18px 42px rgba(15,23,42,.08);padding:24px}
 .form-band{border:1px solid #e5eaf0;border-radius:8px;margin-bottom:16px;padding:18px}
 .band-title{align-items:flex-start;display:flex;gap:12px;margin-bottom:16px}.band-title i{align-items:center;background:#e0f2fe;border-radius:8px;color:#0369a1;display:flex;height:38px;justify-content:center;width:38px}.band-title h2{font-size:19px;font-weight:850;margin:0}.band-title p{color:#64748b;margin:2px 0 0}
-.mode-grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}.mode-card{align-items:center;border:1px solid #dbe4ef;border-radius:8px;cursor:pointer;display:flex;gap:12px;padding:14px}.mode-card strong,.mode-card small{display:block}.mode-card small{color:#64748b}.mode-icon{align-items:center;background:#f0fdfa;border-radius:8px;color:#0f766e;display:flex;height:38px;justify-content:center;width:38px}.mode-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px}.ai-section{background:#eef6ff;border-color:#bfdbfe}.ai-note{align-items:center;color:#1f3a5f;display:flex;gap:8px;margin-top:12px}.file-sample{background:#0f172a;border-radius:8px;color:#e2e8f0;font-size:13px;margin:12px 0 0;overflow:auto;padding:12px;white-space:pre-wrap}.builder-actions{display:flex;gap:12px;justify-content:space-between;margin-top:18px}
+.mode-grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}.mode-card{align-items:center;border:1px solid #dbe4ef;border-radius:8px;cursor:pointer;display:flex;gap:12px;padding:14px}.mode-card strong,.mode-card small{display:block}.mode-card small{color:#64748b}.mode-icon{align-items:center;background:#f0fdfa;border-radius:8px;color:linear-gradient(135deg,#2563eb,#3b82f6);display:flex;height:38px;justify-content:center;width:38px}.mode-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px}.ai-section{background:#eef6ff;border-color:#bfdbfe}.ai-note{align-items:center;color:#1f3a5f;display:flex;gap:8px;margin-top:12px}.file-sample{background:#0f172a;border-radius:8px;color:#e2e8f0;font-size:13px;margin:12px 0 0;overflow:auto;padding:12px;white-space:pre-wrap}.builder-actions{display:flex;gap:12px;justify-content:space-between;margin-top:18px}
 @media(max-width:992px){.quiz-builder-shell{grid-template-columns:1fr}.builder-side{position:static}.mode-grid{grid-template-columns:1fr}}
 @media(max-width:576px){.builder-actions{align-items:stretch;flex-direction:column}.builder-actions .btn{width:100%}}
 </style>
@@ -135,12 +133,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const radios = Array.from(document.querySelectorAll('input[name="mode"]'));
     const manual = document.getElementById('manualSection');
     const ai = document.getElementById('aiSection');
+    const quizFile = document.querySelector("input[name='quiz_file']");
 
     function syncMode() {
         const selected = radios.find(function (radio) { return radio.checked; });
         const isAi = selected && selected.value === 'ai';
         manual.style.display = isAi ? 'none' : 'block';
         ai.style.display = isAi ? 'block' : 'none';
+        quizFile.required = isAi;
     }
 
     radios.forEach(function (radio) { radio.addEventListener('change', syncMode); });

@@ -31,5 +31,4 @@ class SubmitTodoForm(forms.ModelForm):
         fields = [
             'submission_text',
             'submission_file',
-            'completed'
         ]

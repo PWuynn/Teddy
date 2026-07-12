@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -187,6 +188,26 @@ def tea_dashboard(request):
 @login_required
 def stu_dashboard(request):
     return render(request, 'accounts/student/stu_dashboard.html')
+
+
+@login_required
+def settings_view(request):
+    return render(request, 'accounts/settings.html')
+
+
+@login_required
+def change_password_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Mật khẩu đã được cập nhật.')
+            return redirect('accounts:settings')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'accounts/change_password.html', {'form': form})
 
 
 @login_required

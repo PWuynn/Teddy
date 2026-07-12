@@ -17,7 +17,7 @@
             </div>
         </header>
 
-        <form method="POST" class="editor-layout">
+        <form method="POST" enctype="multipart/form-data" class="editor-layout">
             {% csrf_token %}
 
             <main class="editor-content">
@@ -51,12 +51,19 @@
                         <i class="bi bi-patch-question"></i>
                         <div>
                             <h2>Nội dung câu hỏi</h2>
-                            <p>Dùng <code>&lt;br /&gt;</code> nếu muốn xuống dòng trong câu hỏi.</p>
+                            <p>Nhập ký hiệu trực tiếp (√, ≤, π…) hoặc LaTex: <code>\\(x^2 + \\frac{1}{2}\\)</code>.</p>
                         </div>
                     </div>
 
                     <label class="form-label">Câu hỏi</label>
                     <textarea name="content" class="form-control question-field" rows="6" required>{{ question.content }}</textarea>
+
+                    <div class="mt-3">
+                        <label class="form-label" for="questionImage">Hình minh họa</label>
+                        <input id="questionImage" type="file" name="image" class="form-control" accept="image/*">
+                        {% if question.image %}<img class="question-image-preview" src="{{ question.image.url }}" alt="Hình minh họa hiện tại"><label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="remove_image" value="1"> Xóa hình hiện tại</label>{% endif %}
+                        <div class="form-text">PNG, JPG, GIF hoặc WEBP.</div>
+                    </div>
                 </section>
             </main>
 
@@ -92,7 +99,7 @@
 <style>
 .quiz-editor-page{background:#f5f7fb;min-height:calc(100vh - 76px)}
 .editor-header{align-items:flex-start;background:#12343b;border-radius:8px;color:#fff;display:flex;gap:18px;justify-content:space-between;margin-bottom:20px;padding:26px}.editor-header h1{font-size:34px;font-weight:850;letter-spacing:0;margin:6px 0}.editor-header p{color:rgba(255,255,255,.78);line-height:1.6;margin:0;max-width:780px}.eyebrow{color:#99f6e4;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.header-actions{display:flex;gap:10px;white-space:nowrap}.header-actions .btn-outline-light{border-color:rgba(255,255,255,.38);color:#fff}.header-actions .btn-outline-light:hover{color:#12343b}
-.editor-layout{align-items:start;display:grid;gap:18px;grid-template-columns:minmax(0,1fr) 390px}.editor-content{display:grid;gap:18px}.editor-section{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 14px 34px rgba(15,23,42,.06);padding:20px}.section-heading{align-items:flex-start;display:flex;gap:12px;margin-bottom:16px}.section-heading i{align-items:center;background:#e0f2fe;border-radius:8px;color:#0369a1;display:flex;flex:0 0 40px;font-size:20px;height:40px;justify-content:center;width:40px}.section-heading h2{font-size:19px;font-weight:850;margin:0}.section-heading p{color:#64748b;margin:2px 0 0}.section-heading.compact{margin-bottom:12px}.readonly-pill{align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#334155;display:flex;font-weight:800;gap:8px;min-height:48px;padding:10px 12px}.question-field,.answer-field{line-height:1.7}.answer-field{font-family:Consolas,Monaco,monospace;font-size:14px}.sticky-panel{position:sticky;top:96px}.guide-list{display:grid;gap:9px;margin:12px 0}.guide-list div{align-items:flex-start;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;display:flex;gap:9px;padding:10px}.guide-list i{color:#0f766e;margin-top:2px}.guide-list span{color:#475569;font-size:13px;line-height:1.45}.action-stack{display:grid;gap:10px;margin-top:12px}
+.editor-layout{align-items:start;display:grid;gap:18px;grid-template-columns:minmax(0,1fr) 390px}.editor-content{display:grid;gap:18px}.editor-section{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 14px 34px rgba(15,23,42,.06);padding:20px}.section-heading{align-items:flex-start;display:flex;gap:12px;margin-bottom:16px}.section-heading i{align-items:center;background:#e0f2fe;border-radius:8px;color:#0369a1;display:flex;flex:0 0 40px;font-size:20px;height:40px;justify-content:center;width:40px}.section-heading h2{font-size:19px;font-weight:850;margin:0}.section-heading p{color:#64748b;margin:2px 0 0}.section-heading.compact{margin-bottom:12px}.readonly-pill{align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#334155;display:flex;font-weight:800;gap:8px;min-height:48px;padding:10px 12px}.question-image-preview{border:1px solid #dbe4ef;border-radius:8px;display:block;max-height:220px;max-width:100%;object-fit:contain;margin-top:12px}.question-field,.answer-field{line-height:1.7}.answer-field{font-family:Consolas,Monaco,monospace;font-size:14px}.sticky-panel{position:sticky;top:96px}.guide-list{display:grid;gap:9px;margin:12px 0}.guide-list div{align-items:flex-start;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;display:flex;gap:9px;padding:10px}.guide-list i{color:linear-gradient(135deg,#2563eb,#3b82f6);margin-top:2px}.guide-list span{color:#475569;font-size:13px;line-height:1.45}.action-stack{display:grid;gap:10px;margin-top:12px}
 @media(max-width:992px){.editor-header{flex-direction:column}.header-actions{width:100%;flex-direction:column}.header-actions .btn{width:100%}.editor-layout{grid-template-columns:1fr}.sticky-panel{position:static}}
 </style>
 {% endblock %}
