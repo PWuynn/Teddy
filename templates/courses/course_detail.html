@@ -5,11 +5,6 @@
 {% block content %}
 <div class="course-detail-page py-5">
     <div class="container">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
 
         <section class="course-detail-hero">
             <div class="hero-copy">

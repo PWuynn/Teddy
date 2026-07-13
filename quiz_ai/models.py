@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from cloudinary.models import CloudinaryField
 
 
 class Quiz(models.Model):
@@ -50,11 +51,18 @@ class Question(models.Model):
 
     explanation = models.TextField(blank=True, default='')
 
-    image = models.ImageField(
-        upload_to='quiz_question_images/',
-        null=True,
-        blank=True
-    )
+    if settings.USE_CLOUDINARY_MEDIA:
+        image = CloudinaryField(
+            folder='teddy/quiz_question_images',
+            null=True,
+            blank=True,
+        )
+    else:
+        image = models.ImageField(
+            upload_to='quiz_question_images/',
+            null=True,
+            blank=True
+        )
 
     def __str__(self):
         return self.content
@@ -71,9 +79,21 @@ class Choice(models.Model):
 
     is_correct = models.BooleanField(default=False)
 
+    if settings.USE_CLOUDINARY_MEDIA:
+        image = CloudinaryField(folder='teddy/quiz_choice_images', null=True, blank=True)
+    else:
+        image = models.ImageField(upload_to='quiz_choice_images/', null=True, blank=True)
+
     def __str__(self):
         return self.content
     
+
+class QuizReloadPenalty(models.Model):
+    """A limited-attempt quiz consumes one attempt when its active page reloads."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
 class QuizResult(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

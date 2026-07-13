@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Chinh sua bai giao | TEDDY{% endblock %}
+{% block content %}
+<div class="container py-4 py-lg-5" style="max-width:980px">
+  <div class="card border-0 shadow-sm overflow-hidden">
+    <div class="card-body p-4 p-lg-5 text-white" style="background:linear-gradient(135deg,#2563eb,#3b82f6)">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+        <div>
+          <span class="small text-white-50">BAI DUOC GIAO</span>
+          <h1 class="h3 fw-bold mb-1">Chinh sua bai giao</h1>
+          <p class="mb-0 text-white-50">{{ classroom.name }}</p>
+        </div>
+        <a href="{% url 'classroom:class_detail' classroom.id %}" class="btn btn-outline-light align-self-start">Quay lai lop</a>
+      </div>
+    </div>
+    <form method="post" class="card-body p-4 p-lg-5">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">Tieu de</label>
+          <input class="form-control" name="title" value="{{ assignment.title }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Uu tien</label>
+          <select class="form-select" name="priority">
+            <option value="medium" {% if assignment.priority == 'medium' %}selected{% endif %}>Trung binh</option>
+            <option value="high" {% if assignment.priority == 'high' %}selected{% endif %}>Cao</option>
+            <option value="low" {% if assignment.priority == 'low' %}selected{% endif %}>Thap</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Han nop</label>
+          <input class="form-control" type="datetime-local" name="deadline" value="{{ assignment.deadline|date:'Y-m-d\TH:i' }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Mo ta / yeu cau</label>
+          <textarea class="form-control" name="description" rows="4">{{ assignment.description }}</textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Thanh vien thuc hien</label>
+          <div class="border rounded-3 p-3 bg-light">
+            <div class="row g-2">
+              {% for member in members %}
+              <div class="col-sm-6 col-lg-4">
+                <label class="form-check border bg-white rounded-3 px-3 py-2 h-100">
+                  <input class="form-check-input" type="checkbox" name="student_ids" value="{{ member.student_id }}" {% if member.student_id in selected_member_ids %}checked{% endif %}>
+                  <span class="form-check-label ms-1">{{ member.student.get_full_name|default:member.student.username }}</span>
+                </label>
+              </div>
+              {% empty %}
+              <div class="text-muted">Lop chua co thanh vien duoc duyet.</div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-text">Bo chon de go thanh vien khoi bai giao; chon them de giao bai cho thanh vien moi.</div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4 pt-4 border-top">
+        <a href="{% url 'classroom:class_detail' classroom.id %}" class="btn btn-outline-secondary">Huy</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save2 me-1"></i>Luu thay doi</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

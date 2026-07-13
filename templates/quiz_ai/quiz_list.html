@@ -57,14 +57,21 @@
                     </div>
 
                     <div class="quiz-actions">
-                        <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-primary">Xem đề</a>
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Tải xuống</button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'quiz_ai:download_quiz' quiz.id 'docx' %}">Word (.docx)</a></li>
+                                <li><a class="dropdown-item" href="{% url 'quiz_ai:download_quiz' quiz.id 'pdf' %}">PDF (.pdf)</a></li>
+                            </ul>
+                        </div>
+                        <a href="{% url 'quiz_ai:flashcards' quiz.id %}" class="btn btn-outline-success">Ôn tập</a>
                         <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-primary">Làm bài</a>
                     </div>
 
                     {% if quiz.created_by == request.user %}
                         <div class="quiz-admin-actions">
-                            <a href="{% url 'quiz_ai:add_question' quiz.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil-square"></i> Chỉnh sửa
+                            <a href="{% url 'quiz_ai:edit_quiz' quiz.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> Chinh sua de
                             </a>
                             <form method="post" action="{% url 'quiz_ai:delete_quiz' quiz.id %}">
                                 {% csrf_token %}
@@ -98,11 +105,11 @@
 .quiz-search-panel input{border:0;flex:1;min-height:42px;outline:0}
 .quiz-grid{display:grid;gap:18px;grid-template-columns:repeat(3,minmax(0,1fr))}
 .quiz-card-v2{background:white;border:1px solid #dbe8e3;border-radius:8px;box-shadow:0 14px 32px rgba(15,118,110,.08);display:flex;flex-direction:column;padding:20px}
-.quiz-card-top,.quiz-actions,.quiz-admin-actions,.quiz-meta-line{align-items:center;display:flex;gap:10px}.quiz-card-top,.quiz-actions,.quiz-admin-actions{justify-content:space-between}
+.quiz-card-top,.quiz-admin-actions,.quiz-meta-line{align-items:center;display:flex;gap:10px}.quiz-actions{align-items:center;display:flex;gap:6px}.quiz-card-top,.quiz-actions,.quiz-admin-actions{justify-content:space-between}
 .quiz-mark{align-items:center;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:8px;color:#fff;display:flex;font-size:24px;height:52px;justify-content:center;width:52px}
 .quiz-card-body{margin:18px 0}.quiz-card-body h2{font-size:21px;font-weight:850;letter-spacing:0;margin-bottom:8px}.quiz-card-body p{color:#64748b;margin:0;min-height:52px}
 .quiz-stat-strip{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;display:grid;gap:8px;grid-template-columns:repeat(3,1fr);margin-bottom:14px;padding:12px}.quiz-stat-strip span{color:#64748b;display:block;font-size:12px}.quiz-stat-strip strong{color:#0f172a;font-size:18px}
-.quiz-meta-line{color:#64748b;flex-wrap:wrap;font-size:13px;margin-bottom:16px}.quiz-actions{margin-top:auto}.quiz-actions .btn{flex:1}.quiz-admin-actions{border-top:1px solid #e2e8f0;margin-top:14px;padding-top:14px}.quiz-admin-actions form{margin:0}
+.quiz-meta-line{color:#64748b;flex-wrap:wrap;font-size:13px;margin-bottom:16px}.quiz-actions{align-items:stretch;margin-top:auto}.quiz-actions > .btn,.quiz-actions > .dropdown{height:38px;min-height:38px;white-space:nowrap}.quiz-actions > .btn,.quiz-actions > .dropdown > .btn{align-items:center;display:inline-flex;justify-content:center}.quiz-actions > .dropdown{display:flex;flex:1;min-width:112px}.quiz-actions > .dropdown > .btn{height:38px;width:100%}.quiz-actions .btn{flex:1}.quiz-actions > a[href*="/take/"]{min-width:96px}.quiz-admin-actions{border-top:1px solid #e2e8f0;margin-top:14px;padding-top:14px}.quiz-admin-actions form{margin:0}
 .quiz-empty{background:white;border:1px dashed #cbd5e1;border-radius:8px;grid-column:1/-1;padding:54px;text-align:center}.quiz-empty i{color:linear-gradient(135deg,#2563eb,#3b82f6);font-size:44px}
 @media(max-width:992px){.quiz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:768px){.quiz-hub-hero,.quiz-search-panel{align-items:stretch;flex-direction:column}.quiz-grid{grid-template-columns:1fr}.quiz-actions,.quiz-admin-actions{align-items:stretch;flex-direction:column}.quiz-actions .btn,.quiz-admin-actions .btn,.quiz-admin-actions form{width:100%}}

@@ -5,11 +5,6 @@
 {% block content %}
 <div class="join-course-page py-5">
     <div class="container">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
 
         <div class="join-card">
             <div class="join-visual">

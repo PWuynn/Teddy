@@ -1,6 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from cloudinary.models import CloudinaryField
+from django.contrib.auth.models import AbstractUser
 class CustomUser(AbstractUser):
 
     ROLE_CHOICES = (
@@ -44,12 +45,20 @@ class CustomUser(AbstractUser):
         blank=True,
         verbose_name='Mo ta khac'
     )
-    avatar = models.ImageField(
-    upload_to="avatars/",
-    null=True,
-    blank=True,
-    verbose_name="Anh dai dien",
-)
+    if settings.USE_CLOUDINARY_MEDIA:
+        avatar = CloudinaryField(
+            folder='teddy/avatars',
+            null=True,
+            blank=True,
+            verbose_name="Anh dai dien",
+        )
+    else:
+        avatar = models.ImageField(
+            upload_to="avatars/",
+            null=True,
+            blank=True,
+            verbose_name="Anh dai dien",
+        )
     @property
     def is_admin(self):
         return self.is_superuser or self.role == 'admin'

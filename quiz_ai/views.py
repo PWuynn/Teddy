@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Quiz, Question, Choice, QuizResult
-from django.http import HttpResponseForbidden
+from .models import Quiz, Question, Choice, QuizResult, QuizReloadPenalty
+from django.http import HttpResponseForbidden, HttpResponse
 from django.utils import timezone
 from datetime import datetime
 from django.contrib import messages
@@ -9,7 +9,9 @@ from django.db.models import Q
 from django.db import transaction
 from classroom.models import ClassroomMember
 from django.template.loader import get_template
-from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.conf import settings
+import cloudinary.uploader
 import re
 import unicodedata
 import random
@@ -83,11 +85,70 @@ def _extract_uploaded_quiz_images(uploaded_file):
             relationship_id = shape._inline.graphic.graphicData.pic.blipFill.blip.embed
             image_part = document.part.related_parts[relationship_id]
             extension = extension_by_type.get(image_part.content_type, 'png')
-            images.append(ContentFile(image_part.blob, name=f'question_{index}.{extension}'))
+            images.append(SimpleUploadedFile(
+                name=f'question_{index}.{extension}',
+                content=image_part.blob,
+                content_type=image_part.content_type,
+            ))
         except Exception:
             continue
     return images
 
+
+def _store_word_question_image(image_file, quiz_id, index):
+    """Upload a Word-extracted image explicitly and return its Cloudinary ID."""
+    if not image_file:
+        return None
+    if not settings.USE_CLOUDINARY_MEDIA:
+        return image_file
+
+    image_file.seek(0)
+    result = cloudinary.uploader.upload(
+        image_file,
+        resource_type="image",
+        folder=f"teddy/quiz_question_images/quiz_{quiz_id}",
+        public_id=f"question_{index + 1}",
+        overwrite=True,
+    )
+    return result["public_id"]
+
+
+def _docx_paragraph_with_images(paragraph, document, image_map):
+    """Keep text and replace legacy Word equation/image objects with markers."""
+    parts = []
+    relationship_ns = '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'
+    for run in paragraph._p:
+        if not run.tag.endswith('}r'):
+            continue
+        for node in run:
+            if node.tag.endswith('}t'):
+                parts.append(node.text or '')
+            elif node.tag.endswith('}tab'):
+                parts.append('\t')
+            elif node.tag.endswith(('}object', '}drawing')):
+                for image_node in node.iter():
+                    if not image_node.tag.endswith('}imagedata'):
+                        continue
+                    relationship_id = image_node.get(relationship_ns)
+                    if not relationship_id or relationship_id not in document.part.related_parts:
+                        continue
+                    image_part = document.part.related_parts[relationship_id]
+                    extension = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp'}.get(image_part.content_type, 'png')
+                    marker = f'[[DOCX_IMAGE_{len(image_map)}]]'
+                    image_map[marker] = SimpleUploadedFile(name=f'equation_{len(image_map) + 1}.{extension}', content=image_part.blob, content_type=image_part.content_type)
+                    parts.append(marker)
+    return ''.join(parts).strip()
+
+
+def _extract_docx_answer_key(document):
+    answer_key = {}
+    for table in document.tables:
+        rows = [[cell.text.strip() for cell in row.cells] for row in table.rows]
+        for index in range(0, len(rows) - 1, 2):
+            for number, answer in zip(rows[index], rows[index + 1]):
+                if number.isdigit() and answer.upper() in {'A', 'B', 'C', 'D', 'E', 'F'}:
+                    answer_key[number] = answer.upper()
+    return answer_key
 
 def _extract_uploaded_quiz_text(uploaded_file):
     raw_content = uploaded_file.read()
@@ -112,7 +173,11 @@ def _extract_uploaded_quiz_text(uploaded_file):
         except Exception:
             return '', ['Không thể đọc tệp Word. Vui lòng tải tệp .docx hợp lệ.']
 
-        blocks = [paragraph.text.strip() for paragraph in document.paragraphs if paragraph.text.strip()]
+        image_map = {}
+        blocks = [_docx_paragraph_with_images(paragraph, document, image_map) for paragraph in document.paragraphs]
+        blocks = [block for block in blocks if block]
+        uploaded_file._docx_image_map = image_map
+        uploaded_file._docx_answer_key = _extract_docx_answer_key(document)
         for table in document.tables:
             for row in table.rows:
                 cells = [cell.text.strip() for cell in row.cells]
@@ -297,6 +362,16 @@ def _clean_choice_prefix(answer):
 def _parse_question_block(first_line_number, question_lines, answer_lines):
     question_text = _normalize_quiz_text('\n'.join(question_lines))
     correct_letters, answer_lines = _extract_correct_letters(answer_lines)
+    expanded_answers = []
+    for line_number, answer in answer_lines:
+        markers = list(_CHOICE_MARKER_RE.finditer(answer))
+        if len(markers) >= 2:
+            for index, marker in enumerate(markers):
+                end = markers[index + 1].start() if index + 1 < len(markers) else len(answer)
+                expanded_answers.append((line_number, answer[marker.start():end].strip()))
+        else:
+            expanded_answers.append((line_number, answer))
+    answer_lines = expanded_answers
 
     if not question_text:
         return None, f'Dòng {first_line_number}: câu hỏi không hợp lệ.'
@@ -439,19 +514,23 @@ def _parse_uploaded_quiz_file(uploaded_file):
 
     return questions, errors
 
-def _can_access_quiz(user, quiz):
-    def _can_access_quiz(user, quiz):
-        if user.is_admin:
-            return True
-        if quiz.created_by == user or not quiz.classroom_id:
-            return True
 
+def _quiz_attempt_count(user, quiz):
+    return (
+        QuizResult.objects.filter(user=user, quiz=quiz).count()
+        + QuizReloadPenalty.objects.filter(user=user, quiz=quiz).count()
+    )
+
+def _can_access_quiz(user, quiz):
+    if user.is_admin:
+        return True
+    if quiz.created_by == user or not quiz.classroom_id:
+        return True
     return ClassroomMember.objects.filter(
         classroom=quiz.classroom,
         student=user,
         status='approved'
     ).exists()
-
 @login_required
 def create_quiz(request):
 
@@ -487,18 +566,31 @@ def create_quiz(request):
                 return render(request, 'quiz_ai/create_quiz.html')
 
             question_images = _extract_uploaded_quiz_images(quiz_file)
+            image_map = getattr(quiz_file, '_docx_image_map', {})
             with transaction.atomic():
                 for index, (content, choices) in enumerate(parsed_questions):
+                    marker_keys = re.findall(r'\\[\\[DOCX_IMAGE_\\d+\\]\\]', content)
+                    image = image_map.get(marker_keys[0]) if marker_keys else None
+                    if image is None and index < len(question_images):
+                        image = question_images[index]
+                    if image:
+                        image = _store_word_question_image(image, quiz.id, index)
+                    clean_content = re.sub(r'\\[\\[DOCX_IMAGE_\\d+\\]\\]', '', content).strip()
                     question = Question.objects.create(
                         quiz=quiz,
-                        content=content,
-                        image=question_images[index] if index < len(question_images) else None,
+                        content=clean_content,
+                        image=image,
                     )
-                    for choice_text, is_correct in choices:
+                    for choice_index, (choice_text, is_correct) in enumerate(choices):
+                        marker_keys = re.findall(r'\\[\\[DOCX_IMAGE_\\d+\\]\\]', choice_text)
+                        choice_image = image_map.get(marker_keys[0]) if marker_keys else None
+                        if choice_image:
+                            choice_image = _store_word_question_image(choice_image, quiz.id, index * 10 + choice_index)
                         Choice.objects.create(
                             question=question,
-                            content=choice_text,
-                            is_correct=is_correct
+                            content=re.sub(r'\\[\\[DOCX_IMAGE_\\d+\\]\\]', '', choice_text).strip(),
+                            is_correct=is_correct,
+                            image=choice_image,
                         )
 
             messages.success(request, f"Đã tạo {len(parsed_questions)} câu hỏi từ file tải lên.")
@@ -592,14 +684,14 @@ def quiz_detail(request, quiz_id):
         id=quiz_id
     )
 
-    if not request.user.is_admin and  _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền xem đề thi này.")
 
     questions = list(quiz.questions.all())
     for question in questions:
         question.allows_multiple = sum(1 for choice in question.choices.all() if choice.is_correct) > 1
 
-    attempt_count = QuizResult.objects.filter(user=request.user, quiz=quiz).count()
+    attempt_count = _quiz_attempt_count(request.user, quiz)
     blocked = bool(quiz.max_attempts and attempt_count >= quiz.max_attempts and quiz.created_by != request.user)
 
     return render(request, 'quiz_ai/quiz_detail.html', {
@@ -617,10 +709,10 @@ def take_quiz(request, quiz_id):
         id=quiz_id
     )
 
-    if not request.user.is_admin and  _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền làm bài kiểm tra này.")
 
-    attempt_count = QuizResult.objects.filter(user=request.user, quiz=quiz).count()
+    attempt_count = _quiz_attempt_count(request.user, quiz)
     if quiz.max_attempts and attempt_count >= quiz.max_attempts and quiz.created_by != request.user:
         return render(request, 'quiz_ai/attempt_limit.html', {'quiz': quiz})
 
@@ -629,6 +721,13 @@ def take_quiz(request, quiz_id):
     show_order_setup = question_order is None or answer_order is None
     shuffle_questions = question_order == '1'
     shuffle_answers = answer_order == '1'
+
+    reload_key = f'quiz_active_{quiz.id}'
+    if not show_order_setup:
+        if quiz.max_attempts and quiz.created_by != request.user and request.session.get(reload_key):
+            QuizReloadPenalty.objects.create(user=request.user, quiz=quiz)
+            attempt_count += 1
+        request.session[reload_key] = True
 
     questions = list(quiz.questions.all())
     if shuffle_questions:
@@ -663,7 +762,7 @@ def submit_quiz(request, quiz_id):
         id=quiz_id
     )
 
-    if not request.user.is_admin and _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền nộp bài kiểm tra này.")
 
     total_questions = quiz.questions.count()
@@ -682,6 +781,7 @@ def submit_quiz(request, quiz_id):
 
     score = round((correct_answers / total_questions) * 10) if total_questions else 0
 
+    request.session.pop(f'quiz_active_{quiz.id}', None)
     start_time_str = request.session.pop(f'quiz_start_{quiz.id}', None)
     total_seconds = 0
     if start_time_str:
@@ -711,6 +811,38 @@ def submit_quiz(request, quiz_id):
 
 
 @login_required
+def edit_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    if not request.user.is_admin and quiz.created_by != request.user:
+        return HttpResponseForbidden("Ban khong co quyen chinh sua de thi nay.")
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        if not title:
+            messages.error(request, "Ten de thi khong duoc de trong.")
+            return redirect('quiz_ai:edit_quiz', quiz.id)
+
+        try:
+            time_limit = int(request.POST.get('time_limit') or 0) or None
+            max_attempts = int(request.POST.get('max_attempts') or 0) or None
+            if (time_limit and time_limit < 1) or (max_attempts and max_attempts < 1):
+                raise ValueError
+        except ValueError:
+            messages.error(request, "Thoi gian va so luot lam bai phai la so nguyen duong.")
+            return redirect('quiz_ai:edit_quiz', quiz.id)
+
+        quiz.title = title
+        quiz.description = request.POST.get('description', '').strip()
+        quiz.time_limit = time_limit
+        quiz.max_attempts = max_attempts
+        quiz.save(update_fields=['title', 'description', 'time_limit', 'max_attempts'])
+        messages.success(request, "Da cap nhat thong tin de thi.")
+        return redirect('quiz_ai:edit_quiz', quiz.id)
+
+    return render(request, 'quiz_ai/edit_quiz.html', {'quiz': quiz})
+
+@login_required
 def edit_question(request, question_id):
     question = get_object_or_404(
         Question.objects.select_related('quiz').prefetch_related('choices'),
@@ -721,10 +853,6 @@ def edit_question(request, question_id):
         return HttpResponseForbidden("Bạn không có quyền chỉnh sửa câu hỏi này.")
 
     if request.method == 'POST':
-        question.quiz.title = request.POST.get('title', '').strip()
-        question.quiz.description = request.POST.get('description', '').strip()
-        question.quiz.save(update_fields=['title', 'description'])
-
         question.content = _normalize_quiz_text(request.POST.get('content', ''))
         image = request.FILES.get('image')
         if request.POST.get('remove_image') and question.image:
@@ -778,21 +906,76 @@ def delete_quiz(request, quiz_id):
     return redirect('quiz_ai:quiz_list')
 
 
+
+@login_required
+def download_quiz(request, quiz_id, format):
+    quiz = get_object_or_404(Quiz.objects.prefetch_related('questions__choices'), id=quiz_id)
+
+    filename = re.sub(r'[^\w-]+', '_', quiz.title, flags=re.UNICODE).strip('_') or 'de_kiem_tra'
+    if format == 'docx':
+        from docx import Document
+        document = Document()
+        document.add_heading(quiz.title, 0)
+        if quiz.description:
+            document.add_paragraph(quiz.description)
+        for number, question in enumerate(quiz.questions.all(), start=1):
+            document.add_heading(f'Câu {number}: {question.content}', level=2)
+            for letter, choice in zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', question.choices.all()):
+                marker = ' (Đáp án đúng)' if choice.is_correct else ''
+                document.add_paragraph(f'{letter}. {choice.content}{marker}')
+        buffer = BytesIO()
+        document.save(buffer)
+        response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.docx"'
+        return response
+
+    if format == 'pdf':
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.pdfbase import pdfmetrics
+            from reportlab.pdfbase.ttfonts import TTFont
+            from reportlab.pdfgen import canvas
+        except ImportError:
+            return HttpResponse('PDF chưa sẵn sàng. Vui lòng tải bản Word.', status=503)
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+        pdf.setTitle(quiz.title)
+        y = 800
+        pdf.setFont('Helvetica-Bold', 14)
+        pdf.drawString(40, y, quiz.title[:90])
+        for number, question in enumerate(quiz.questions.all(), start=1):
+            y -= 28
+            if y < 60:
+                pdf.showPage(); y = 800
+            pdf.setFont('Helvetica-Bold', 10)
+            pdf.drawString(40, y, f'Cau {number}: {question.content}'[:110])
+            pdf.setFont('Helvetica', 9)
+            for letter, choice in zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', question.choices.all()):
+                y -= 16
+                if y < 60:
+                    pdf.showPage(); y = 800
+                suffix = ' [DAP AN DUNG]' if choice.is_correct else ''
+                pdf.drawString(56, y, f'{letter}. {choice.content}{suffix}'[:120])
+        pdf.save()
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
+        return response
+    return HttpResponse(status=404)
+
 @login_required
 def flashcards(request, quiz_id):
     quiz = get_object_or_404(Quiz.objects.prefetch_related('questions__choices'), id=quiz_id)
 
-    if not request.user.is_admin and _can_access_quiz(request.user, quiz):
+    if not request.user.is_admin and not _can_access_quiz(request.user, quiz):
         return HttpResponseForbidden("Bạn không có quyền xem flashcards của đề này.")
 
     questions = list(quiz.questions.all())
     for question in questions:
         question.allows_multiple = sum(1 for choice in question.choices.all() if choice.is_correct) > 1
 
-    return render(request, 'quiz_ai/quiz_detail.html', {
+    return render(request, 'quiz_ai/flashcards.html', {
         'quiz': quiz,
         'questions': questions,
-        'blocked': False,
     })
 
 

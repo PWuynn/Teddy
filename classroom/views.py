@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 
@@ -316,6 +317,75 @@ def assign_class_todo(request, pk):
 
 
 @login_required
+def edit_class_todo_group(request, todo_id):
+    todo = get_object_or_404(
+        Todo.objects.select_related('classroom', 'assigned_by'),
+        id=todo_id
+    )
+    classroom = todo.classroom
+
+    if not _teacher_required(request, classroom):
+        return HttpResponseForbidden("Ban khong co quyen chinh sua bai duoc giao trong lop nay.")
+
+    group = Todo.objects.filter(
+        classroom=classroom,
+        assigned_by=todo.assigned_by,
+        title=todo.title,
+        description=todo.description,
+        deadline=todo.deadline,
+        priority=todo.priority,
+    )
+    members = ClassroomMember.objects.filter(
+        classroom=classroom,
+        status='approved'
+    ).select_related('student').order_by('student__username')
+
+    if request.method == 'POST':
+        selected_ids = {int(value) for value in request.POST.getlist('student_ids') if value.isdigit()}
+        if not selected_ids:
+            messages.warning(request, "Vui long chon it nhat mot thanh vien.")
+            return redirect('classroom:edit_class_todo_group', todo_id=todo.id)
+
+        deadline = parse_datetime(request.POST.get('deadline', ''))
+        if deadline and timezone.is_naive(deadline):
+            deadline = timezone.make_aware(deadline, timezone.get_current_timezone())
+
+        title = request.POST.get('title', '').strip()
+        if not title:
+            messages.warning(request, "Tieu de bai giao khong duoc de trong.")
+            return redirect('classroom:edit_class_todo_group', todo_id=todo.id)
+
+        allowed_ids = {member.student_id for member in members}
+        selected_ids &= allowed_ids
+        if not selected_ids:
+            messages.warning(request, "Thanh vien duoc chon khong hop le.")
+            return redirect('classroom:edit_class_todo_group', todo_id=todo.id)
+
+        existing = {item.user_id: item for item in group}
+        group.exclude(user_id__in=selected_ids).delete()
+        group.filter(user_id__in=selected_ids).update(
+            title=title,
+            description=request.POST.get('description', '').strip(),
+            priority=request.POST.get('priority') or 'medium',
+            deadline=deadline,
+        )
+        for user_id in selected_ids - set(existing):
+            Todo.objects.create(
+                user_id=user_id, assigned_by=request.user, classroom=classroom,
+                role='student', title=title,
+                description=request.POST.get('description', '').strip(),
+                priority=request.POST.get('priority') or 'medium', deadline=deadline,
+            )
+
+        messages.success(request, "Da cap nhat bai duoc giao.")
+        return redirect('classroom:class_detail', pk=classroom.pk)
+
+    return render(request, 'classroom/edit_assignment.html', {
+        'classroom': classroom, 'assignment': todo, 'members': members,
+        'selected_member_ids': set(group.values_list('user_id', flat=True)),
+    })
+
+@login_required
 def delete_class_todo_group(request, todo_id):
     todo = get_object_or_404(
         Todo.objects.select_related('classroom', 'assigned_by'),
@@ -484,6 +554,22 @@ def submit_todo_file(request, todo_id):
         pk=todo.classroom.id
     )
 @login_required
+def delete_class_quiz_result(request, pk, result_id):
+    classroom = get_object_or_404(Classroom, pk=pk)
+    if not _teacher_required(request, classroom):
+        return HttpResponseForbidden("Ban khong co quyen xoa lich su lam bai cua lop nay.")
+
+    result = get_object_or_404(
+        QuizResult.objects.select_related('quiz'),
+        id=result_id,
+        quiz__classroom=classroom,
+    )
+    if request.method == 'POST':
+        result.delete()
+        messages.success(request, "Da xoa lich su lam bai.")
+    return redirect('classroom:class_detail', pk=classroom.pk)
+
+@login_required
 def class_quiz_history_json(request, pk):
     classroom = get_object_or_404(Classroom, pk=pk)
 
@@ -491,8 +577,7 @@ def class_quiz_history_json(request, pk):
         return HttpResponseForbidden("Ban khong co quyen xem lich su lop nay.")
 
     results = QuizResult.objects.filter(
-        quiz__classroom=classroom,
-        quiz__created_by=request.user
+        quiz__classroom=classroom
     ).select_related('user', 'quiz').order_by('-created_at')[:30]
 
     return JsonResponse({
@@ -501,7 +586,8 @@ def class_quiz_history_json(request, pk):
                 'student': result.user.username,
                 'quiz': result.quiz.title,
                 'score': result.score,
-                'created_at': result.created_at.strftime('%d/%m/%Y %H:%M'),
+                'created_at': timezone.localtime(result.created_at).strftime('%d/%m/%Y %H:%M'),
+                'delete_url': reverse('classroom:delete_class_quiz_result', args=[classroom.pk, result.id]),
             }
             for result in results
         ]

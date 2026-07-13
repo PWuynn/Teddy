@@ -1,1 +1,1 @@
-web: gunicorn study_support.wsgi:application
+web: python manage.py migrate --noinput && gunicorn study_support.wsgi:application

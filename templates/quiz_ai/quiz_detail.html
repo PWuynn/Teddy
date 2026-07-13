@@ -33,12 +33,12 @@
             <article class="question-card">
                 <div class="question-number">{{ forloop.counter }}</div>
                 <div class="question-body">
-                    <h2>{{ question.content|linebreaksbr }}</h2>{% if question.image %}<img class="question-image" src="{{ question.image.url }}" alt="Hình minh họa câu {{ forloop.counter }}">{% endif %}
+                    <h2>{{ question.content|linebreaksbr }}</h2>{% if question.image %}<img class="question-image" src="{{ question.image.url }}" alt="Hình minh họa câu {{ forloop.counter }}" onerror="this.closest('figure') ? this.closest('figure').remove() : this.remove()">{% endif %}
                     <div class="choice-list">
                         {% for choice in question.choices.all %}
                         <div class="choice-item {% if choice.is_correct and request.user == quiz.created_by %}correct{% endif %}">
                             <span class="choice-dot">{{ forloop.counter }}</span>
-                            <span>{{ choice.content|linebreaksbr }}</span>
+                            <span>{{ choice.content|linebreaksbr }}{% if choice.image %}<img class="choice-image" src="{{ choice.image.url }}" alt="Hình đáp án" onerror="this.remove()">{% endif %}</span>
                             {% if choice.is_correct and request.user == quiz.created_by %}<i class="bi bi-check-circle-fill"></i>{% endif %}
                         </div>
                         {% endfor %}

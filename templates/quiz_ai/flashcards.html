@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}On tap | TEDDY{% endblock %}
+{% block content %}
+<div class="container py-4 py-lg-5 flashcard-page">
+  <div class="flashcard-hero d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+    <div>
+      <div class="d-flex flex-wrap gap-2 small mb-2">
+        <a href="{% url 'quiz_ai:quiz_list' %}" class="hero-link"><i class="bi bi-grid me-1"></i>Danh s&#225;ch &#273;&#7873;</a>
+        <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="hero-link"><i class="bi bi-arrow-left-circle me-1"></i>Quay l&#7841;i &#273;&#7873; thi</a>
+      </div>
+      <h1 class="h3 fw-bold mb-1">&Ocirc;n t&#7853;p: {{ quiz.title }}</h1>
+      <p class="mb-0 hero-subtitle">B&#7845;m v&agrave;o th&#7867; &#273;&#7875; l&#7853;t v&agrave; xem &#273;&aacute;p &aacute;n &#273;&uacute;ng.</p>
+    </div>
+    <span class="badge rounded-pill hero-count px-3 py-2">{{ questions|length }} c&#226;u h&#7887;i</span>
+  </div>
+  {% if questions %}
+  <div class="card border-0 shadow-sm mx-auto flashcard-shell">
+    <div class="card-body p-3 p-md-4 p-lg-5">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-uppercase small fw-semibold text-primary">The on tap</span>
+        <span id="card-counter" class="small text-muted"></span>
+      </div>
+      <div class="progress mb-4" role="progressbar" aria-label="Tien do on tap" style="height: .45rem;"><div id="card-progress" class="progress-bar" style="width: 0%"></div></div>
+      {% for question in questions %}
+      <section class="flashcard {% if not forloop.first %}d-none{% endif %}">
+        <div class="flashcard-face flashcard-front rounded-4 border bg-light p-4 p-md-5">
+          <div class="d-flex align-items-center gap-2 text-secondary mb-3"><i class="bi bi-patch-question fs-4"></i><span class="fw-semibold">Cau hoi</span></div>
+          <div class="fs-5 fw-semibold mb-4">{{ question.content|linebreaksbr }}</div>
+          {% if question.image %}<img src="{{ question.image.url }}" alt="Hinh minh hoa cau hoi" class="img-fluid rounded-3 border mb-4">{% endif %}
+          <div class="vstack gap-2">
+            {% for choice in question.choices.all %}
+            <div class="border rounded-3 bg-white px-3 py-2"><span class="badge text-bg-light border text-primary me-2">{% cycle 'A' 'B' 'C' 'D' 'E' 'F' %}</span>{{ choice.content|linebreaksbr }}{% if choice.image %}<img src="{{ choice.image.url }}" alt="H�nh c?a d�p �n" class="img-fluid rounded-2 d-block mt-2">{% endif %}</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="flashcard-face flashcard-back rounded-4 border border-success-subtle bg-success-subtle p-4 p-md-5 d-none">
+          <div class="d-flex align-items-center gap-2 text-success-emphasis mb-3"><i class="bi bi-check-circle-fill fs-4"></i><span class="fw-semibold">Dap an dung</span></div>
+          <div class="vstack gap-2">
+            {% for choice in question.choices.all %}{% if choice.is_correct %}
+            <div class="rounded-3 bg-white border border-success px-3 py-3"><span class="badge text-bg-success me-2">Dung</span>{{ choice.content|linebreaksbr }}{% if choice.image %}<img src="{{ choice.image.url }}" alt="H�nh d�p �n d�ng" class="img-fluid rounded-2 d-block mt-2">{% endif %}</div>
+            {% endif %}{% endfor %}
+          </div>
+        </div>
+      </section>
+      {% endfor %}
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
+        <button type="button" id="previous-card" class="btn btn-outline-secondary"><i class="bi bi-chevron-left me-1"></i>Cau truoc</button>
+        <button type="button" id="flip-card" class="btn btn-primary px-4"><i class="bi bi-arrow-repeat me-1"></i>Lat the</button>
+        <button type="button" id="next-card" class="btn btn-outline-secondary">Cau sau<i class="bi bi-chevron-right ms-1"></i></button>
+      </div>
+    </div>
+  </div>
+  {% else %}<div class="alert alert-info border-0 shadow-sm">De chua co cau hoi de on tap.</div>{% endif %}
+</div>
+<style>
+.flashcard-page { max-width: 1080px; }
+.flashcard-hero { padding: 1.5rem; border-radius: 1.25rem; color: #fff; background: linear-gradient(135deg,#2563eb,#3b82f6); box-shadow: 0 1rem 2.5rem rgba(37, 99, 235, .24); }
+.hero-link { color: rgba(255,255,255,.9); text-decoration: none; padding: .35rem .65rem; border: 1px solid rgba(255,255,255,.32); border-radius: .5rem; }
+.hero-link:hover { color: #fff; background: rgba(255,255,255,.16); }
+.hero-subtitle { color: rgba(255,255,255,.82); }
+.hero-count { color: #2563eb; background: #fff; }
+.flashcard-shell { max-width: 880px; border-radius: 1.25rem; overflow: hidden; box-shadow: 0 1rem 3rem rgba(30, 64, 175, .14) !important; }
+.flashcard-face { min-height: 340px; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.flashcard-face:hover { transform: translateY(-3px); box-shadow: 0 .75rem 2rem rgba(15, 23, 42, .10); }
+.flashcard-front { background: linear-gradient(145deg, #eff6ff, #ffffff) !important; border-color: #bfdbfe !important; }
+.flashcard-back { background: linear-gradient(145deg, #ecfdf5, #ffffff) !important; border-color: #86efac !important; }
+.flashcard-front p { padding: .7rem .85rem; margin-bottom: .55rem; border: 1px solid #e2e8f0; border-radius: .75rem; background: rgba(255,255,255,.9); }
+.flashcard-back p { padding: .8rem 1rem; margin-bottom: .55rem; border: 1px solid #86efac; border-radius: .75rem; background: #fff; }
+.flashcard-face img { max-height: 360px; object-fit: contain; }
+</style>
+<script>
+(() => {
+  const cards = [...document.querySelectorAll('.flashcard')];
+  if (!cards.length) return;
+  let current = 0;
+  const counter = document.getElementById('card-counter');
+  const progress = document.getElementById('card-progress');
+  const previous = document.getElementById('previous-card');
+  const next = document.getElementById('next-card');
+  const flip = document.getElementById('flip-card');
+  function resetCard(card) {
+    card.querySelector('.flashcard-front').classList.remove('d-none');
+    card.querySelector('.flashcard-back').classList.add('d-none');
+  }
+  function showCard(index) {
+    cards.forEach((card, cardIndex) => card.classList.toggle('d-none', cardIndex !== index));
+    resetCard(cards[index]);
+    counter.textContent = 'Cau ' + (index + 1) + ' / ' + cards.length;
+    progress.style.width = (((index + 1) / cards.length) * 100) + '%';
+    previous.disabled = index === 0;
+    next.disabled = index === cards.length - 1;
+    flip.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Lat the';
+  }
+  flip.addEventListener('click', () => {
+    const card = cards[current];
+    const front = card.querySelector('.flashcard-front');
+    const back = card.querySelector('.flashcard-back');
+    const showingAnswer = !back.classList.contains('d-none');
+    front.classList.toggle('d-none', !showingAnswer);
+    back.classList.toggle('d-none', showingAnswer);
+    flip.innerHTML = showingAnswer ? '<i class="bi bi-arrow-repeat me-1"></i>Lat the' : '<i class="bi bi-arrow-repeat me-1"></i>Xem cau hoi';
+  });
+  cards.forEach((card) => {
+    card.querySelector('.flashcard-front').addEventListener('click', () => flip.click());
+    card.querySelector('.flashcard-back').addEventListener('click', () => flip.click());
+  });
+  previous.addEventListener('click', () => { if (current > 0) showCard(--current); });
+  next.addEventListener('click', () => { if (current < cards.length - 1) showCard(++current); });
+  showCard(current);
+})();
+</script>
+{% endblock %}
