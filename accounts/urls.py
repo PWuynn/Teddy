@@ -18,6 +18,9 @@ urlpatterns = [
     path('admin-dashboard/latest-courses/', views.admin_latest_courses, name='admin_latest_courses'),
     path('admin-dashboard/latest-quizzes/', views.admin_latest_quizzes, name='admin_latest_quizzes'),
     path('admin-dashboard/latest-documents/', views.admin_latest_documents, name='admin_latest_documents'),
+    path('admin-dashboard/latest-courses/<int:pk>/delete/', views.admin_delete_latest_course, name='admin_delete_latest_course'),
+    path('admin-dashboard/latest-quizzes/<int:pk>/delete/', views.admin_delete_latest_quiz, name='admin_delete_latest_quiz'),
+    path('admin-dashboard/latest-documents/<int:pk>/delete/', views.admin_delete_latest_document, name='admin_delete_latest_document'),
 
     path('users/', views.user_list, name='user_list'),
 ]

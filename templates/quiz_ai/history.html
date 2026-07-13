@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load tz %}
 
 {% block title %}Lịch sử làm bài | TEDDY{% endblock %}
 
@@ -47,7 +48,7 @@
                         <span class="score-pill low">{{ result.score }}/10</span>
                         {% endif %}
                     </div>
-                    <div class="date-cell">{{ result.created_at|date:"d/m/Y H:i" }}</div>
+                    <div class="date-cell">{{ result.created_at|timezone:"Asia/Bangkok"|date:"d/m/Y H:i" }}</div>
                     <div class="action-cell">
                         {% if request.user == result.quiz.created_by %}
                         <form method="POST" action="{% url 'quiz_ai:delete_result' result.id %}">

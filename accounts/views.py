@@ -180,6 +180,32 @@ def admin_latest_documents(request):
     })
 
 
+@staff_member_required
+def admin_delete_latest_course(request, pk):
+    course = get_object_or_404(Course, pk=pk)
+    if request.method == 'POST':
+        course.delete()
+        messages.success(request, "Da xoa khoa hoc.")
+    return redirect('accounts:admin_latest_courses')
+
+
+@staff_member_required
+def admin_delete_latest_quiz(request, pk):
+    quiz = get_object_or_404(Quiz, pk=pk)
+    if request.method == 'POST':
+        quiz.delete()
+        messages.success(request, "Da xoa quiz.")
+    return redirect('accounts:admin_latest_quizzes')
+
+
+@staff_member_required
+def admin_delete_latest_document(request, pk):
+    document = get_object_or_404(Document, pk=pk)
+    if request.method == 'POST':
+        document.delete()
+        messages.success(request, "Da xoa tai lieu.")
+    return redirect('accounts:admin_latest_documents')
+
 @login_required
 def tea_dashboard(request):
     return render(request, 'accounts/teacher/tea_dashboard.html')

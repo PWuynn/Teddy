@@ -51,7 +51,14 @@
                                 <td><span class="latest-code">{{ course.course_code }}</span></td>
                                 <td>{{ course.creator.username }}</td>
                                 <td>{{ course.created_at|date:'d/m/Y H:i' }}</td>
-                                <td class="text-end"><a href="{% url 'courses:course_detail' course.id %}" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
+                                <td class="text-end">
+    <div class="d-flex gap-1 justify-content-end">
+        <a href="{% url 'courses:course_detail' course.id %}" class="btn btn-outline-primary btn-sm">Chi tiet</a>
+        <form method="post" action="{% url 'accounts:admin_delete_latest_course' course.id %}" class="d-inline" onsubmit="return confirm('Xoa khoa hoc nay?');">
+            {% csrf_token %}<button type="submit" class="btn btn-outline-danger btn-sm">Xoa</button>
+        </form>
+    </div>
+</td>
                             </tr>
                         {% empty %}
                             <tr><td colspan="5" class="latest-empty">Chưa có khóa học</td></tr>
@@ -68,7 +75,14 @@
                                 <td>{{ quiz.classroom.name|default:'-' }}</td>
                                 <td>{{ quiz.created_by.username|default:'-' }}</td>
                                 <td>{{ quiz.created_at|date:'d/m/Y H:i' }}</td>
-                                <td class="text-end"><a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
+                                <td class="text-end">
+    <div class="d-flex gap-1 justify-content-end">
+        <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-primary btn-sm">Chi tiet</a>
+        <form method="post" action="{% url 'accounts:admin_delete_latest_quiz' quiz.id %}" class="d-inline" onsubmit="return confirm('Xoa quiz nay?');">
+            {% csrf_token %}<button type="submit" class="btn btn-outline-danger btn-sm">Xoa</button>
+        </form>
+    </div>
+</td>
                             </tr>
                         {% empty %}
                             <tr><td colspan="5" class="latest-empty">Chưa có quiz</td></tr>
@@ -86,7 +100,14 @@
                                 <td>{{ doc.classroom.name|default:'-' }}</td>
                                 <td>{{ doc.owner.username }}</td>
                                 <td>{{ doc.created_at|date:'d/m/Y H:i' }}</td>
-                                <td class="text-end"><a href="{% url 'materials:download_document' doc.id %}" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
+                                <td class="text-end">
+    <div class="d-flex gap-1 justify-content-end">
+        <a href="{% url 'materials:download_document' doc.id %}" class="btn btn-outline-primary btn-sm">Chi tiet</a>
+        <form method="post" action="{% url 'accounts:admin_delete_latest_document' doc.id %}" class="d-inline" onsubmit="return confirm('Xoa tai lieu nay?');">
+            {% csrf_token %}<button type="submit" class="btn btn-outline-danger btn-sm">Xoa</button>
+        </form>
+    </div>
+</td>
                             </tr>
                         {% empty %}
                             <tr><td colspan="6" class="latest-empty">Chưa có tài liệu</td></tr>

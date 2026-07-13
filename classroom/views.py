@@ -13,6 +13,7 @@ from quiz_ai.models import Quiz, QuizResult
 from todo.models import Todo
 from .forms import ClassroomForm
 import os
+from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 
@@ -586,7 +587,7 @@ def class_quiz_history_json(request, pk):
                 'student': result.user.username,
                 'quiz': result.quiz.title,
                 'score': result.score,
-                'created_at': timezone.localtime(result.created_at).strftime('%d/%m/%Y %H:%M'),
+                'created_at': timezone.localtime(result.created_at, ZoneInfo('Asia/Bangkok')).strftime('%d/%m/%Y %H:%M'),
                 'delete_url': reverse('classroom:delete_class_quiz_result', args=[classroom.pk, result.id]),
             }
             for result in results
