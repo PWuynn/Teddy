@@ -11,6 +11,7 @@ from classroom.models import ClassroomMember
 from django.template.loader import get_template
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
+import os
 import cloudinary.uploader
 import re
 import unicodedata
@@ -931,32 +932,105 @@ def download_quiz(request, quiz_id, format):
 
     if format == 'pdf':
         try:
+            from reportlab.lib import colors
             from reportlab.lib.pagesizes import A4
+            from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+            from reportlab.lib.units import mm
             from reportlab.pdfbase import pdfmetrics
             from reportlab.pdfbase.ttfonts import TTFont
-            from reportlab.pdfgen import canvas
+            from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+            from xml.sax.saxutils import escape
         except ImportError:
             return HttpResponse('PDF chưa sẵn sàng. Vui lòng tải bản Word.', status=503)
+
+        font_regular = 'Helvetica'
+        font_bold = 'Helvetica-Bold'
+        font_candidates = [
+            (r'C:\Windows\Fonts\DejaVuSans.ttf', r'C:\Windows\Fonts\DejaVuSans-Bold.ttf'),
+            (r'C:\Windows\Fonts\arial.ttf', r'C:\Windows\Fonts\arialbd.ttf'),
+        ]
+        for regular_path, bold_path in font_candidates:
+            if os.path.exists(regular_path) and os.path.exists(bold_path):
+                pdfmetrics.registerFont(TTFont('TeddyUnicode', regular_path))
+                pdfmetrics.registerFont(TTFont('TeddyUnicode-Bold', bold_path))
+                font_regular = 'TeddyUnicode'
+                font_bold = 'TeddyUnicode-Bold'
+                break
+
+        def paragraph_text(value):
+            return escape(str(value or '')).replace('\n', '<br/>')
+
         buffer = BytesIO()
-        pdf = canvas.Canvas(buffer, pagesize=A4)
-        pdf.setTitle(quiz.title)
-        y = 800
-        pdf.setFont('Helvetica-Bold', 14)
-        pdf.drawString(40, y, quiz.title[:90])
+        document = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=18 * mm,
+            leftMargin=18 * mm,
+            topMargin=16 * mm,
+            bottomMargin=16 * mm,
+            title=quiz.title,
+        )
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'QuizTitle',
+            parent=styles['Title'],
+            fontName=font_bold,
+            fontSize=18,
+            leading=24,
+            textColor=colors.HexColor('#0f172a'),
+            spaceAfter=8,
+        )
+        description_style = ParagraphStyle(
+            'QuizDescription',
+            parent=styles['BodyText'],
+            fontName=font_regular,
+            fontSize=10,
+            leading=15,
+            textColor=colors.HexColor('#475569'),
+            spaceAfter=12,
+        )
+        question_style = ParagraphStyle(
+            'QuizQuestion',
+            parent=styles['BodyText'],
+            fontName=font_bold,
+            fontSize=11,
+            leading=16,
+            textColor=colors.HexColor('#111827'),
+            spaceBefore=10,
+            spaceAfter=4,
+            keepWithNext=True,
+        )
+        choice_style = ParagraphStyle(
+            'QuizChoice',
+            parent=styles['BodyText'],
+            fontName=font_regular,
+            fontSize=10,
+            leading=15,
+            leftIndent=8 * mm,
+            firstLineIndent=-5 * mm,
+            textColor=colors.HexColor('#1f2937'),
+            spaceAfter=3,
+        )
+        correct_choice_style = ParagraphStyle(
+            'QuizCorrectChoice',
+            parent=choice_style,
+            fontName=font_bold,
+            textColor=colors.HexColor('#166534'),
+        )
+
+        story = [Paragraph(paragraph_text(quiz.title), title_style)]
+        if quiz.description:
+            story.append(Paragraph(paragraph_text(quiz.description), description_style))
+
         for number, question in enumerate(quiz.questions.all(), start=1):
-            y -= 28
-            if y < 60:
-                pdf.showPage(); y = 800
-            pdf.setFont('Helvetica-Bold', 10)
-            pdf.drawString(40, y, f'Cau {number}: {question.content}'[:110])
-            pdf.setFont('Helvetica', 9)
+            story.append(Paragraph(f'Câu {number}: {paragraph_text(question.content)}', question_style))
             for letter, choice in zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', question.choices.all()):
-                y -= 16
-                if y < 60:
-                    pdf.showPage(); y = 800
-                suffix = ' [DAP AN DUNG]' if choice.is_correct else ''
-                pdf.drawString(56, y, f'{letter}. {choice.content}{suffix}'[:120])
-        pdf.save()
+                suffix = ' (Đáp án đúng)' if choice.is_correct else ''
+                style = correct_choice_style if choice.is_correct else choice_style
+                story.append(Paragraph(f'{letter}. {paragraph_text(choice.content)}{suffix}', style))
+            story.append(Spacer(1, 4))
+
+        document.build(story)
         response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
         return response

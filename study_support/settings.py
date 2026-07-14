@@ -128,10 +128,10 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "cloudinary_storage.storage.StaticCloudinaryStorage",
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-STATICFILES_STORAGE = "cloudinary_storage.storage.StaticCloudinaryStorage"
+
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
 
 STATICFILES_DIRS = [
