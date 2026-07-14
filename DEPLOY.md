@@ -16,7 +16,7 @@ Du an da san sang de deploy len cac nen tang Python/Django nhu Render, Railway h
 Build command:
 
 ```bash
-pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+./build.sh
 ```
 
 Start command:

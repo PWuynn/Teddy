@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: teddy
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn study_support.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: teddy-n00g.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://teddy-n00g.onrender.com
