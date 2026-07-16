@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     "cloudinary",
     'accounts',
-    'quiz_ai',
+    'quiz',
     'classroom',
     'courses',
     'todo',

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+﻿from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
@@ -7,13 +7,12 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models.functions import ExtractMonth
 from collections import Counter
 import json
-
 from .forms import ProfileForm
 from accounts.models import CustomUser
 from classroom.models import Classroom
 from courses.models import Course
 from materials.models import Document
-from quiz_ai.models import Quiz
+from quiz.models import Quiz
 from todo.models import PersonalTodo, Todo
 
 
@@ -38,7 +37,7 @@ def _admin_totals():
         'total_classes': Classroom.objects.count(),
         'total_documents': Document.objects.count(),
         'total_quizzes': total_quizzes,
-        'total_quiz_ai': total_quizzes,
+        'total_quiz': total_quizzes,
         'total_todos': Todo.objects.count() + PersonalTodo.objects.count(),
     }
 
@@ -185,7 +184,7 @@ def admin_delete_latest_course(request, pk):
     course = get_object_or_404(Course, pk=pk)
     if request.method == 'POST':
         course.delete()
-        messages.success(request, "Da xoa khoa hoc.")
+        messages.success(request, "Đã xóa khóa học.")
     return redirect('accounts:admin_latest_courses')
 
 
@@ -194,7 +193,7 @@ def admin_delete_latest_quiz(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
     if request.method == 'POST':
         quiz.delete()
-        messages.success(request, "Da xoa quiz.")
+        messages.success(request, "Đã xóa quiz.")
     return redirect('accounts:admin_latest_quizzes')
 
 
@@ -203,7 +202,7 @@ def admin_delete_latest_document(request, pk):
     document = get_object_or_404(Document, pk=pk)
     if request.method == 'POST':
         document.delete()
-        messages.success(request, "Da xoa tai lieu.")
+        messages.success(request, "Đã xóa tài liệu.")
     return redirect('accounts:admin_latest_documents')
 
 @login_required

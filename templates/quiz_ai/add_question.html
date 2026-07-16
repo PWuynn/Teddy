@@ -17,9 +17,9 @@
             </div>
 
             <div class="qa-actions">
-                <a href="{% url 'quiz_ai:edit_quiz' quiz.id %}" class="btn btn-light"><i class="bi bi-sliders"></i> Chỉnh sửa đề</a>
-                <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-light"><i class="bi bi-eye"></i> Xem đề</a>
-                <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-primary"><i class="bi bi-play-fill"></i> Thử làm bài</a>
+                <a href="{% url 'quiz:edit_quiz' quiz.id %}" class="btn btn-light"><i class="bi bi-sliders"></i> Chỉnh sửa đề</a>
+                <a href="{% url 'quiz:quiz_detail' quiz.id %}" class="btn btn-light"><i class="bi bi-eye"></i> Xem đề</a>
+                <a href="{% url 'quiz:take_quiz' quiz.id %}" class="btn btn-primary"><i class="bi bi-play-fill"></i> Thử làm bài</a>
             </div>
         </header>
 
@@ -83,7 +83,7 @@
                         <span class="qa-kicker dark">Question Bank</span>
                         <h2>Danh sách câu hỏi</h2>
                     </div>
-                    <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kho đề</a>
+                    <a href="{% url 'quiz:quiz_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kho đề</a>
                 </div>
 
                 <div class="question-list">
@@ -97,8 +97,8 @@
                                     <h3 class="math-content">{{ q.content|linebreaksbr }}</h3>{% if q.image %}<img class="question-thumb" src="{{ q.image.url }}" alt="Hình minh họa câu {{ forloop.counter }}" onerror="this.closest('figure') ? this.closest('figure').remove() : this.remove()">{% endif %}
                                 </div>
                                 <div class="row-actions">
-                                    <a href="{% url 'quiz_ai:edit_question' q.id %}" class="icon-btn edit" title="Sửa câu hỏi" aria-label="Sửa câu hỏi"><i class="bi bi-pencil-square"></i></a>
-                                    <form method="POST" action="{% url 'quiz_ai:delete_question' q.id %}">
+                                    <a href="{% url 'quiz:edit_question' q.id %}" class="icon-btn edit" title="Sửa câu hỏi" aria-label="Sửa câu hỏi"><i class="bi bi-pencil-square"></i></a>
+                                    <form method="POST" action="{% url 'quiz:delete_question' q.id %}">
                                         {% csrf_token %}
                                         <button type="submit" class="icon-btn delete" title="Xóa câu hỏi" aria-label="Xóa câu hỏi" onclick="return confirm('Bạn có chắc muốn xóa câu hỏi này?')"><i class="bi bi-trash3"></i></button>
                                     </form>

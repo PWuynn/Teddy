@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from classroom.models import Classroom, ClassroomMember
 from materials.models import Document
-from quiz_ai.models import Quiz, QuizResult
+from quiz.models import Quiz, QuizResult
 from todo.models import Todo
 from .forms import ClassroomForm
 import os
@@ -244,12 +244,12 @@ def upload_class_document(request, pk):
         return redirect('classroom:class_detail', pk=classroom.pk)
 
     if not _approved_member_required(request, classroom):
-        return HttpResponseForbidden("Ban can duoc chap nhan vao lop truoc khi tai tai lieu.")
+        return HttpResponseForbidden("Bạn cần được chấp nhận vào lớp trước khi tải tài liệu.")
 
     uploaded_file = request.FILES.get('file')
 
     if not uploaded_file:
-        messages.error(request, "Vui long chon tep tai lieu.")
+        messages.error(request, "Vui lòng chọn tệp tài liệu.")
         return redirect('classroom:class_detail', pk=classroom.pk)
 
     Document.objects.create(
@@ -263,7 +263,7 @@ def upload_class_document(request, pk):
         file=uploaded_file
     )
 
-    messages.success(request, "Da tai tai lieu len lop.")
+    messages.success(request, "Đã tải tài liệu lên lớp.")
     return redirect('classroom:class_detail', pk=classroom.pk)
 
 
@@ -275,7 +275,7 @@ def assign_class_todo(request, pk):
         return redirect('classroom:class_detail', pk=classroom.pk)
 
     if not _teacher_required(request, classroom):
-        return HttpResponseForbidden("Ban khong co quyen giao bai trong lop nay.")
+        return HttpResponseForbidden("Bạn không có quyền giao bài trong lớp này.")
 
     assign_scope = request.POST.get('assign_scope', 'all')
     selected_ids = request.POST.getlist('student_ids')
@@ -286,7 +286,7 @@ def assign_class_todo(request, pk):
 
     if assign_scope == 'selected':
         if not selected_ids:
-            messages.warning(request, "Vui long chon it nhat mot thanh vien de giao bai.")
+            messages.warning(request, "Vui lòng chọn ít nhất một thành viên để giao bài.")
             return redirect('classroom:class_detail', pk=classroom.pk)
 
         members_query = members_query.filter(student_id__in=selected_ids)
@@ -294,7 +294,7 @@ def assign_class_todo(request, pk):
     member_users = [member.student for member in members_query]
 
     if not member_users:
-        messages.warning(request, "Lop chua co hoc sinh/sinh vien de giao bai.")
+        messages.warning(request, "Lớp chưa có học sinh/ sinh viên để giao bài.")
         return redirect('classroom:class_detail', pk=classroom.pk)
 
     deadline = parse_datetime(request.POST.get('deadline', ''))
@@ -313,7 +313,7 @@ def assign_class_todo(request, pk):
             deadline=deadline,
         )
     
-    messages.success(request, f"Da giao bai cho {len(member_users)} thanh vien.")
+    messages.success(request, f"Đã giao bài cho {len(member_users)} thành viên.")
     return redirect('classroom:class_detail', pk=classroom.pk)
 
 
@@ -326,7 +326,7 @@ def edit_class_todo_group(request, todo_id):
     classroom = todo.classroom
 
     if not _teacher_required(request, classroom):
-        return HttpResponseForbidden("Ban khong co quyen chinh sua bai duoc giao trong lop nay.")
+        return HttpResponseForbidden("Bạn không có quyền chỉnh sửa bài được giao trong lớp này.")
 
     group = Todo.objects.filter(
         classroom=classroom,
@@ -344,7 +344,7 @@ def edit_class_todo_group(request, todo_id):
     if request.method == 'POST':
         selected_ids = {int(value) for value in request.POST.getlist('student_ids') if value.isdigit()}
         if not selected_ids:
-            messages.warning(request, "Vui long chon it nhat mot thanh vien.")
+            messages.warning(request, "Vui lòng chọn ít nhất một thành viên.")
             return redirect('classroom:edit_class_todo_group', todo_id=todo.id)
 
         deadline = parse_datetime(request.POST.get('deadline', ''))
@@ -353,13 +353,13 @@ def edit_class_todo_group(request, todo_id):
 
         title = request.POST.get('title', '').strip()
         if not title:
-            messages.warning(request, "Tieu de bai giao khong duoc de trong.")
+            messages.warning(request, "Tiêu đề bài giao không được để trống.")
             return redirect('classroom:edit_class_todo_group', todo_id=todo.id)
 
         allowed_ids = {member.student_id for member in members}
         selected_ids &= allowed_ids
         if not selected_ids:
-            messages.warning(request, "Thanh vien duoc chon khong hop le.")
+            messages.warning(request, "Thành viên được chọn không hợp lệ.")
             return redirect('classroom:edit_class_todo_group', todo_id=todo.id)
 
         existing = {item.user_id: item for item in group}
@@ -378,7 +378,7 @@ def edit_class_todo_group(request, todo_id):
                 priority=request.POST.get('priority') or 'medium', deadline=deadline,
             )
 
-        messages.success(request, "Da cap nhat bai duoc giao.")
+        messages.success(request, "Đã cập nhật bài được giao.")
         return redirect('classroom:class_detail', pk=classroom.pk)
 
     return render(request, 'classroom/edit_assignment.html', {
@@ -422,7 +422,7 @@ def review_classroom_member(request, pk, member_id, action):
     classroom = get_object_or_404(Classroom, pk=pk)
 
     if classroom.teacher != request.user:
-        return HttpResponseForbidden("Ban khong co quyen duyet thanh vien lop nay.")
+        return HttpResponseForbidden("Bạn không có quyền duyệt thành viên lớp này.")
 
     membership = get_object_or_404(
         ClassroomMember,
@@ -494,7 +494,7 @@ def create_class_quiz(request, pk):
         return redirect('classroom:class_detail', pk=classroom.pk)
 
     if not _teacher_required(request, classroom):
-        return HttpResponseForbidden("Ban khong co quyen tao bai kiem tra trong lop nay.")
+        return HttpResponseForbidden("Bạn không có quyền tạo bài kiểm tra trong lớp này.")
 
     quiz = Quiz.objects.create(
         title=request.POST.get('title'),
@@ -505,8 +505,8 @@ def create_class_quiz(request, pk):
         time_limit=request.POST.get('time_limit') or 30,
     )
 
-    messages.success(request, "Da tao bai kiem tra. Hay them cau hoi trac nghiem.")
-    return redirect('quiz_ai:add_question', quiz_id=quiz.id)
+    messages.success(request, "Đã tạo bài kiểm tra. Hãy thêm câu hỏi trắc nghiệm.")
+    return redirect('quiz:add_question', quiz_id=quiz.id)
 
 @login_required
 def submit_todo_file(request, todo_id):
@@ -523,10 +523,10 @@ def submit_todo_file(request, todo_id):
         )
 
     if not _approved_member_required(request, todo.classroom):
-        return HttpResponseForbidden("Ban can duoc chap nhan vao lop truoc khi nop bai.")
+        return HttpResponseForbidden("Bạn cần được chấp nhận vào lớp trước khi nộp bài.")
 
     if todo.deadline and timezone.now() > todo.deadline:
-        messages.error(request, "Bai da qua han, ban khong the nop bai.")
+        messages.error(request, "Bài đã quá hạn, bạn không thể nộp bài.")
         return redirect(
             "classroom:class_detail",
             pk=todo.classroom.id
@@ -558,7 +558,7 @@ def submit_todo_file(request, todo_id):
 def delete_class_quiz_result(request, pk, result_id):
     classroom = get_object_or_404(Classroom, pk=pk)
     if not _teacher_required(request, classroom):
-        return HttpResponseForbidden("Ban khong co quyen xoa lich su lam bai cua lop nay.")
+        return HttpResponseForbidden("Bạn không có quyền xóa lịch sử làm bài của lớp này.")
 
     result = get_object_or_404(
         QuizResult.objects.select_related('quiz'),
@@ -567,7 +567,7 @@ def delete_class_quiz_result(request, pk, result_id):
     )
     if request.method == 'POST':
         result.delete()
-        messages.success(request, "Da xoa lich su lam bai.")
+        messages.success(request, "Đã xóa lịch sử làm bài.")
     return redirect('classroom:class_detail', pk=classroom.pk)
 
 @login_required
@@ -575,7 +575,7 @@ def class_quiz_history_json(request, pk):
     classroom = get_object_or_404(Classroom, pk=pk)
 
     if not _teacher_required(request, classroom):
-        return HttpResponseForbidden("Ban khong co quyen xem lich su lop nay.")
+        return HttpResponseForbidden("Bạn không có quyền xem lịch sử lớp này.")
 
     results = QuizResult.objects.filter(
         quiz__classroom=classroom

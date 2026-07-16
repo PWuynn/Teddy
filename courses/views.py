@@ -1,15 +1,12 @@
 import uuid
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-
 from classroom.models import Classroom
 from .models import Course, CourseMember
-
 
 def _filter_courses(queryset, keyword):
     if not keyword:
@@ -64,7 +61,7 @@ def create_course(request):
 
         course.total_classes = course.classes.count()
         course.save(update_fields=['total_classes'])
-        messages.success(request, "Da tao khoa hoc.")
+        messages.success(request, "Đã tạo khóa học.")
         return redirect('courses:course_detail', pk=course.pk)
 
     return render(request, 'courses/create_course.html')
@@ -143,7 +140,7 @@ def edit_course(request, pk):
     course = get_object_or_404(Course, pk=pk)
 
     if request.user != course.creator:
-        return HttpResponseForbidden("Ban khong co quyen chinh sua khoa hoc nay.")
+        return HttpResponseForbidden("Bạn không có quyền chỉnh sửa khóa học này.")
 
     if request.method == 'POST':
         course.name = request.POST.get('name', course.name).strip()
@@ -183,7 +180,7 @@ def edit_course(request, pk):
 
         course.total_classes = course.classes.count()
         course.save(update_fields=['total_classes'])
-        messages.success(request, "Da cap nhat khoa hoc va giu lai du lieu lop cu.")
+        messages.success(request, "Đã cập nhật khóa học và giữ lại dữ liệu lớp cũ.")
         return redirect('courses:course_detail', pk=course.pk)
 
     return render(request, 'courses/edit_course.html', {
@@ -201,7 +198,7 @@ def join_course(request):
             course = Course.objects.get(course_code=code)
 
             if course.creator == request.user:
-                messages.info(request, "Ban la nguoi tao khoa hoc nay.")
+                messages.info(request, "Bạn là người tạo khóa học này.")
                 return redirect('courses:course_detail', pk=course.pk)
 
             membership, created = CourseMember.objects.get_or_create(
@@ -238,7 +235,7 @@ def review_course_member(request, pk, membership_id, action):
     course = get_object_or_404(Course, pk=pk)
 
     if request.user != course.creator:
-        return HttpResponseForbidden("Ban khong co quyen duyet thanh vien khoa hoc nay.")
+        return HttpResponseForbidden("Bạn không có quyền duyệt thành viên khóa học này.")
 
     membership = get_object_or_404(
         CourseMember,
@@ -255,7 +252,7 @@ def review_course_member(request, pk, membership_id, action):
             membership.status = 'rejected'
             messages.warning(request, f'Đã từ chối {membership.user.username}.')
         else:
-            return HttpResponseForbidden("Hanh dong khong hop le.")
+            return HttpResponseForbidden("Hành động không hợp lệ.")
 
         membership.reviewed_at = timezone.now()
         membership.reviewed_by = request.user

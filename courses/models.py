@@ -5,15 +5,15 @@ import string
 
 
 JOIN_PERMISSION_CHOICES = (
-    ('public', 'Cong khai'),
-    ('approval', 'Yeu cau kiem duyet'),
+    ('public', 'Công khai'),
+    ('approval', 'Yêu cầu kiểm duyệt'),
 )
 
 
 MEMBERSHIP_STATUS_CHOICES = (
     ('pending', 'Chờ duyệt'),
     ('approved', 'Đã chấp nhận'),
-    ('rejected', 'Tu choi'),
+    ('rejected', 'Từ chối'),
 )
 
 

@@ -5,8 +5,8 @@
   <div class="flashcard-hero d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
     <div>
       <div class="d-flex flex-wrap gap-2 small mb-2">
-        <a href="{% url 'quiz_ai:quiz_list' %}" class="hero-link"><i class="bi bi-grid me-1"></i>Danh s&#225;ch &#273;&#7873;</a>
-        <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="hero-link"><i class="bi bi-arrow-left-circle me-1"></i>Quay l&#7841;i &#273;&#7873; thi</a>
+        <a href="{% url 'quiz:quiz_list' %}" class="hero-link"><i class="bi bi-grid me-1"></i>Danh s&#225;ch &#273;&#7873;</a>
+        <a href="{% url 'quiz:quiz_detail' quiz.id %}" class="hero-link"><i class="bi bi-arrow-left-circle me-1"></i>Quay l&#7841;i &#273;&#7873; thi</a>
       </div>
       <h1 class="h3 fw-bold mb-1">&Ocirc;n t&#7853;p: {{ quiz.title }}</h1>
       <p class="mb-0 hero-subtitle">B&#7845;m v&agrave;o th&#7867; &#273;&#7875; l&#7853;t v&agrave; xem &#273;&aacute;p &aacute;n &#273;&uacute;ng.</p>

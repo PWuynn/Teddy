@@ -17,9 +17,9 @@
                 </div>
             </div>
             <div class="hero-actions">
-                <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Danh sách</a>
+                <a href="{% url 'quiz:quiz_list' %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Danh sách</a>
                 {% if not blocked and questions %}
-                <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-primary btn-lg"><i class="bi bi-play-fill"></i> Làm bài</a>
+                <a href="{% url 'quiz:take_quiz' quiz.id %}" class="btn btn-primary btn-lg"><i class="bi bi-play-fill"></i> Làm bài</a>
                 {% endif %}
             </div>
         </section>

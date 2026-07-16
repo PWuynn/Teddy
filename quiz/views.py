@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Quiz, Question, Choice, QuizResult, QuizReloadPenalty
 from django.http import HttpResponseForbidden, HttpResponse
@@ -257,8 +257,7 @@ def _extract_correct_letters(lines):
             if compact_key and all(letter in 'abcdef' for letter in compact_key):
                 correct_letters.update(compact_key)
                 continue
-            # A line such as "Đáp án: Hà Nội" is itself the only choice,
-            # not an answer-key label. Keep its value as the choice text.
+            
             clean_lines.append((line_number, answer_value))
             continue
         clean_lines.append((line_number, line))
@@ -464,8 +463,6 @@ def _parse_uploaded_quiz_file(uploaded_file):
                 first_line_number = None
             continue
 
-        # A numbered line after choices starts the next question; check this
-        # before numeric-choice recognition (e.g. "1. ...").
         if question_lines and answer_lines and _is_question_line(line):
             flush_current()
 
@@ -485,10 +482,7 @@ def _parse_uploaded_quiz_file(uploaded_file):
 
         if _is_question_line(line) and (question_lines or answer_lines):
             flush_current()
-
-        # Files exported as alternating question/answer rows often do not
-        # label the answer with A., B. or a bullet. Treat the next line as
-        # the answer when the question itself has an explicit number/label.
+            
         if question_lines and not answer_lines and _is_question_line(question_lines[0]):
             answer_lines.append((line_number, line))
             continue
@@ -556,7 +550,7 @@ def create_quiz(request):
             if not quiz_file:
                 quiz.delete()
                 messages.error(request, "Vui lòng tải file Word (.docx), PDF hoặc file văn bản có câu hỏi trước khi tạo đề tự động.")
-                return render(request, 'quiz_ai/create_quiz.html')
+                return render(request, 'quiz/create_quiz.html')
 
             parsed_questions, parse_errors = _parse_uploaded_quiz_file(quiz_file)
             if not parsed_questions:
@@ -564,7 +558,7 @@ def create_quiz(request):
                 messages.error(request, "File chưa có câu hỏi đúng cấu trúc. Bài kiểm tra chưa được tạo.")
                 for error in parse_errors[:10]:
                     messages.warning(request, error)
-                return render(request, 'quiz_ai/create_quiz.html')
+                return render(request, 'quiz/create_quiz.html')
 
             question_images = _extract_uploaded_quiz_images(quiz_file)
             image_map = getattr(quiz_file, '_docx_image_map', {})
@@ -599,7 +593,7 @@ def create_quiz(request):
                 messages.warning(request, f"Có {len(parse_errors)} câu hỏi/dòng sai cấu trúc và đã được bỏ qua.")
                 for error in parse_errors[:10]:
                     messages.warning(request, error)
-            return redirect('quiz_ai:quiz_detail', quiz.id)
+            return redirect('quiz:quiz_detail', quiz.id)
         manual_questions = request.POST.get('manual_questions', '').strip()
         if manual_questions:
             for lines in _split_manual_question_blocks(manual_questions):
@@ -617,11 +611,11 @@ def create_quiz(request):
                 question = Question.objects.create(quiz=quiz, content=content)
                 for choice_text, is_correct in choices:
                     Choice.objects.create(question=question, content=choice_text, is_correct=is_correct)
-            return redirect('quiz_ai:quiz_detail', quiz.id)
+            return redirect('quiz:quiz_detail', quiz.id)
 
-        return redirect('quiz_ai:add_question', quiz.id)
+        return redirect('quiz:add_question', quiz.id)
 
-    return render(request, 'quiz_ai/create_quiz.html')
+    return render(request, 'quiz/create_quiz.html')
 
 
 @login_required
@@ -638,7 +632,7 @@ def add_question(request, quiz_id):
         choices, error = _parse_answers_for_question(content, '\n'.join(answers))
         if error:
             messages.error(request, error)
-            return redirect('quiz_ai:add_question', quiz.id)
+            return redirect('quiz:add_question', quiz.id)
 
         question = Question.objects.create(
             quiz=quiz,
@@ -649,12 +643,12 @@ def add_question(request, quiz_id):
             Choice.objects.create(question=question, content=choice_text, is_correct=is_correct)
 
         messages.success(request, "Đã thêm câu hỏi mới.")
-        return redirect('quiz_ai:add_question', quiz.id)
+        return redirect('quiz:add_question', quiz.id)
 
     questions = quiz.questions.all()
-    template = get_template("quiz_ai/add_question.html")
+    template = get_template("quiz/add_question.html")
     print("TEMPLATE:", template.origin.name)
-    return render(request, 'quiz_ai/add_question.html', {
+    return render(request, 'quiz/add_question.html', {
         'quiz': quiz,
         'questions': questions
     })
@@ -672,7 +666,7 @@ def quiz_list(request):
             Q(classroom__name__icontains=keyword)
         )
 
-    return render(request, 'quiz_ai/quiz_list.html', {
+    return render(request, 'quiz/quiz_list.html', {
         'quizzes': quizzes.order_by('-created_at'),
         'keyword': keyword,
     })
@@ -695,7 +689,7 @@ def quiz_detail(request, quiz_id):
     attempt_count = _quiz_attempt_count(request.user, quiz)
     blocked = bool(quiz.max_attempts and attempt_count >= quiz.max_attempts and quiz.created_by != request.user)
 
-    return render(request, 'quiz_ai/quiz_detail.html', {
+    return render(request, 'quiz/quiz_detail.html', {
         'quiz': quiz,
         'questions': questions,
         'blocked': blocked,
@@ -715,7 +709,7 @@ def take_quiz(request, quiz_id):
 
     attempt_count = _quiz_attempt_count(request.user, quiz)
     if quiz.max_attempts and attempt_count >= quiz.max_attempts and quiz.created_by != request.user:
-        return render(request, 'quiz_ai/attempt_limit.html', {'quiz': quiz})
+        return render(request, 'quiz/attempt_limit.html', {'quiz': quiz})
 
     question_order = request.GET.get('shuffle_questions')
     answer_order = request.GET.get('shuffle_answers')
@@ -743,7 +737,7 @@ def take_quiz(request, quiz_id):
     if not show_order_setup:
         request.session[f'quiz_start_{quiz.id}'] = timezone.now().isoformat()
 
-    return render(request, 'quiz_ai/take_quiz.html', {
+    return render(request, 'quiz/take_quiz.html', {
         'quiz': quiz,
         'questions': questions,
         'attempt_count': attempt_count,
@@ -756,7 +750,7 @@ def take_quiz(request, quiz_id):
 @login_required
 def submit_quiz(request, quiz_id):
     if request.method != 'POST':
-        return redirect('quiz_ai:take_quiz', quiz_id=quiz_id)
+        return redirect('quiz:take_quiz', quiz_id=quiz_id)
 
     quiz = get_object_or_404(
         Quiz.objects.select_related('created_by').prefetch_related('questions__choices'),
@@ -801,7 +795,7 @@ def submit_quiz(request, quiz_id):
         score=score
     )
 
-    return render(request, 'quiz_ai/result.html', {
+    return render(request, 'quiz/result.html', {
         'quiz': quiz,
         'score': score,
         'correct_answers': correct_answers,
@@ -816,13 +810,13 @@ def edit_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
 
     if not request.user.is_admin and quiz.created_by != request.user:
-        return HttpResponseForbidden("Ban khong co quyen chinh sua de thi nay.")
+        return HttpResponseForbidden("Bạn không có quyền chỉnh sửa đề thi này.")
 
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         if not title:
-            messages.error(request, "Ten de thi khong duoc de trong.")
-            return redirect('quiz_ai:edit_quiz', quiz.id)
+            messages.error(request, "Tên đề thi không được để trống.")
+            return redirect('quiz:edit_quiz', quiz.id)
 
         try:
             time_limit = int(request.POST.get('time_limit') or 0) or None
@@ -830,18 +824,18 @@ def edit_quiz(request, quiz_id):
             if (time_limit and time_limit < 1) or (max_attempts and max_attempts < 1):
                 raise ValueError
         except ValueError:
-            messages.error(request, "Thoi gian va so luot lam bai phai la so nguyen duong.")
-            return redirect('quiz_ai:edit_quiz', quiz.id)
+            messages.error(request, "Thời gian và số lượt làm bài phải là số nguyên dương.")
+            return redirect('quiz:edit_quiz', quiz.id)
 
         quiz.title = title
         quiz.description = request.POST.get('description', '').strip()
         quiz.time_limit = time_limit
         quiz.max_attempts = max_attempts
         quiz.save(update_fields=['title', 'description', 'time_limit', 'max_attempts'])
-        messages.success(request, "Da cap nhat thong tin de thi.")
-        return redirect('quiz_ai:edit_quiz', quiz.id)
+        messages.success(request, "Đã cập nhật thông tin đề thi.")
+        return redirect('quiz:edit_quiz', quiz.id)
 
-    return render(request, 'quiz_ai/edit_quiz.html', {'quiz': quiz})
+    return render(request, 'quiz/edit_quiz.html', {'quiz': quiz})
 
 @login_required
 def edit_question(request, question_id):
@@ -866,16 +860,16 @@ def edit_question(request, question_id):
         choices, error = _parse_answers_for_question(question.content, request.POST.get('answers', ''))
         if error:
             messages.error(request, error)
-            return redirect('quiz_ai:edit_question', question.id)
+            return redirect('quiz:edit_question', question.id)
 
         question.choices.all().delete()
         for choice_text, is_correct in choices:
             Choice.objects.create(question=question, content=choice_text, is_correct=is_correct)
 
         messages.success(request, "Đã lưu thay đổi câu hỏi.")
-        return redirect('quiz_ai:add_question', question.quiz.id)
+        return redirect('quiz:add_question', question.quiz.id)
 
-    return render(request, 'quiz_ai/edit_question.html', {'question': question})
+    return render(request, 'quiz/edit_question.html', {'question': question})
 
 
 @login_required
@@ -890,7 +884,7 @@ def delete_question(request, question_id):
         question.delete()
         messages.success(request, "Đã xóa câu hỏi.")
 
-    return redirect('quiz_ai:add_question', quiz.id)
+    return redirect('quiz:add_question', quiz.id)
 
 
 @login_required
@@ -904,7 +898,7 @@ def delete_quiz(request, quiz_id):
         quiz.delete()
         messages.success(request, "Đã xóa đề thi.")
 
-    return redirect('quiz_ai:quiz_list')
+    return redirect('quiz:quiz_list')
 
 
 
@@ -1047,7 +1041,7 @@ def flashcards(request, quiz_id):
     for question in questions:
         question.allows_multiple = sum(1 for choice in question.choices.all() if choice.is_correct) > 1
 
-    return render(request, 'quiz_ai/flashcards.html', {
+    return render(request, 'quiz/flashcards.html', {
         'quiz': quiz,
         'questions': questions,
     })
@@ -1064,7 +1058,7 @@ def quiz_history(request):
         'quiz__created_by'
     ).distinct().order_by('-created_at')
 
-    return render(request, 'quiz_ai/history.html', {'results': results})
+    return render(request, 'quiz/history.html', {'results': results})
 
 
 @login_required
@@ -1078,8 +1072,4 @@ def delete_result(request, result_id):
         result.delete()
         messages.success(request, "Đã xóa lịch sử làm bài")
 
-    return redirect('quiz_ai:quiz_history')
-
-
-
-
+    return redirect('quiz:quiz_history')

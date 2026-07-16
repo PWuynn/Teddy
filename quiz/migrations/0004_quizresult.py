@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('quiz_ai', '0003_quiz_created_at_quiz_max_attempts_quiz_time_limit_and_more'),
+        ('quiz', '0003_quiz_created_at_quiz_max_attempts_quiz_time_limit_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('total_questions', models.IntegerField(default=0)),
                 ('time_taken', models.IntegerField(default=0)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('quiz', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='quiz_ai.quiz')),
+                ('quiz', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='quiz.quiz')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

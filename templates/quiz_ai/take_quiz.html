@@ -9,7 +9,7 @@
         <span class="eyebrow dark">Thiết lập làm bài</span>
         <h2 id="orderSetupTitle">Chọn thứ tự hiển thị</h2>
         <p>Thiết lập có bật đảo sẽ được tạo ngẫu nhiên lại mỗi lần bạn tải lại trang.</p>
-        <form method="get" action="{% url 'quiz_ai:take_quiz' quiz.id %}">
+        <form method="get" action="{% url 'quiz:take_quiz' quiz.id %}">
             <fieldset>
                 <legend>Thứ tự câu hỏi</legend>
                 <label><input type="radio" name="shuffle_questions" value="0" checked> Giữ nguyên</label>
@@ -27,7 +27,7 @@
 {% endif %}
 <div class="take-page">
     <div class="container py-4 py-lg-5">
-        <form method="POST" action="{% url 'quiz_ai:submit_quiz' quiz.id %}" id="quizForm" class="take-layout">
+        <form method="POST" action="{% url 'quiz:submit_quiz' quiz.id %}" id="quizForm" class="take-layout">
             {% csrf_token %}
 
             <aside class="take-sidebar">
@@ -115,7 +115,7 @@
 
                 {% if questions %}
                 <div class="submit-bar">
-                    <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Thoát</a>
+                    <a href="{% url 'quiz:quiz_detail' quiz.id %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Thoát</a>
                     <div class="submit-hint" id="submitHint">Bạn chưa trả lời câu nào.</div>
                     <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-send-check"></i> Nộp bài</button>
                 </div>

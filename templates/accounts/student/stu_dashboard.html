@@ -13,14 +13,14 @@
             </div>
             <div class="hero-quick">
                 <a href="{% url 'todo:todo_list' %}" class="btn btn-light"><i class="bi bi-check2-square"></i> Mở Todo</a>
-                <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-primary"><i class="bi bi-ui-checks"></i> Làm bài</a>
+                <a href="{% url 'quiz:quiz_list' %}" class="btn btn-primary"><i class="bi bi-ui-checks"></i> Làm bài</a>
             </div>
         </section>
 
         <section class="student-focus-grid">
             <a href="{% url 'todo:todo_list' %}" class="focus-card primary"><span><i class="bi bi-list-task"></i></span><strong>Todo hôm nay</strong><small>Xem bài được giao và việc cá nhân.</small></a>
-            <a href="{% url 'quiz_ai:quiz_list' %}" class="focus-card success"><span><i class="bi bi-pencil-square"></i></span><strong>Làm bài kiểm tra</strong><small>Vào kho đề thi, làm bài và ôn tập.</small></a>
-            <a href="{% url 'quiz_ai:quiz_history' %}" class="focus-card amber"><span><i class="bi bi-bar-chart-line"></i></span><strong>Kết quả của tôi</strong><small>Theo dõi điểm và lịch sử làm bài.</small></a>
+            <a href="{% url 'quiz:quiz_list' %}" class="focus-card success"><span><i class="bi bi-pencil-square"></i></span><strong>Làm bài kiểm tra</strong><small>Vào kho đề thi, làm bài và ôn tập.</small></a>
+            <a href="{% url 'quiz:quiz_history' %}" class="focus-card amber"><span><i class="bi bi-bar-chart-line"></i></span><strong>Kết quả của tôi</strong><small>Theo dõi điểm và lịch sử làm bài.</small></a>
         </section>
 
         <section class="dash-layout">
@@ -38,7 +38,7 @@
             <div class="action-panel student-actions">
                 <h2>Lối tắt học sinh</h2>
                 <a href="{% url 'todo:todo_list' %}"><i class="bi bi-arrow-right-circle"></i> Todo của tôi</a>
-                <a href="{% url 'quiz_ai:quiz_list' %}"><i class="bi bi-arrow-right-circle"></i> Làm bài</a>
+                <a href="{% url 'quiz:quiz_list' %}"><i class="bi bi-arrow-right-circle"></i> Làm bài</a>
                 <a href="{% url 'courses:course_list' %}"><i class="bi bi-arrow-right-circle"></i> Khóa học đang tham gia</a>
                 <a href="{% url 'materials:document_list' %}"><i class="bi bi-arrow-right-circle"></i> Tài liệu học tập</a>
             </div>

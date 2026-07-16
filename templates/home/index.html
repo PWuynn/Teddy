@@ -399,7 +399,7 @@ background: white;
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'quiz_ai:quiz_list' %}">Đề thi</a>
+                        <a class="nav-link" href="{% url 'quiz:quiz_list' %}">Đề thi</a>
                     </li>
 
                     <li class="nav-item">
@@ -411,7 +411,7 @@ background: white;
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'quiz_ai:quiz_history' %}">Lịch sử làm bài</a>
+                        <a class="nav-link" href="{% url 'quiz:quiz_history' %}">Lịch sử làm bài</a>
                     </li>
                 </ul>
 
@@ -590,7 +590,7 @@ Dashboard học tập
                             <i class="bi bi-pencil-square"></i>
                         </div>
 
-                        <a href = "{% url 'create_quiz' %}">Tạo đề kiểm tra</a>
+                        <h4>Tạo đề kiểm tra</h4>
 
                         <p>
                             Tạo bài kiểm tra trực tuyến nhanh chóng,
@@ -629,7 +629,6 @@ Dashboard học tập
                         </div>
 
                         <h4>TodoList học tập</h4>
-                        <a href="{% url 'todo:todo_list' %}" class="btn btn-dark"> Mở Todo </a>
                         <p>
                             Theo dõi lịch học và công việc hằng ngày
                             giúp tăng hiệu suất học tập.
@@ -721,7 +720,7 @@ Dashboard học tập
                     Trải nghiệm nền tảng học tập hiện đại dành cho sinh viên.
                 </p>
 
-                <a href="#" class="btn btn-light btn-lg px-5 py-3 rounded-4">
+                <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg px-5 py-3 rounded-4">
                     Đăng ký ngay
                 </a>
 

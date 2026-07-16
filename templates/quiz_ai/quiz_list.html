@@ -12,7 +12,7 @@
                 <p>Quản lý, tìm kiếm và làm bài trắc nghiệm trong một không gian gọn gàng cho đánh giá năng lực.</p>
             </div>
 
-            <a href="{% url 'quiz_ai:create_quiz' %}" class="btn btn-light">
+            <a href="{% url 'quiz:create_quiz' %}" class="btn btn-light">
                 <i class="bi bi-plus-lg"></i> Tạo đề mới
             </a>
         </section>
@@ -24,7 +24,7 @@
             <input type="text" name="q" value="{{ keyword }}" placeholder="Tìm theo tên đề, mô tả hoặc lớp học...">
             <button class="btn btn-primary">Tìm kiếm</button>
             {% if keyword %}
-                <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-outline-secondary">Xóa lọc</a>
+                <a href="{% url 'quiz:quiz_list' %}" class="btn btn-outline-secondary">Xóa lọc</a>
             {% endif %}
         </form>
 
@@ -60,20 +60,20 @@
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Tải xuống</button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'quiz_ai:download_quiz' quiz.id 'docx' %}">Word (.docx)</a></li>
-                                <li><a class="dropdown-item" href="{% url 'quiz_ai:download_quiz' quiz.id 'pdf' %}">PDF (.pdf)</a></li>
+                                <li><a class="dropdown-item" href="{% url 'quiz:download_quiz' quiz.id 'docx' %}">Word (.docx)</a></li>
+                                <li><a class="dropdown-item" href="{% url 'quiz:download_quiz' quiz.id 'pdf' %}">PDF (.pdf)</a></li>
                             </ul>
                         </div>
-                        <a href="{% url 'quiz_ai:flashcards' quiz.id %}" class="btn btn-outline-success">Ôn tập</a>
-                        <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-primary">Làm bài</a>
+                        <a href="{% url 'quiz:flashcards' quiz.id %}" class="btn btn-outline-success">Ôn tập</a>
+                        <a href="{% url 'quiz:take_quiz' quiz.id %}" class="btn btn-primary">Làm bài</a>
                     </div>
 
                     {% if quiz.created_by == request.user %}
                         <div class="quiz-admin-actions">
-                            <a href="{% url 'quiz_ai:edit_quiz' quiz.id %}" class="btn btn-sm btn-outline-primary">
+                            <a href="{% url 'quiz:edit_quiz' quiz.id %}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-pencil-square"></i> Chinh sua de
                             </a>
-                            <form method="post" action="{% url 'quiz_ai:delete_quiz' quiz.id %}">
+                            <form method="post" action="{% url 'quiz:delete_quiz' quiz.id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa đề này?')">
                                     <i class="bi bi-trash3"></i> Xóa
@@ -87,7 +87,7 @@
                     <i class="bi bi-clipboard-x"></i>
                     <h2>Không tìm thấy đề kiểm tra</h2>
                     <p>Thử từ khóa khác hoặc tạo đề mới cho lớp học của bạn.</p>
-                    <a href="{% url 'quiz_ai:create_quiz' %}" class="btn btn-primary">Tạo đề ngay</a>
+                    <a href="{% url 'quiz:create_quiz' %}" class="btn btn-primary">Tạo đề ngay</a>
                 </div>
             {% endfor %}
         </div>

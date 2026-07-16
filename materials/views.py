@@ -7,7 +7,6 @@ from django.contrib import messages
 from .models import Document
 from .forms import DocumentForm
 
-
 @login_required
 def document_list(request):
 

@@ -11,8 +11,8 @@
           <p class="mb-0 text-white-50">Cap nhat thong tin va cac quy dinh lam bai cua de.</p>
         </div>
         <div class="d-flex gap-2 align-items-start">
-          <a href="{% url 'quiz_ai:add_question' quiz.id %}" class="btn btn-light">Quan ly cau hoi</a>
-          <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-light">Xem de</a>
+          <a href="{% url 'quiz:add_question' quiz.id %}" class="btn btn-light">Quan ly cau hoi</a>
+          <a href="{% url 'quiz:quiz_detail' quiz.id %}" class="btn btn-outline-light">Xem de</a>
         </div>
       </div>
     </div>
@@ -39,7 +39,7 @@
         </div>
       </div>
       <div class="d-flex flex-wrap justify-content-end gap-2 mt-4 pt-4 border-top">
-        <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-outline-secondary">Huy</a>
+        <a href="{% url 'quiz:quiz_list' %}" class="btn btn-outline-secondary">Huy</a>
         <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save2 me-1"></i>Luu thong tin de</button>
       </div>
     </form>

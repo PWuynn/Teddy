@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('classroom', '0001_initial'),
-        ('quiz_ai', '0006_remove_quizresult_time_taken_and_more'),
+        ('quiz', '0006_remove_quizresult_time_taken_and_more'),
     ]
 
     operations = [

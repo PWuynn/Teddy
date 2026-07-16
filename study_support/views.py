@@ -8,7 +8,7 @@ from django.urls import reverse
 from classroom.models import Classroom, ClassroomMember
 from courses.models import Course
 from materials.models import Document
-from quiz_ai.models import Quiz
+from quiz.models import Quiz
 from todo.models import Todo
 
 
@@ -111,7 +111,7 @@ def assistant_chat(request):
             'type': 'Quiz',
             'title': quiz.title,
             'description': f'{quiz.time_limit} phút · tạo bởi {quiz.created_by.username}',
-            'url': reverse('quiz_ai:quiz_detail', args=[quiz.id]),
+            'url': reverse('quiz:quiz_detail', args=[quiz.id]),
         })
 
     for todo in todo_matches:

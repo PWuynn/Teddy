@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('quiz_ai', '0002_remove_quiz_created_at_alter_quiz_description'),
+        ('quiz', '0002_remove_quiz_created_at_alter_quiz_description'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

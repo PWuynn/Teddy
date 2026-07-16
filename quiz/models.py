@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 from cloudinary.models import CloudinaryField
 
-
 class Quiz(models.Model):
 
     title = models.CharField(max_length=255)
@@ -22,8 +21,6 @@ class Quiz(models.Model):
         blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
-
-    # Cài đặt đề kiểm tra
 
     max_attempts = models.IntegerField(
         null=True,

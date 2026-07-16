@@ -49,9 +49,9 @@
                 </div>
 
                 <div class="result-actions">
-                    <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-secondary"><i class="bi bi-eye"></i> Xem đề</a>
-                    <a href="{% url 'quiz_ai:take_quiz' quiz.id %}" class="btn btn-light"><i class="bi bi-arrow-repeat"></i> Làm lại</a>
-                    <a href="{% url 'quiz_ai:quiz_list' %}" class="btn btn-primary"><i class="bi bi-list-ul"></i> Danh sách đề</a>
+                    <a href="{% url 'quiz:quiz_detail' quiz.id %}" class="btn btn-outline-secondary"><i class="bi bi-eye"></i> Xem đề</a>
+                    <a href="{% url 'quiz:take_quiz' quiz.id %}" class="btn btn-light"><i class="bi bi-arrow-repeat"></i> Làm lại</a>
+                    <a href="{% url 'quiz:quiz_list' %}" class="btn btn-primary"><i class="bi bi-list-ul"></i> Danh sách đề</a>
                 </div>
             </main>
         </section>

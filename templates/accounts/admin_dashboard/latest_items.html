@@ -34,7 +34,7 @@
                 {% if latest_type == 'courses' %}
                     <a href="/admin/courses/course/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm khóa học</a>
                 {% elif latest_type == 'quizzes' %}
-                    <a href="/admin/quiz_ai/quiz/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm quiz</a>
+                    <a href="/admin/quiz/quiz/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm quiz</a>
                 {% elif latest_type == 'documents' %}
                     <a href="/admin/materials/document/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm tài liệu</a>
                 {% endif %}
@@ -77,7 +77,7 @@
                                 <td>{{ quiz.created_at|date:'d/m/Y H:i' }}</td>
                                 <td class="text-end">
     <div class="d-flex gap-1 justify-content-end">
-        <a href="{% url 'quiz_ai:quiz_detail' quiz.id %}" class="btn btn-outline-primary btn-sm">Chi tiet</a>
+        <a href="{% url 'quiz:quiz_detail' quiz.id %}" class="btn btn-outline-primary btn-sm">Chi tiet</a>
         <form method="post" action="{% url 'accounts:admin_delete_latest_quiz' quiz.id %}" class="d-inline" onsubmit="return confirm('Xoa quiz nay?');">
             {% csrf_token %}<button type="submit" class="btn btn-outline-danger btn-sm">Xoa</button>
         </form>

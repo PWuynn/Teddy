@@ -481,11 +481,11 @@
                                 </div>
                                 <div class="btn-group">
                                     {% if can_interact %}
-                                    <a class="btn btn-outline-primary btn-sm" href="{% url 'quiz_ai:quiz_detail' quiz.id %}">
+                                    <a class="btn btn-outline-primary btn-sm" href="{% url 'quiz:quiz_detail' quiz.id %}">
                                         Xem
                                     </a>
                                     {% if can_interact %}
-                                    <a class="btn btn-success btn-sm" href="{% url 'quiz_ai:take_quiz' quiz.id %}">
+                                    <a class="btn btn-success btn-sm" href="{% url 'quiz:take_quiz' quiz.id %}">
                                         Làm
                                     </a>
                                     {% endif %}
@@ -493,7 +493,7 @@
                                     <span class="btn btn-secondary btn-sm disabled">Chờ duyệt</span>
                                     {% endif %}
                                     {% if request.user == quiz.created_by %}
-                                        <a class="btn btn-warning btn-sm" href="{% url 'quiz_ai:add_question' quiz.id %}">
+                                        <a class="btn btn-warning btn-sm" href="{% url 'quiz:add_question' quiz.id %}">
                                             Sửa
                                         </a>
                                     {% endif %}

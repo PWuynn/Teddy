@@ -3,7 +3,7 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    dependencies = [('quiz_ai', '0010_quiz_reload_penalty')]
+    dependencies = [('quiz', '0010_quiz_reload_penalty')]
     operations = [
         migrations.AddField(
             model_name='choice',

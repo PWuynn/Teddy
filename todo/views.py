@@ -241,10 +241,10 @@ def view_submission_file(request, pk):
     )
 
     if not can_view:
-        return HttpResponseForbidden("Ban khong co quyen xem file nop bai nay.")
+        return HttpResponseForbidden("Bạn không có quyền xem file nộp bài này.")
 
     if not todo.submission_file:
-        raise Http404("Bai nay chua co file nop.")
+        raise Http404("Bài này chưa có file nộp.")
 
     download = request.GET.get('download') == '1'
     filename = os.path.basename(todo.submission_file.name)
