@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}{{ page_title }} | TEDDY{% endblock %}
 
@@ -32,11 +32,11 @@
                     <h2>{{ page_title }}</h2>
                 </div>
                 {% if latest_type == 'courses' %}
-                    <a href="/admin/courses/course/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm khóa học</a>
+                    <a href="{% url 'courses:create_course' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm khóa học</a>
                 {% elif latest_type == 'quizzes' %}
-                    <a href="/admin/quiz/quiz/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm quiz</a>
+                    <a href="{% url 'quiz:create_quiz' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm quiz</a>
                 {% elif latest_type == 'documents' %}
-                    <a href="/admin/materials/document/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm tài liệu</a>
+                    <a href="{% url 'materials:upload_document' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Thêm tài liệu</a>
                 {% endif %}
             </div>
 

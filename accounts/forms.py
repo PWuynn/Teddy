@@ -40,13 +40,13 @@ class ProfileForm(forms.ModelForm):
             'bio',
         ]
         labels = {
-            'avatar': '?nh ??i di?n',
-            'full_name': 'H? t?n',
-            'birth_date': 'Ng?y th?ng n?m sinh',
-            'school': 'Tr??ng',
-            'phone': 'S? ?i?n tho?i',
+            'avatar': 'Ảnh đại diện',
+            'full_name': 'Họ tên',
+            'birth_date': 'Ngày tháng năm sinh',
+            'school': 'Trường',
+            'phone': 'Số điện thọai',
             'email': 'Email',
-            'bio': 'M? t? kh?c',
+            'bio': 'Mô tả khác',
         }
         widgets = {
             'avatar': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
