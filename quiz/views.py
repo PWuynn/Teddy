@@ -33,6 +33,7 @@ _BULLET_CHOICE_PREFIX_RE = re.compile(r'^[\s]*(?:[-\u2022\u2013\u2014]|\*)\s+')
 _ANSWER_PREFIXES = (
     'dap an:', 'dap an dung:', 'answer:', 'answer key:', 'correct:',
 )
+_DOCX_IMAGE_MARKER_RE = re.compile(r'\[\[DOCX_IMAGE_\d+\]\]')
 _DOCX_IMAGE_EXTENSIONS = {
     'image/jpeg': 'jpg',
     'image/jpg': 'jpg',
@@ -174,9 +175,17 @@ def _combine_word_images(image_files, name):
 def _word_images_for_markers(value, image_map):
     return [
         image_map[marker]
-        for marker in re.findall(r'\[\[DOCX_IMAGE_\d+\]\]', value)
+        for marker in _DOCX_IMAGE_MARKER_RE.findall(value or '')
         if marker in image_map
     ]
+
+
+def _strip_docx_image_markers(value):
+    return _DOCX_IMAGE_MARKER_RE.sub('', value or '').strip()
+
+
+def _is_docx_image_only_line(value):
+    return bool(_DOCX_IMAGE_MARKER_RE.search(value or '')) and not _strip_docx_image_markers(value)
 
 
 
@@ -820,6 +829,16 @@ def _parse_uploaded_quiz_file(uploaded_file):
         if _is_question_line(line) and (question_lines or answer_lines):
             flush_current()
 
+        if _is_docx_image_only_line(line):
+            if answer_lines:
+                prev_line_number, prev_text = answer_lines[-1]
+                answer_lines[-1] = (prev_line_number, prev_text + '\n' + line)
+            else:
+                if not question_lines:
+                    first_line_number = line_number
+                question_lines.append(line)
+            continue
+
         if question_lines and not answer_lines and _is_question_line(question_lines[0]):
             answer_lines.append((line_number, line))
             continue
@@ -931,7 +950,6 @@ def create_quiz(request):
                     messages.warning(request, error)
                 return render(request, 'quiz/create_quiz.html', {'selected_classroom': classroom})
 
-            question_images = _extract_uploaded_quiz_images(quiz_file)
             image_map = getattr(quiz_file, '_docx_image_map', {})
             with transaction.atomic():
                 for index, (section, content, choices) in enumerate(parsed_questions):
@@ -939,11 +957,9 @@ def create_quiz(request):
                         _word_images_for_markers(content, image_map),
                         f'question_{index + 1}',
                     )
-                    if image is None and index < len(question_images):
-                        image = question_images[index]
                     if image:
                         image = _store_word_question_image(image, quiz.id, index)
-                    clean_content = re.sub(r'\[\[DOCX_IMAGE_\d+\]\]', '', content).strip()
+                    clean_content = _strip_docx_image_markers(content)
                     question = Question.objects.create(
                         quiz=quiz,
                         content=clean_content,
@@ -959,7 +975,7 @@ def create_quiz(request):
                             choice_image = _store_word_question_image(choice_image, quiz.id, index * 10 + choice_index)
                         Choice.objects.create(
                             question=question,
-                            content=re.sub(r'\[\[DOCX_IMAGE_\d+\]\]', '', choice_text).strip(),
+                            content=_strip_docx_image_markers(choice_text),
                             is_correct=is_correct,
                             image=choice_image,
                         )
