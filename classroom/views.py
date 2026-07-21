@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from classroom.models import Classroom, ClassroomMember
 from materials.models import Document
-from quiz.models import Quiz, QuizResult
+from quiz.models import Quiz, QuizReloadPenalty, QuizResult
 from todo.models import Todo
 from .forms import ClassroomForm
 import os
@@ -570,6 +570,24 @@ def delete_class_quiz_result(request, pk, result_id):
         messages.success(request, "Đã xóa lịch sử làm bài.")
     return redirect('classroom:class_detail', pk=classroom.pk)
 
+
+@login_required
+def delete_class_quiz_reload_attempt(request, pk, penalty_id):
+    classroom = get_object_or_404(Classroom, pk=pk)
+    if not _teacher_required(request, classroom):
+        return HttpResponseForbidden("Bạn không có quyền xóa lịch sử làm bài của lớp này.")
+
+    attempt = get_object_or_404(
+        QuizReloadPenalty.objects.select_related('quiz'),
+        id=penalty_id,
+        quiz__classroom=classroom,
+    )
+    if request.method == 'POST':
+        attempt.delete()
+        messages.success(request, "Đã xóa lịch sử tải lại bài làm.")
+    return redirect('classroom:class_detail', pk=classroom.pk)
+
+
 @login_required
 def class_quiz_history_json(request, pk):
     classroom = get_object_or_404(Classroom, pk=pk)
@@ -577,19 +595,38 @@ def class_quiz_history_json(request, pk):
     if not _teacher_required(request, classroom):
         return HttpResponseForbidden("Bạn không có quyền xem lịch sử lớp này.")
 
-    results = QuizResult.objects.filter(
+    submitted_results = QuizResult.objects.filter(
         quiz__classroom=classroom
-    ).select_related('user', 'quiz').order_by('-created_at')[:30]
+    ).select_related('user', 'quiz')
+    reload_attempts = QuizReloadPenalty.objects.filter(
+        quiz__classroom=classroom
+    ).select_related('user', 'quiz')
 
-    return JsonResponse({
-        'results': [
-            {
-                'student': result.user.username,
-                'quiz': result.quiz.title,
-                'score': result.score,
-                'created_at': timezone.localtime(result.created_at, ZoneInfo('Asia/Bangkok')).strftime('%d/%m/%Y %H:%M'),
-                'delete_url': reverse('classroom:delete_class_quiz_result', args=[classroom.pk, result.id]),
-            }
-            for result in results
-        ]
-    })
+    records = []
+    for result in submitted_results:
+        records.append({
+            'student': result.user.username,
+            'quiz': result.quiz.title,
+            'score': result.score,
+            'status': 'Đã nộp bài',
+            'created_at': timezone.localtime(result.created_at, ZoneInfo('Asia/Bangkok')).strftime('%d/%m/%Y %H:%M'),
+            'sort_at': result.created_at,
+            'delete_url': reverse('classroom:delete_class_quiz_result', args=[classroom.pk, result.id]),
+        })
+
+    for attempt in reload_attempts:
+        records.append({
+            'student': attempt.user.username,
+            'quiz': attempt.quiz.title,
+            'score': None,
+            'status': 'Tải lại / chưa nộp',
+            'created_at': timezone.localtime(attempt.created_at, ZoneInfo('Asia/Bangkok')).strftime('%d/%m/%Y %H:%M'),
+            'sort_at': attempt.created_at,
+            'delete_url': reverse('classroom:delete_class_quiz_reload_attempt', args=[classroom.pk, attempt.id]),
+        })
+
+    records.sort(key=lambda record: record['sort_at'], reverse=True)
+    for record in records:
+        record.pop('sort_at', None)
+
+    return JsonResponse({'results': records[:30]})

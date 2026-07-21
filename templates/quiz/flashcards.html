@@ -24,7 +24,8 @@
       {% for question in questions %}
       <section class="flashcard {% if not forloop.first %}d-none{% endif %}">
         <div class="flashcard-face flashcard-front rounded-4 border bg-light p-4 p-md-5">
-          <div class="d-flex align-items-center gap-2 text-secondary mb-3"><i class="bi bi-patch-question fs-4"></i><span class="fw-semibold">Cau hoi</span></div>
+          {% if question.section %}<div class="badge text-bg-info mb-3">{{ question.section }}</div>{% endif %}
+          <div class="d-flex align-items-center gap-2 text-secondary mb-3"><i class="bi bi-patch-question fs-4"></i><span class="fw-semibold">Câu hỏi</span></div>
           <div class="fs-5 fw-semibold mb-4">{{ question.content|linebreaksbr }}</div>
           {% if question.image %}<img src="{{ question.image.url }}" alt="Hinh minh hoa cau hoi" class="img-fluid rounded-3 border mb-4">{% endif %}
           <div class="vstack gap-2">
@@ -34,23 +35,23 @@
           </div>
         </div>
         <div class="flashcard-face flashcard-back rounded-4 border border-success-subtle bg-success-subtle p-4 p-md-5 d-none">
-          <div class="d-flex align-items-center gap-2 text-success-emphasis mb-3"><i class="bi bi-check-circle-fill fs-4"></i><span class="fw-semibold">Dap an dung</span></div>
+          <div class="d-flex align-items-center gap-2 text-success-emphasis mb-3"><i class="bi bi-check-circle-fill fs-4"></i><span class="fw-semibold">Đáp án đúng</span></div>
           <div class="vstack gap-2">
             {% for choice in question.choices.all %}{% if choice.is_correct %}
-            <div class="rounded-3 bg-white border border-success px-3 py-3"><span class="badge text-bg-success me-2">Dung</span>{{ choice.content|linebreaksbr }}{% if choice.image %}<img src="{{ choice.image.url }}" alt="H�nh d�p �n d�ng" class="img-fluid rounded-2 d-block mt-2">{% endif %}</div>
+            <div class="rounded-3 bg-white border border-success px-3 py-3"><span class="badge text-bg-success me-2">Đúng</span>{{ choice.content|linebreaksbr }}{% if choice.image %}<img src="{{ choice.image.url }}" alt="H�nh d�p �n d�ng" class="img-fluid rounded-2 d-block mt-2">{% endif %}</div>
             {% endif %}{% endfor %}
           </div>
         </div>
       </section>
       {% endfor %}
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
-        <button type="button" id="previous-card" class="btn btn-outline-secondary"><i class="bi bi-chevron-left me-1"></i>Cau truoc</button>
-        <button type="button" id="flip-card" class="btn btn-primary px-4"><i class="bi bi-arrow-repeat me-1"></i>Lat the</button>
-        <button type="button" id="next-card" class="btn btn-outline-secondary">Cau sau<i class="bi bi-chevron-right ms-1"></i></button>
+        <button type="button" id="previous-card" class="btn btn-outline-secondary"><i class="bi bi-chevron-left me-1"></i>Câu trước</button>
+        <button type="button" id="flip-card" class="btn btn-primary px-4"><i class="bi bi-arrow-repeat me-1"></i>Lật the</button>
+        <button type="button" id="next-card" class="btn btn-outline-secondary">Câu sau<i class="bi bi-chevron-right ms-1"></i></button>
       </div>
     </div>
   </div>
-  {% else %}<div class="alert alert-info border-0 shadow-sm">De chua co cau hoi de on tap.</div>{% endif %}
+  {% else %}<div class="alert alert-info border-0 shadow-sm">Đề chưa có câu hỏi đề ôn tập.</div>{% endif %}
 </div>
 <style>
 .flashcard-page { max-width: 1080px; }
@@ -89,7 +90,7 @@
     progress.style.width = (((index + 1) / cards.length) * 100) + '%';
     previous.disabled = index === 0;
     next.disabled = index === cards.length - 1;
-    flip.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Lat the';
+    flip.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Lật thẻ';
   }
   flip.addEventListener('click', () => {
     const card = cards[current];
@@ -98,7 +99,7 @@
     const showingAnswer = !back.classList.contains('d-none');
     front.classList.toggle('d-none', !showingAnswer);
     back.classList.toggle('d-none', showingAnswer);
-    flip.innerHTML = showingAnswer ? '<i class="bi bi-arrow-repeat me-1"></i>Lat the' : '<i class="bi bi-arrow-repeat me-1"></i>Xem cau hoi';
+    flip.innerHTML = showingAnswer ? '<i class="bi bi-arrow-repeat me-1"></i>Lật thẻ' : '<i class="bi bi-arrow-repeat me-1"></i>Xem câu hỏi';
   });
   cards.forEach((card) => {
     card.querySelector('.flashcard-front').addEventListener('click', () => flip.click());

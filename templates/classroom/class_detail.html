@@ -154,7 +154,7 @@
                                     <th>Tài liệu</th>
                                     <th>Người tải</th>
                                     <th>Ngày tải</th>
-                                    <th class="text-end">Tải xuống</th>
+                                    <th class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -167,12 +167,13 @@
                                         <td>{{ document.owner.username }}</td>
                                         <td>{{ document.created_at|date:"d/m/Y H:i" }}</td>
                                         <td class="text-end">
-                                            {% if can_interact %}
-                                                <a class="btn btn-outline-primary btn-sm" href="{{ document.file.url }}" download>
+                                            <a class="btn btn-outline-primary btn-sm" href="{% url 'materials:download_document' document.id %}" title="Xem trước">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if can_interact and document.permission == 'download' %}
+                                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'materials:document_file' document.id %}?download=1" title="Tải xuống">
                                                     <i class="bi bi-download"></i>
                                                 </a>
-                                            {% else %}
-                                                <span class="badge bg-light text-dark">Chỉ xem</span>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -402,73 +403,9 @@
                     <div class="panel-header">
                         <h2><i class="bi bi-ui-checks-grid"></i> Bài kiểm tra</h2>
                         {% if is_teacher %}
-                            <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#createQuiz">
-                                <i class="bi bi-plus-lg"></i> Tạo quiz
-                            </button>
+                            <a class="btn btn-primary btn-sm" href="{% url 'quiz:create_quiz' %}?classroom_id={{ classroom.id }}"><i class="bi bi-plus-lg"></i> Tạo bài kiểm tra trong lớp</a>
                         {% endif %}
                     </div>
-
-                    {% if is_teacher %}
-                        <div id="createQuiz" class="collapse mb-4">
-                            <form method="post" action="{% url 'classroom:create_class_quiz' classroom.id %}" class="action-form smart-quiz-form">
-                                {% csrf_token %}
-                                <div class="form-section-title">
-                                    <span><i class="bi bi-stars"></i> Tạo bài kiểm tra</span>
-                                    <small>Chọn tạo thủ công hoặc tự sinh câu hỏi bằng AI nội bộ.</small>
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-7">
-                                        <label class="form-label">Tên bài kiểm tra</label>
-                                        <input class="form-control" name="title" placeholder="Ví dụ: Kiểm tra chương 2" required>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label">Thời gian (phút)</label>
-                                        <input class="form-control" type="number" name="time_limit" min="1" value="30" required>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label">Số lượt tối đa</label>
-                                        <input class="form-control" type="number" name="max_attempts" min="1" placeholder="Không giới hạn">
-                                    </div>
-                                    <div class="col-md-7">
-                                        <label class="form-label">Mô tả</label>
-                                        <input class="form-control" name="description" placeholder="Hướng dẫn ngắn cho học sinh">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">Cách tạo đề</label>
-                                        <div class="quiz-mode-grid">
-                                            <label class="quiz-mode-option">
-                                                <input class="form-check-input quiz-mode-radio" type="radio" name="mode" value="manual" checked>
-                                                <span><strong>Thủ công</strong><small>Tạo đề trước, thêm câu hỏi sau.</small></span>
-                                            </label>
-                                            <label class="quiz-mode-option">
-                                                <input class="form-check-input quiz-mode-radio" type="radio" name="mode" value="ai">
-                                                <span><strong>Tự động bằng AI</strong><small>Sinh sẵn câu hỏi và đáp án đúng.</small></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 ai-classroom-fields" style="display:none;">
-                                        <div class="ai-config-box">
-                                            <div class="row g-3">
-                                                <div class="col-md-8">
-                                                    <label class="form-label">Chủ đề AI</label>
-                                                    <input class="form-control" name="ai_topic" placeholder="Ví dụ: Hàm số bậc hai, thì hiện tại hoàn thành...">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Số câu</label>
-                                                    <input class="form-control" type="number" name="question_count" min="1" max="30" value="5">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 text-end">
-                                        <button class="btn btn-success">
-                                            <i class="bi bi-magic"></i> Tạo bài kiểm tra
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    {% endif %}
 
                     <div class="quiz-list">
                         {% for quiz in quizzes %}
@@ -1103,7 +1040,7 @@
                         return h('tr', { key: index }, [
                             h('td', { key: 'student' }, item.student),
                             h('td', { key: 'quiz' }, item.quiz),
-                            h('td', { key: 'score' }, h('span', { className: 'badge bg-primary' }, item.score + '/10')),
+                            h('td', { key: 'score' }, h('span', { className: item.score === null ? 'badge bg-info text-dark' : 'badge bg-primary' }, item.score === null ? item.status : item.score + '/10')),
                             h('td', { key: 'created' }, item.created_at),
                             h('td', { key: 'action' }, h('form', {
                                 method: 'post',

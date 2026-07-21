@@ -8,7 +8,7 @@
     <section class="order-setup-card" role="dialog" aria-modal="true" aria-labelledby="orderSetupTitle">
         <span class="eyebrow dark">Thiết lập làm bài</span>
         <h2 id="orderSetupTitle">Chọn thứ tự hiển thị</h2>
-        <p>Thiết lập có bật đảo sẽ được tạo ngẫu nhiên lại mỗi lần bạn tải lại trang.</p>
+        <p>Mỗi lần bấm bắt đầu sẽ tính một lượt làm. Nếu tải lại trang khi đang làm, bạn sẽ quay lại bước thiết lập này.</p>
         <form method="get" action="{% url 'quiz:take_quiz' quiz.id %}">
             <fieldset>
                 <legend>Thứ tự câu hỏi</legend>
@@ -63,7 +63,7 @@
 
                 <nav class="question-nav" aria-label="Đi tới câu hỏi">
                     {% for question in questions %}
-                    <a href="#question-{{ question.id }}" class="question-pill" data-question-id="{{ question.id }}">{{ forloop.counter }}</a>
+                    <a href="#question-{{ question.id }}" class="question-pill" data-question-id="{{ question.id }}" data-section-index="{{ question.section_index }}">{{ question.display_number }}</a>
                     {% endfor %}
                 </nav>
 
@@ -74,41 +74,57 @@
             </aside>
 
             <main class="question-flow">
-                {% for question in questions %}
-                <article class="take-card" id="question-{{ question.id }}" data-question-card data-question-id="{{ question.id }}">
-                    <div class="take-card-head">
-                        <span>Câu {{ forloop.counter }}</span>
-                        <small>{{ forloop.counter }} / {{ questions|length }}</small>
-                    </div>
+                {% if has_question_sections %}
+                <nav class="section-tabs" aria-label="Chọn phần làm bài">
+                    {% for section in question_sections %}
+                    <button type="button" class="section-tab {% if forloop.first %}active{% endif %}" data-section-tab="{{ section.index }}">
+                        <span>{{ section.title }}</span>
+                        <small>{{ section.questions|length }} câu</small>
+                    </button>
+                    {% endfor %}
+                </nav>
+                {% endif %}
 
-                    <div class="question-title-row">
-                        <h2>{{ question.content|linebreaksbr }}</h2>
-                        {% if question.allows_multiple %}
-                        <span class="multi-badge"><i class="bi bi-check2-square"></i> Chọn nhiều đáp án</span>
-                        {% else %}
-                        <span class="single-badge"><i class="bi bi-record-circle"></i> Chọn một đáp án</span>
-                        {% endif %}
-                    </div>
+                {% for section in question_sections %}
+                <section class="section-panel {% if has_question_sections and not forloop.first %}d-none{% endif %}" data-section-panel="{{ section.index }}">
+                    {% if has_question_sections %}<div class="take-section-divider"><span>{{ section.title }}</span></div>{% endif %}
+                    {% for question in section.questions %}
+                    <article class="take-card" id="question-{{ question.id }}" data-question-card data-question-id="{{ question.id }}">
+                        <div class="take-card-head">
+                            <span>Câu {{ question.display_number }}</span>
+                            <small>{% if has_question_sections %}{{ section.title }} · câu {{ question.section_number }}{% else %}{{ question.display_number }} / {{ questions|length }}{% endif %}</small>
+                        </div>
 
-                    {% if question.image %}
-                    <figure class="question-image">
-                        <img src="{{ question.image.url }}" alt="Hình minh họa câu {{ forloop.counter }}" onerror="this.closest('figure') ? this.closest('figure').remove() : this.remove()">
-                    </figure>
-                    {% endif %}
-
-                    <div class="answer-list">
-                        {% for choice in question.display_choices %}
-                        <label class="answer-option" for="choice{{ choice.id }}">
+                        <div class="question-title-row">
+                            <h2>{{ question.content|linebreaksbr }}</h2>
                             {% if question.allows_multiple %}
-                            <input class="form-check-input" type="checkbox" name="question_{{ question.id }}" value="{{ choice.id }}" id="choice{{ choice.id }}">
+                            <span class="multi-badge"><i class="bi bi-check2-square"></i> Chọn nhiều đáp án</span>
                             {% else %}
-                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" id="choice{{ choice.id }}">
+                            <span class="single-badge"><i class="bi bi-record-circle"></i> Chọn một đáp án</span>
                             {% endif %}
-                            <span class="answer-text">{{ choice.content|linebreaksbr }}{% if choice.image %}<img class="choice-image" src="{{ choice.image.url }}" alt="Hình đáp án" onerror="this.remove()">{% endif %}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </article>
+                        </div>
+
+                        {% if question.image %}
+                        <figure class="question-image">
+                            <img src="{{ question.image.url }}" alt="Hình minh họa câu {{ question.display_number }}" onerror="this.closest('figure') ? this.closest('figure').remove() : this.remove()">
+                        </figure>
+                        {% endif %}
+
+                        <div class="answer-list">
+                            {% for choice in question.display_choices %}
+                            <label class="answer-option" for="choice{{ choice.id }}">
+                                {% if question.allows_multiple %}
+                                <input class="form-check-input" type="checkbox" name="question_{{ question.id }}" value="{{ choice.id }}" id="choice{{ choice.id }}">
+                                {% else %}
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" id="choice{{ choice.id }}">
+                                {% endif %}
+                                <span class="answer-text">{{ choice.content|linebreaksbr }}{% if choice.image %}<img class="choice-image" src="{{ choice.image.url }}" alt="Hình đáp án" onerror="this.remove()">{% endif %}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </section>
                 {% empty %}
                 <div class="empty-state">Chưa có câu hỏi nào trong đề này.</div>
                 {% endfor %}
@@ -135,7 +151,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitHint = document.getElementById('submitHint');
     const total = cards.length;
 
-    function isAnswered(card) {
+        const sectionTabs = Array.from(document.querySelectorAll('[data-section-tab]'));
+    const sectionPanels = Array.from(document.querySelectorAll('[data-section-panel]'));
+
+    function activateSection(sectionIndex) {
+        if (!sectionIndex) return;
+        sectionTabs.forEach(function (tab) {
+            tab.classList.toggle('active', tab.dataset.sectionTab === sectionIndex);
+        });
+        sectionPanels.forEach(function (panel) {
+            panel.classList.toggle('d-none', panel.dataset.sectionPanel !== sectionIndex);
+        });
+    }
+
+    sectionTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            activateSection(tab.dataset.sectionTab);
+        });
+    });
+
+    pills.forEach(function (pill) {
+        pill.addEventListener('click', function () {
+            activateSection(pill.dataset.sectionIndex);
+        });
+    });
+
+function isAnswered(card) {
         return Array.from(card.querySelectorAll('input[type="radio"], input[type="checkbox"]')).some(function (input) {
             return input.checked;
         });
@@ -207,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
 .take-page{background:#f4f7fb;min-height:calc(100vh - 76px)}
 .take-layout{align-items:start;display:grid;gap:22px;grid-template-columns:340px minmax(0,1fr)}
 .take-sidebar{background:#12343b;border-radius:8px;color:#fff;padding:24px;position:sticky;top:96px}.eyebrow{color:#99f6e4;font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.take-sidebar h1{font-size:28px;font-weight:850;letter-spacing:0;margin:8px 0}.take-sidebar p{color:rgba(255,255,255,.76);line-height:1.6;margin:0}.side-stats{display:grid;gap:10px;grid-template-columns:repeat(3,1fr);margin-top:18px}.side-stats div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px}.side-stats strong,.side-stats span{display:block}.side-stats span{color:rgba(255,255,255,.72);font-size:12px}.timer-box,.rule-box,.progress-panel{background:#fff;border-radius:8px;color:#0f172a;margin-top:14px;padding:14px}.timer-box{align-items:flex-start;display:flex;gap:12px}.timer-box i{color:#dc2626;font-size:24px}.timer-box span{color:#64748b;display:block;font-size:13px}.timer-box strong{font-size:26px}.timer-box.urgent{background:#fee2e2;color:#991b1b}.progress-label{align-items:center;display:flex;justify-content:space-between}.progress-label span{color:#64748b;font-size:13px}.progress-label strong{font-size:18px}.answer-progress{background:#e2e8f0;border-radius:999px;height:9px;margin-top:10px;overflow:hidden}.answer-progress span{background:#10b981;display:block;height:100%;transition:width .2s ease;width:0}.question-nav{display:grid;gap:8px;grid-template-columns:repeat(6,1fr);margin-top:14px}.question-pill{align-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#fff;display:flex;font-weight:850;height:38px;justify-content:center}.question-pill:hover{background:rgba(255,255,255,.2);color:#fff}.question-pill.answered{background:#10b981;border-color:#34d399;color:#052e2b}.rule-box{align-items:flex-start;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;display:flex;font-size:13px;gap:10px;line-height:1.5}.rule-box i{font-size:18px;margin-top:1px}
-.question-flow{display:grid;gap:16px}.take-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.06);padding:20px;scroll-margin-top:96px}.take-card-head{align-items:center;display:flex;justify-content:space-between;margin-bottom:12px}.take-card-head span{background:#e0f2fe;border-radius:8px;color:#0369a1;font-weight:850;padding:7px 10px}.take-card-head small{color:#64748b}.question-title-row{align-items:flex-start;display:flex;gap:12px;justify-content:space-between}.question-title-row h2{font-size:19px;font-weight:850;line-height:1.5;margin:0}.multi-badge,.single-badge{border-radius:999px;display:inline-flex;flex:0 0 auto;font-size:12px;font-weight:800;gap:6px;padding:7px 10px}.multi-badge{background:#fff7ed;color:#9a3412}.single-badge{background:#f1f5f9;color:#334155}.question-image{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:16px 0 0;overflow:hidden}.question-image img{display:block;max-height:360px;object-fit:contain;width:100%}.answer-list{display:grid;gap:10px;margin-top:16px}.answer-option{align-items:flex-start;border:1px solid #dbe4ef;border-radius:8px;cursor:pointer;display:flex;gap:12px;line-height:1.55;padding:14px;transition:.16s}.answer-option:hover{background:#f8fafc;border-color:#94a3b8}.answer-option input{flex:0 0 auto;margin-top:4px}.answer-option:has(input:checked){background:#ecfdf5;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.12)}.answer-text{min-width:0}.choice-image{display:block;max-height:180px;max-width:100%;object-fit:contain;margin-top:8px}.submit-bar{align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;bottom:14px;box-shadow:0 16px 36px rgba(15,23,42,.12);display:flex;gap:12px;justify-content:space-between;margin-top:8px;padding:12px;position:sticky}.submit-hint{color:#64748b;font-weight:700;text-align:center}.empty-state{background:#fff;border:1px dashed #cbd5e1;border-radius:8px;padding:28px;text-align:center}
-@media(max-width:992px){.take-layout{grid-template-columns:1fr}.take-sidebar{position:static}.submit-bar{position:static}}@media(max-width:640px){.side-stats{grid-template-columns:1fr}.question-title-row{display:grid}.multi-badge,.single-badge{width:max-content}.submit-bar{align-items:stretch;flex-direction:column}.submit-bar .btn{width:100%}.question-nav{grid-template-columns:repeat(5,1fr)}}
+.question-flow{display:grid;gap:16px}.section-tabs{background:#f4f7fb;border-bottom:1px solid #dbe4ef;display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 2px;padding:10px 0 12px;position:sticky;top:84px;z-index:30}.section-tab{align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:8px;color:#334155;display:inline-flex;font-weight:850;gap:8px;padding:9px 12px}.section-tab small{background:#f1f5f9;border-radius:999px;color:#64748b;font-size:12px;padding:3px 7px}.section-tab.active{background:#0f766e;border-color:#0f766e;color:#fff}.section-tab.active small{background:rgba(255,255,255,.18);color:#fff}.section-panel{display:grid;gap:16px}.take-section-divider{align-items:center;background:#e0f2fe;border:1px solid #bae6fd;border-radius:8px;color:#075985;display:flex;font-weight:850;gap:8px;padding:12px 14px}.take-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.06);padding:20px;scroll-margin-top:154px}.take-card-head{align-items:center;display:flex;justify-content:space-between;margin-bottom:12px}.take-card-head span{background:#e0f2fe;border-radius:8px;color:#0369a1;font-weight:850;padding:7px 10px}.take-card-head small{color:#64748b}.question-title-row{align-items:flex-start;display:flex;gap:12px;justify-content:space-between}.question-title-row h2{font-size:19px;font-weight:850;line-height:1.5;margin:0}.multi-badge,.single-badge{border-radius:999px;display:inline-flex;flex:0 0 auto;font-size:12px;font-weight:800;gap:6px;padding:7px 10px}.multi-badge{background:#fff7ed;color:#9a3412}.single-badge{background:#f1f5f9;color:#334155}.question-image{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:16px 0 0;overflow:hidden}.question-image img{display:block;max-height:360px;object-fit:contain;width:100%}.answer-list{display:grid;gap:10px;margin-top:16px}.answer-option{align-items:flex-start;border:1px solid #dbe4ef;border-radius:8px;cursor:pointer;display:flex;gap:12px;line-height:1.55;padding:14px;transition:.16s}.answer-option:hover{background:#f8fafc;border-color:#94a3b8}.answer-option input{flex:0 0 auto;margin-top:4px}.answer-option:has(input:checked){background:#ecfdf5;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.12)}.answer-text{min-width:0}.choice-image{display:block;max-height:180px;max-width:100%;object-fit:contain;margin-top:8px}.submit-bar{align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;bottom:14px;box-shadow:0 16px 36px rgba(15,23,42,.12);display:flex;gap:12px;justify-content:space-between;margin-top:8px;padding:12px;position:sticky}.submit-hint{color:#64748b;font-weight:700;text-align:center}.empty-state{background:#fff;border:1px dashed #cbd5e1;border-radius:8px;padding:28px;text-align:center}
+@media(max-width:992px){.take-layout{grid-template-columns:1fr}.take-sidebar{position:static}.section-tabs{top:0}.submit-bar{position:static}}@media(max-width:640px){.side-stats{grid-template-columns:1fr}.question-title-row{display:grid}.multi-badge,.single-badge{width:max-content}.submit-bar{align-items:stretch;flex-direction:column}.submit-bar .btn{width:100%}.question-nav{grid-template-columns:repeat(5,1fr)}}
 </style>
 {% endblock %}

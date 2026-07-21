@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from classroom.models import Classroom
+from .storage import DocumentCloudinaryStorage
 
 class Document(models.Model):
 
@@ -46,7 +47,8 @@ class Document(models.Model):
     )
 
     file = models.FileField(
-        upload_to='documents/'
+        upload_to='documents/',
+        storage=DocumentCloudinaryStorage() if settings.USE_CLOUDINARY_MEDIA else None
     )
 
     permission = models.CharField(

@@ -17,5 +17,6 @@ urlpatterns = [
     path('<int:pk>/quizzes/create/', views.create_class_quiz, name='create_class_quiz'),
     path('todo/<int:todo_id>/submit/',views.submit_todo_file,name="submit_todo_file"),
     path('<int:pk>/quizzes/history/<int:result_id>/delete/', views.delete_class_quiz_result, name='delete_class_quiz_result'),
+    path('<int:pk>/quizzes/history/reload/<int:penalty_id>/delete/', views.delete_class_quiz_reload_attempt, name='delete_class_quiz_reload_attempt'),
     path('<int:pk>/quizzes/history.json', views.class_quiz_history_json, name='class_quiz_history_json'),
 ]

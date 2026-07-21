@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
-{% block title %}Chinh sua cau hoi | TEDDY{% endblock %}
+{% block title %}Chỉnh sửa câu hỏi | TEDDY{% endblock %}
 {% block content %}
 <div class="container py-4 py-lg-5" style="max-width:1100px">
   <div class="card border-0 shadow-sm mb-4 overflow-hidden">
     <div class="card-body p-4 text-white" style="background:linear-gradient(135deg,#2563eb,#3b82f6)">
       <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
         <div>
-          <span class="small text-white-50">QUAN LY CAU HOI</span>
-          <h1 class="h3 fw-bold mb-1">Chinh sua cau hoi</h1>
-          <p class="mb-0 text-white-50">Chi cap nhat noi dung, hinh minh hoa va dap an cua cau hoi nay.</p>
+          <span class="small text-white-50">QUẢN LÝ CÂU HỎI</span>
+          <h1 class="h3 fw-bold mb-1">Chỉnh sửa câu hỏi</h1>
+          <p class="mb-0 text-white-50">Chỉ cập nhật nội dung, hình minh họa và đáp án của câu hỏi nay.</p>
         </div>
         <div class="d-flex gap-2 align-items-start">
-          <a href="{% url 'quiz:add_question' question.quiz.id %}" class="btn btn-light">Danh sach cau hoi</a>
-          <a href="{% url 'quiz:edit_quiz' question.quiz.id %}" class="btn btn-outline-light">Chinh sua de</a>
+          <a href="{% url 'quiz:add_question' question.quiz.id %}" class="btn btn-light">Danh sách câu hỏi</a>
+          <a href="{% url 'quiz:edit_quiz' question.quiz.id %}" class="btn btn-outline-light">Chỉnh sửa đề</a>
         </div>
       </div>
     </div>
@@ -23,15 +23,15 @@
     <div class="col-lg-8">
       <section class="card border-0 shadow-sm h-100">
         <div class="card-body p-4">
-          <h2 class="h5 fw-bold mb-4"><i class="bi bi-patch-question text-primary me-2"></i>Noi dung cau hoi</h2>
-          <label class="form-label fw-semibold">Cau hoi</label>
+          <h2 class="h5 fw-bold mb-4"><i class="bi bi-patch-question text-primary me-2"></i>Nội dung câu hỏi</h2>
+          <label class="form-label fw-semibold">Phần (không bắt buộc)</label><input name="section" class="form-control mb-3" value="{{ question.section }}" placeholder="Vi du: Phan I. Doc hieu"><label class="form-label fw-semibold">Câu hỏi</label>
           <textarea name="content" class="form-control" rows="7" required>{{ question.content }}</textarea>
           <div class="mt-4">
-            <label class="form-label fw-semibold" for="questionImage">Hinh minh hoa</label>
+            <label class="form-label fw-semibold" for="questionImage">Hình minh họa</label>
             <input id="questionImage" type="file" name="image" class="form-control" accept="image/*">
             {% if question.image %}
             <img class="img-fluid rounded border mt-3" style="max-height:240px;object-fit:contain" src="{{ question.image.url }}" alt="Hinh cau hoi">
-            <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="remove_image" value="1"> Xoa hinh hien tai</label>
+            <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="remove_image" value="1"> Xóa hình hiện tại</label>
             {% endif %}
           </div>
         </div>
@@ -40,11 +40,11 @@
     <div class="col-lg-4">
       <section class="card border-0 shadow-sm h-100">
         <div class="card-body p-4">
-          <h2 class="h5 fw-bold mb-3"><i class="bi bi-ui-checks text-success me-2"></i>Dap an</h2>
-          <p class="small text-muted">Moi dap an mot dong. Them <strong>*</strong> dau dong dung; co the danh dau nhieu dap an.</p>
+          <h2 class="h5 fw-bold mb-3"><i class="bi bi-ui-checks text-success me-2"></i>Đáp án</h2>
+          <p class="small text-muted">Mỗi đáp án một dòng. Thêm <strong>*</strong> đầu dòng đúng; có thể đánh dấu nhiều đáp án.</p>
           <textarea name="answers" class="form-control font-monospace" rows="13" required>{% for c in question.choices.all %}{% if c.is_correct %}*{% endif %}{{ c.content }}
 {% endfor %}</textarea>
-          <button class="btn btn-primary w-100 mt-4" type="submit"><i class="bi bi-save2 me-1"></i>Luu cau hoi</button>
+          <button class="btn btn-primary w-100 mt-4" type="submit"><i class="bi bi-save2 me-1"></i>Lưu câu hỏi</button>
         </div>
       </section>
     </div>

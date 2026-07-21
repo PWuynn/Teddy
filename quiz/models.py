@@ -46,6 +46,8 @@ class Question(models.Model):
 
     content = models.TextField()
 
+    section = models.CharField(max_length=255, blank=True, default='')
+
     explanation = models.TextField(blank=True, default='')
 
     if settings.USE_CLOUDINARY_MEDIA:
