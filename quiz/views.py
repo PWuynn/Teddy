@@ -191,6 +191,17 @@ def _is_docx_image_only_line(value):
 
 _MATH_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
 _MATH_TAG = '{' + _MATH_NS + '}'
+_MATH_SYMBOLS = {
+    '±': r'\pm', '×': r'\times', '÷': r'\div', '≤': r'\le', '≥': r'\ge',
+    '≠': r'\ne', '≈': r'\approx', '∞': r'\infty', 'π': r'\pi', 'θ': r'\theta',
+    'α': r'\alpha', 'β': r'\beta', 'γ': r'\gamma', 'δ': r'\delta', 'Δ': r'\Delta',
+    'λ': r'\lambda', 'μ': r'\mu', 'σ': r'\sigma', 'φ': r'\varphi', 'ω': r'\omega',
+    '∑': r'\sum', '∫': r'\int', '√': r'\sqrt{}', '∈': r'\in', '∉': r'\notin',
+    '∩': r'\cap', '∪': r'\cup', '→': r'\to', '⇒': r'\Rightarrow',
+}
+_NARY_LATEX = {
+    '∑': r'\sum', '∏': r'\prod', '∫': r'\int', '∬': r'\iint', '∭': r'\iiint',
+}
 
 
 def _xml_attr(node, local_name):
@@ -198,6 +209,10 @@ def _xml_attr(node, local_name):
         if key.endswith('}' + local_name) or key == local_name:
             return value
     return ''
+
+
+def _local_name(node):
+    return node.tag.rsplit('}', 1)[-1]
 
 
 def _first_child_by_local_name(node, local_name):
@@ -210,47 +225,72 @@ def _first_child_by_local_name(node, local_name):
 def _math_group_text(node):
     if node is None:
         return ''
-    return _docx_math_text(node).strip()
+    return _docx_math_latex(node).strip()
 
 
-def _docx_math_text(node):
-    tag = node.tag
-    if tag.endswith('}t'):
-        return node.text or ''
+def _math_text_literal(value):
+    value = value or ''
+    parts = []
+    for char in value:
+        if char in _MATH_SYMBOLS:
+            parts.append(_MATH_SYMBOLS[char])
+        elif char in {'\\', '{', '}', '$', '&', '#', '_', '%'}:
+            parts.append('\\' + char)
+        else:
+            parts.append(char)
+    return ''.join(parts)
 
-    if tag.endswith('}f'):
+
+def _latex_group(value):
+    value = (value or '').strip()
+    return value if len(value) == 1 and value.isalnum() else '{' + value + '}'
+
+
+def _latex_limits(base, sub='', sup=''):
+    if sub:
+        base += '_{' + sub + '}'
+    if sup:
+        base += '^{' + sup + '}'
+    return base
+
+
+def _docx_math_latex(node):
+    tag = _local_name(node)
+    if tag == 't':
+        return _math_text_literal(node.text)
+
+    if tag == 'f':
         numerator = _math_group_text(_first_child_by_local_name(node, 'num'))
         denominator = _math_group_text(_first_child_by_local_name(node, 'den'))
         if numerator and denominator:
-            return f'({numerator})/({denominator})'
+            return r'\frac{' + numerator + '}{' + denominator + '}'
 
-    if tag.endswith('}sSup'):
+    if tag == 'sSup':
         base = _math_group_text(_first_child_by_local_name(node, 'e'))
         sup = _math_group_text(_first_child_by_local_name(node, 'sup'))
         if base and sup:
-            return f'{base}^{sup}'
+            return _latex_group(base) + '^{' + sup + '}'
 
-    if tag.endswith('}sSub'):
+    if tag == 'sSub':
         base = _math_group_text(_first_child_by_local_name(node, 'e'))
         sub = _math_group_text(_first_child_by_local_name(node, 'sub'))
         if base and sub:
-            return f'{base}_{sub}'
+            return _latex_group(base) + '_{' + sub + '}'
 
-    if tag.endswith('}sSubSup'):
+    if tag == 'sSubSup':
         base = _math_group_text(_first_child_by_local_name(node, 'e'))
         sub = _math_group_text(_first_child_by_local_name(node, 'sub'))
         sup = _math_group_text(_first_child_by_local_name(node, 'sup'))
         if base:
-            suffix = (f'_{sub}' if sub else '') + (f'^{sup}' if sup else '')
-            return base + suffix
+            return _latex_limits(_latex_group(base), sub, sup)
 
-    if tag.endswith('}rad'):
+    if tag == 'rad':
         degree = _math_group_text(_first_child_by_local_name(node, 'deg'))
         expression = _math_group_text(_first_child_by_local_name(node, 'e'))
         if expression:
-            return f'{degree}√({expression})' if degree else f'√({expression})'
+            return (r'\sqrt[' + degree + ']{' + expression + '}') if degree else (r'\sqrt{' + expression + '}')
 
-    if tag.endswith('}d'):
+    if tag == 'd':
         props = _first_child_by_local_name(node, 'dPr')
         begin = end = ''
         if props is not None:
@@ -259,31 +299,60 @@ def _docx_math_text(node):
             begin = _xml_attr(begin_node, 'val') if begin_node is not None else ''
             end = _xml_attr(end_node, 'val') if end_node is not None else ''
         expression = _math_group_text(_first_child_by_local_name(node, 'e'))
-        return f'{begin or "("}{expression}{end or ")"}' if expression else ''
+        if expression:
+            return r'\left' + (begin or '(') + expression + r'\right' + (end or ')')
 
-    if tag.endswith('}nary'):
-        symbol = ''
+    if tag == 'nary':
         props = _first_child_by_local_name(node, 'naryPr')
+        symbol = ''
         if props is not None:
             char_node = _first_child_by_local_name(props, 'chr')
             symbol = _xml_attr(char_node, 'val') if char_node is not None else ''
+        base = _NARY_LATEX.get(symbol, _math_text_literal(symbol) or r'\sum')
         sub = _math_group_text(_first_child_by_local_name(node, 'sub'))
         sup = _math_group_text(_first_child_by_local_name(node, 'sup'))
         expression = _math_group_text(_first_child_by_local_name(node, 'e'))
-        prefix = symbol or '∑'
-        if sub:
-            prefix += f'_{sub}'
-        if sup:
-            prefix += f'^{sup}'
-        return (prefix + ' ' + expression).strip()
+        return (_latex_limits(base, sub, sup) + (' ' + expression if expression else '')).strip()
+
+    if tag == 'func':
+        name = _math_group_text(_first_child_by_local_name(node, 'fName'))
+        expression = _math_group_text(_first_child_by_local_name(node, 'e'))
+        command = '\\' + name if name in {'sin', 'cos', 'tan', 'cot', 'log', 'ln', 'lim', 'max', 'min'} else name
+        return (command + ' ' + expression).strip()
+
+    if tag == 'bar':
+        expression = _math_group_text(_first_child_by_local_name(node, 'e'))
+        return r'\overline{' + expression + '}' if expression else ''
+
+    if tag == 'acc':
+        expression = _math_group_text(_first_child_by_local_name(node, 'e'))
+        return r'\hat{' + expression + '}' if expression else ''
+
+    if tag == 'm':
+        rows = []
+        for row in node:
+            if _local_name(row) != 'mr':
+                continue
+            cells = [_docx_math_latex(child) for child in row if _local_name(child) == 'e']
+            rows.append(' & '.join(cell for cell in cells if cell))
+        if rows:
+            return r'\begin{matrix}' + r'\\'.join(rows) + r'\end{matrix}'
 
     parts = []
     for child in node:
-        value = _docx_math_text(child)
+        value = _docx_math_latex(child)
         if value:
             parts.append(value)
     return ''.join(parts)
 
+
+def _docx_math_text(node):
+    latex = _docx_math_latex(node).strip()
+    return r'\(' + latex + r'\)' if latex else ''
+
+
+def _node_contains_office_math(node):
+    return any(child.tag.startswith(_MATH_TAG) for child in node.iter())
 
 def _docx_cell_text(cell, document, image_map):
     blocks = [_docx_paragraph_with_images(paragraph, document, image_map) for paragraph in cell.paragraphs]
@@ -359,7 +428,10 @@ def _docx_paragraph_with_images(paragraph, document, image_map):
             elif node.tag.endswith('}tab'):
                 parts.append('\t')
             elif node.tag.endswith(('}object', '}drawing', '}pict')):
-                parts.extend(_docx_image_markers_from_node(node, document, image_map))
+                if _node_contains_office_math(node):
+                    parts.append(_docx_math_text(node))
+                else:
+                    parts.extend(_docx_image_markers_from_node(node, document, image_map))
     return ''.join(parts).strip()
 
 
